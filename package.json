@@ -1,0 +1,10 @@
+{
+  "name": "prosperofy-app",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
