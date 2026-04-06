@@ -8,7 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import type { AuthSuccessPayload } from "@/lib/api/types";
-import { isApiClientError } from "@/lib/api/errors";
+import {
+  logAuthFormErrorInDevelopment,
+  resolveAuthFormCatchMessage,
+} from "@/lib/api/auth-form-error";
 import { useAuth } from "@/lib/auth/session-context";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth";
 import { mergeServerFieldErrors } from "@/lib/validation/merge-server-errors";
@@ -44,9 +47,10 @@ function LoginForm() {
       login(payload);
       router.replace(next.startsWith("/") ? next : "/dashboard");
     } catch (e) {
+      logAuthFormErrorInDevelopment(e);
       if (!mergeServerFieldErrors(e, setError)) {
         setFormError(
-          isApiClientError(e) ? e.message : "Sign-in failed. Please try again.",
+          resolveAuthFormCatchMessage(e, "Sign-in failed. Please try again."),
         );
       }
     }

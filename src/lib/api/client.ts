@@ -2,11 +2,14 @@ import { parseEnvelope } from "./envelope";
 import { ApiClientError } from "./errors";
 
 function getBaseUrl(): string {
-  const base = process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL;
-  if (!base || base.trim() === "") {
+  const base =
+    typeof process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL === "string"
+      ? process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL.trim()
+      : "";
+  if (!base) {
     throw new Error("NEXT_PUBLIC_LARAVEL_API_BASE_URL is not configured.");
   }
-  return base.replace(/\/$/, "");
+  return base.replace(/\/+$/, "");
 }
 
 export type LaravelFetchOptions = {
