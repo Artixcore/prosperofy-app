@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { buildContentSecurityPolicy } from "@/lib/csp/build-csp";
 
 const AUTH_ROUTES = ["/login", "/register"];
 
@@ -38,7 +39,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  if (process.env.NODE_ENV !== "production") {
+    return NextResponse.next();
+  }
+
+  const nonce = globalThis.crypto.randomUUID();
+  const csp = buildContentSecurityPolicy(nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("Content-Security-Policy", csp);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
 }
 
 export const config = {

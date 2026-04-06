@@ -6,6 +6,8 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Prosperofy",
   description: "Authenticated Prosperofy dashboard",
