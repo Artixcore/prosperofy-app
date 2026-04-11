@@ -1,3 +1,10 @@
+# DigitalOcean App Platform spec — apply with: doctl apps create --spec app.yaml
+# Or: Control Panel → Apps → Create → edit spec as YAML.
+# Replace YOUR_GITHUB_USERNAME (and branch if needed) before deploy.
+
+name: prosperofy-app
+region: nyc
+
 services:
   - name: web
     github:
