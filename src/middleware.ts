@@ -56,5 +56,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|health).*)"],
+  // Exclude `/health` only as a path segment, not every path starting with "health".
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|health(?:/|$)).*)",
+  ],
 };

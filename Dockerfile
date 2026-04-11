@@ -6,9 +6,18 @@ RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
+# NEXT_PUBLIC_* is inlined at `next build`. .dockerignore excludes .env files, so
+# pass this via build args (e.g. DigitalOcean App Platform --build-arg).
+ARG NEXT_PUBLIC_LARAVEL_API_BASE_URL
+ENV NEXT_PUBLIC_LARAVEL_API_BASE_URL=${NEXT_PUBLIC_LARAVEL_API_BASE_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN test -n "${NEXT_PUBLIC_LARAVEL_API_BASE_URL}" || ( \
+  echo >&2 "Missing build-arg NEXT_PUBLIC_LARAVEL_API_BASE_URL (Laravel origin, no /api suffix)."; \
+  echo >&2 "Example: docker build --build-arg NEXT_PUBLIC_LARAVEL_API_BASE_URL=https://backend.example.com ."; \
+  exit 1 \
+)
 RUN npm run build
 
 FROM node:20-alpine AS runner

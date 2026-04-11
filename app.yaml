@@ -18,11 +18,14 @@ services:
       - key: NODE_ENV
         value: production
 
+      # Dockerfile builds: DO passes these as --build-arg so Next can inline NEXT_PUBLIC_*.
       - key: NEXT_PUBLIC_APP_URL
         value: https://app.prosperofy.com
+        scope: RUN_AND_BUILD_TIME
 
       - key: NEXT_PUBLIC_LARAVEL_API_BASE_URL
         value: https://backend.prosperofy.com
+        scope: RUN_AND_BUILD_TIME
 
       - key: APP_URL
         value: https://app.prosperofy.com
