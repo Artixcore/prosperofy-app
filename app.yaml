@@ -1,24 +1,24 @@
-# DigitalOcean App Platform spec — apply with: doctl apps create --spec app.yaml
-# Or: Control Panel → Apps → Create → edit spec as YAML.
-# Replace YOUR_GITHUB_USERNAME (and branch if needed) before deploy.
-
-name: prosperofy-app
-region: nyc
-
 services:
   - name: web
     github:
-      repo: YOUR_GITHUB_USERNAME/prosperofy-app
+      repo: https://github.com/Artixcore/prosperofy-app.git
       branch: main
       deploy_on_push: true
     dockerfile_path: Dockerfile
     http_port: 8080
-    instance_count: 1
-    instance_size_slug: apps-s-1vcpu-0.5gb
-    health_check:
-      http_path: /health
-      initial_delay_seconds: 10
-      period_seconds: 10
-      timeout_seconds: 5
-      success_threshold: 1
-      failure_threshold: 3
+
+    envs:
+      - key: NODE_ENV
+        value: production
+
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://app.prosperofy.com
+
+      - key: NEXT_PUBLIC_LARAVEL_API_BASE_URL
+        value: https://backend.prosperofy.com
+
+      - key: APP_URL
+        value: https://app.prosperofy.com
+
+      - key: TRUSTED_HOSTS
+        value: app.prosperofy.com
