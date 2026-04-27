@@ -21,6 +21,7 @@ import {
   saveSession,
   type StoredSession,
 } from "@/lib/auth/storage";
+import { AUTH_UNAUTHORIZED_EVENT } from "@/lib/api/client";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -70,6 +71,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    function onUnauthorized() {
+      clearSessionStorage();
+      clearAuthCookie();
+      setUser(null);
+      setToken(null);
+      router.replace("/login");
+    }
+
+    if (typeof window === "undefined") return;
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => {
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, onUnauthorized);
+    };
+  }, [router]);
 
   const login = useCallback(
     (payload: AuthSuccessPayload) => {

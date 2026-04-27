@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth/session-context";
+import { useNotificationsQuery } from "@/features/app/use-notifications";
 
 const nav = [
   { href: "/dashboard", label: "Overview" },
@@ -36,6 +37,11 @@ function NavLink({ href, label }: { href: string; label: string }) {
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
+  const unreadQuery = useNotificationsQuery({ unread: true, perPage: 1, page: 1 });
+  const unreadFromPagination = unreadQuery.data?.pagination?.total;
+  const unreadCount = typeof unreadFromPagination === "number"
+    ? unreadFromPagination
+    : (unreadQuery.data?.items?.length ?? 0);
   const isNonProd =
     typeof process.env.NEXT_PUBLIC_VERCEL_ENV !== "undefined"
       ? process.env.NEXT_PUBLIC_VERCEL_ENV !== "production"
@@ -49,9 +55,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <p className="text-xs text-zinc-500">Dashboard</p>
         </div>
         <nav className="space-y-0.5">
-          {nav.map((item) => (
-            <NavLink key={item.href} {...item} />
-          ))}
+          {nav.map((item) => {
+            const label =
+              item.href === "/notifications" && unreadCount > 0
+                ? `${item.label} (${unreadCount})`
+                : item.label;
+            return <NavLink key={item.href} href={item.href} label={label} />;
+          })}
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -86,7 +96,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               href={item.href}
               className="rounded px-2 py-1 text-xs text-zinc-400 hover:bg-surface-raised hover:text-zinc-200"
             >
-              {item.label}
+              {item.href === "/notifications" && unreadCount > 0
+                ? `${item.label} (${unreadCount})`
+                : item.label}
             </Link>
           ))}
         </div>

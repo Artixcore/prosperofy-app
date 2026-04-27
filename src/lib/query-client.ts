@@ -14,6 +14,15 @@ export function makeQueryClient(): QueryClient {
           return failureCount < 2;
         },
       },
+      mutations: {
+        retry: (failureCount, error) => {
+          if (isApiClientError(error)) {
+            if ([400, 401, 403, 404, 422].includes(error.status)) return false;
+            if (!error.retryable) return false;
+          }
+          return failureCount < 1;
+        },
+      },
     },
   });
 }

@@ -11,6 +11,8 @@ export function ErrorState({ error, onRetry, title = "Something went wrong" }: P
     ? error.message
     : "An unexpected error occurred. Please try again.";
   const code = isApiClientError(error) ? error.code : undefined;
+  const requestId = isApiClientError(error) ? error.requestId : undefined;
+  const correlationId = isApiClientError(error) ? error.correlationId : undefined;
   const canRetry = isApiClientError(error) ? error.retryable : Boolean(onRetry);
 
   return (
@@ -22,6 +24,12 @@ export function ErrorState({ error, onRetry, title = "Something went wrong" }: P
       <p className="mt-1 text-sm text-red-200/90">{message}</p>
       {code ? (
         <p className="mt-2 font-mono text-xs text-red-300/80">Code: {code}</p>
+      ) : null}
+      {requestId ? (
+        <p className="mt-1 font-mono text-xs text-red-300/70">Request ID: {requestId}</p>
+      ) : null}
+      {correlationId ? (
+        <p className="mt-1 font-mono text-xs text-red-300/70">Correlation ID: {correlationId}</p>
       ) : null}
       {onRetry && canRetry ? (
         <button

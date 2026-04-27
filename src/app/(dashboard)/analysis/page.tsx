@@ -21,6 +21,11 @@ type FormValues = z.infer<typeof schema>;
 
 const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"] as const;
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
 export default function AnalysisPage() {
   const mut = useMarketAnalysisMutation();
   const [banner, setBanner] = useState<string | null>(null);
@@ -95,6 +100,41 @@ export default function AnalysisPage() {
       {mut.isSuccess && mut.data ? (
         <div className="mt-8">
           <h2 className="text-sm font-medium text-zinc-300">Result</h2>
+          <p className="mt-1 text-xs text-zinc-500">
+            Use this analysis as guidance only. Markets can move against any strategy.
+          </p>
+          {(() => {
+            const result = asRecord(mut.data);
+            if (!result) return null;
+            const confidence = result.confidence;
+            const riskScore = result.risk_score ?? result.risk;
+            const reasoning = result.reasoning;
+            const warnings = Array.isArray(result.warnings) ? result.warnings : null;
+            return (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {typeof confidence !== "undefined" ? (
+                  <div className="rounded-md border border-surface-border bg-surface p-3 text-sm text-zinc-300">
+                    Confidence: <span className="text-white">{String(confidence)}</span>
+                  </div>
+                ) : null}
+                {typeof riskScore !== "undefined" ? (
+                  <div className="rounded-md border border-surface-border bg-surface p-3 text-sm text-zinc-300">
+                    Risk: <span className="text-white">{String(riskScore)}</span>
+                  </div>
+                ) : null}
+                {reasoning ? (
+                  <div className="rounded-md border border-surface-border bg-surface p-3 text-sm text-zinc-300 sm:col-span-2">
+                    Reasoning: <span className="text-white">{String(reasoning)}</span>
+                  </div>
+                ) : null}
+                {warnings?.length ? (
+                  <div className="rounded-md border border-amber-800/60 bg-amber-950/30 p-3 text-sm text-amber-200 sm:col-span-2">
+                    Warnings: {warnings.map((warning) => String(warning)).join(" | ")}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })()}
           <pre className="mt-2 max-h-[480px] overflow-auto rounded-md bg-black/40 p-4 font-mono text-xs text-zinc-400">
             {JSON.stringify(mut.data, null, 2)}
           </pre>

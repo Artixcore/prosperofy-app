@@ -10,8 +10,8 @@ import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { isApiClientError } from "@/lib/api/errors";
-import { demoOhlcv } from "@/lib/ai/demo-series";
 import { useStrategyEvaluateDispatchMutation } from "@/features/ai/use-ai-mutations";
+import { useCreateStrategyMutation } from "@/features/app/use-strategies";
 
 const schema = z.object({
   symbol: z.string().min(1).max(128),
@@ -19,14 +19,30 @@ const schema = z.object({
   portfolio_exposure: z.coerce.number().min(0).max(3),
   current_drawdown: z.coerce.number().min(0).max(1),
   consecutive_losses: z.coerce.number().int().min(0),
-  bars: z.coerce.number().min(35).max(500).default(40),
+  open: z.string().min(1),
+  high: z.string().min(1),
+  low: z.string().min(1),
+  close: z.string().min(1),
+  volume: z.string().min(1),
+  save_strategy: z.boolean().default(true),
+  strategy_name: z.string().min(1).max(256),
 });
 
 type FormValues = z.infer<typeof schema>;
 
+function parseSeries(value: string): number[] {
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => Number(part))
+    .filter((number) => Number.isFinite(number));
+}
+
 export default function StrategyEvaluatePage() {
   const router = useRouter();
   const mut = useStrategyEvaluateDispatchMutation();
+  const createStrategy = useCreateStrategyMutation();
   const [err, setErr] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -37,25 +53,66 @@ export default function StrategyEvaluatePage() {
       portfolio_exposure: 1,
       current_drawdown: 0.05,
       consecutive_losses: 0,
-      bars: 40,
+      open: "",
+      high: "",
+      low: "",
+      close: "",
+      volume: "",
+      save_strategy: true,
+      strategy_name: "Evaluated strategy",
     },
   });
 
   async function onSubmit(values: FormValues) {
     setErr(null);
-    const series = demoOhlcv(values.bars);
     const idempotency_key =
       typeof crypto !== "undefined" && crypto.randomUUID
         ? crypto.randomUUID()
         : `eval-${Date.now()}`;
     try {
+      const open = parseSeries(values.open);
+      const high = parseSeries(values.high);
+      const low = parseSeries(values.low);
+      const close = parseSeries(values.close);
+      const volume = parseSeries(values.volume);
+      const lengths = [open.length, high.length, low.length, close.length, volume.length];
+      const size = lengths[0] ?? 0;
+      if (size < 2 || lengths.some((length) => length !== size)) {
+        setErr("OHLCV arrays must be numeric, non-empty, and equal length.");
+        return;
+      }
+
+      if (values.save_strategy) {
+        await createStrategy.mutateAsync({
+          name: values.strategy_name,
+          description: "Saved from evaluation input",
+          market_type: "crypto",
+          timeframe: "1h",
+          source: "ai",
+          definition: {
+            symbol: values.symbol,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            sentiment_score: values.sentiment_score,
+            risk: {
+              portfolio_exposure: values.portfolio_exposure,
+              current_drawdown: values.current_drawdown,
+              consecutive_losses: values.consecutive_losses,
+            },
+          },
+        });
+      }
+
       const data = await mut.mutateAsync({
         symbol: values.symbol,
-        open: series.open,
-        high: series.high,
-        low: series.low,
-        close: series.close,
-        volume: series.volume,
+        open,
+        high,
+        low,
+        close,
+        volume,
         sentiment_score: values.sentiment_score,
         risk: {
           portfolio_exposure: values.portfolio_exposure,
@@ -79,7 +136,7 @@ export default function StrategyEvaluatePage() {
     <>
       <PageHeader
         title="Strategy evaluation (async)"
-        description="Dispatches Laravel orchestration. You are redirected to the job status page to poll safely."
+        description="Dispatches Laravel orchestration and redirects to job status polling."
       />
       {err ? <InlineAlert tone="error">{err}</InlineAlert> : null}
       <form
@@ -93,12 +150,44 @@ export default function StrategyEvaluatePage() {
             {...form.register("symbol")}
           />
         </FormField>
-        <FormField id="bars" label="OHLC bars (synthetic)" error={form.formState.errors.bars?.message}>
-          <input
-            id="bars"
-            type="number"
+        <FormField id="open" label="Open values (comma-separated)" error={form.formState.errors.open?.message}>
+          <textarea
+            id="open"
+            rows={3}
             className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
-            {...form.register("bars")}
+            {...form.register("open")}
+          />
+        </FormField>
+        <FormField id="high" label="High values (comma-separated)" error={form.formState.errors.high?.message}>
+          <textarea
+            id="high"
+            rows={3}
+            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            {...form.register("high")}
+          />
+        </FormField>
+        <FormField id="low" label="Low values (comma-separated)" error={form.formState.errors.low?.message}>
+          <textarea
+            id="low"
+            rows={3}
+            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            {...form.register("low")}
+          />
+        </FormField>
+        <FormField id="close" label="Close values (comma-separated)" error={form.formState.errors.close?.message}>
+          <textarea
+            id="close"
+            rows={3}
+            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            {...form.register("close")}
+          />
+        </FormField>
+        <FormField id="volume" label="Volume values (comma-separated)" error={form.formState.errors.volume?.message}>
+          <textarea
+            id="volume"
+            rows={3}
+            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            {...form.register("volume")}
           />
         </FormField>
         <FormField id="sent" label="Sentiment score (-1…1)" error={form.formState.errors.sentiment_score?.message}>
@@ -137,7 +226,30 @@ export default function StrategyEvaluatePage() {
             {...form.register("consecutive_losses")}
           />
         </FormField>
-        <SubmitButton pending={mut.isPending}>Dispatch evaluation</SubmitButton>
+        <label className="flex items-center gap-2 text-sm text-zinc-300">
+          <input
+            type="checkbox"
+            className="rounded border-surface-border"
+            {...form.register("save_strategy")}
+          />
+          Save this evaluation input as a strategy
+        </label>
+        {form.watch("save_strategy") ? (
+          <FormField
+            id="strategy_name"
+            label="Strategy name"
+            error={form.formState.errors.strategy_name?.message}
+          >
+            <input
+              id="strategy_name"
+              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              {...form.register("strategy_name")}
+            />
+          </FormField>
+        ) : null}
+        <SubmitButton pending={mut.isPending || createStrategy.isPending}>
+          Dispatch evaluation
+        </SubmitButton>
       </form>
     </>
   );

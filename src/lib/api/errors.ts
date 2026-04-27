@@ -5,6 +5,8 @@ export class ApiClientError extends Error {
   readonly code: string;
   readonly retryable: boolean;
   readonly fieldErrors: FieldErrors;
+  readonly requestId?: string;
+  readonly correlationId?: string;
 
   constructor(
     message: string,
@@ -13,6 +15,8 @@ export class ApiClientError extends Error {
       code: string;
       retryable: boolean;
       fieldErrors?: FieldErrors;
+      requestId?: string;
+      correlationId?: string;
     },
   ) {
     super(message);
@@ -21,6 +25,8 @@ export class ApiClientError extends Error {
     this.code = options.code;
     this.retryable = options.retryable;
     this.fieldErrors = options.fieldErrors ?? {};
+    this.requestId = options.requestId;
+    this.correlationId = options.correlationId;
   }
 }
 

@@ -7,6 +7,23 @@ export const API = {
     logout: "/api/auth/logout",
   },
   app: {
+    profile: "/api/app/profile",
+    settings: "/api/app/settings",
+    notifications: {
+      list: "/api/app/notifications",
+      readAll: "/api/app/notifications/read-all",
+      read: (id: string) => `/api/app/notifications/${id}/read` as const,
+    },
+    activity: {
+      list: "/api/app/activity",
+    },
+    strategies: {
+      list: "/api/app/strategies",
+      create: "/api/app/strategies",
+      show: (id: string) => `/api/app/strategies/${id}` as const,
+      update: (id: string) => `/api/app/strategies/${id}` as const,
+      evaluations: (id: string) => `/api/app/strategies/${id}/evaluations` as const,
+    },
     wallets: {
       nonce: "/api/app/wallets/nonce",
       connectPhantom: "/api/app/wallets/connect/phantom",

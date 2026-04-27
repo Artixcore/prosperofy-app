@@ -1,6 +1,8 @@
 import { parseEnvelope } from "./envelope";
 import { ApiClientError } from "./errors";
 
+export const AUTH_UNAUTHORIZED_EVENT = "prosperofy:auth-unauthorized";
+
 function getBaseUrl(): string {
   const base =
     typeof process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL === "string"
@@ -10,6 +12,19 @@ function getBaseUrl(): string {
     throw new Error("NEXT_PUBLIC_LARAVEL_API_BASE_URL is not configured.");
   }
   return base.replace(/\/+$/, "");
+}
+
+function emitUnauthorizedEvent(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+}
+
+function pickFirstHeader(res: Response, names: string[]): string | undefined {
+  for (const name of names) {
+    const value = res.headers.get(name);
+    if (value && value.trim()) return value.trim();
+  }
+  return undefined;
 }
 
 export type LaravelFetchOptions = {
@@ -62,32 +77,58 @@ export async function laravelFetch<T>(
 
   const contentType = res.headers.get("content-type") ?? "";
   const isJson = contentType.includes("application/json");
+  const requestId = pickFirstHeader(res, ["x-request-id", "x-amzn-requestid", "x-amz-request-id"]);
+  const correlationId = pickFirstHeader(res, ["x-correlation-id"]);
 
   if (res.status === 401) {
+    emitUnauthorizedEvent();
     throw new ApiClientError("Session expired. Please sign in again.", {
       status: 401,
       code: "UNAUTHENTICATED",
       retryable: false,
+      requestId,
+      correlationId,
     });
   }
 
   if (!isJson) {
-    throw new ApiClientError("Unexpected response from server.", {
+    throw new ApiClientError(
+      res.status >= 500
+        ? "The server is temporarily unavailable. Please try again shortly."
+        : res.status === 403
+          ? "You do not have permission to perform this action."
+          : "Unexpected response from server.",
+      {
       status: res.status,
       code: "NON_JSON_RESPONSE",
       retryable: res.status >= 500,
-    });
+      requestId,
+      correlationId,
+      },
+    );
   }
 
   const json: unknown = await res.json();
 
   if (!res.ok && (!json || typeof json !== "object")) {
-    throw new ApiClientError("Request failed.", {
+    throw new ApiClientError(
+      res.status === 403
+        ? "You do not have permission to perform this action."
+        : res.status >= 500
+          ? "The server is temporarily unavailable. Please try again shortly."
+          : "Request failed.",
+      {
       status: res.status,
       code: "HTTP_ERROR",
       retryable: res.status >= 500,
-    });
+      requestId,
+      correlationId,
+      },
+    );
   }
 
-  return parseEnvelope<T>(json, res.status);
+  return parseEnvelope<T>(json, res.status, {
+    requestId,
+    correlationId,
+  });
 }
