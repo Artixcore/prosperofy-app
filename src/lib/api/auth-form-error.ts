@@ -4,9 +4,9 @@ import { isApiClientError } from "./errors";
 export function resolveAuthFormCatchMessage(error: unknown, fallback: string): string {
   if (isApiClientError(error)) {
     if (error.status === 401) return "Invalid credentials. Please try again.";
-    if (error.status === 419) return "Unable to connect. Please try again.";
+    if (error.status === 419) return "Session expired. Please try again.";
     if (error.code === "NETWORK_ERROR" || error.status === 0) {
-      return "Unable to connect. Please try again.";
+      return "Connection error. Please try again.";
     }
     return error.message;
   }

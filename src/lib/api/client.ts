@@ -105,7 +105,7 @@ export async function laravelFetch<T>(
   }
 
   if (res.status === 419) {
-    throw new ApiClientError("Unable to connect. Please try again.", {
+    throw new ApiClientError("Session expired. Please try again.", {
       status: 419,
       code: "HTTP_SESSION_EXPIRED",
       retryable: false,
