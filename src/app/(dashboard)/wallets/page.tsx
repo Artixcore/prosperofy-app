@@ -13,7 +13,25 @@ import {
   useWalletNonceMutation,
   useWalletsQuery,
 } from "@/features/wallets/use-wallet-mutations";
-import { connectMetaMaskFlow, connectPhantomFlow } from "@/features/wallets/wallet-adapters";
+
+function resolveWalletConnectError(error: unknown, wallet: "Phantom" | "MetaMask"): string {
+  if (error instanceof Error && typeof error.message === "string") {
+    const message = error.message.trim();
+    if (message !== "") {
+      // Keep known user-actionable wallet errors, hide unexpected internal details.
+      if (
+        message.includes("not available")
+        || message.includes("No Ethereum account available.")
+        || message.includes("Could not read Phantom public key.")
+        || message.includes("Unexpected signature format from wallet.")
+      ) {
+        return message;
+      }
+    }
+  }
+
+  return `${wallet} connection failed. Please try again.`;
+}
 
 export default function WalletsPage() {
   const { data, isPending, isError, error, refetch } = useWalletsQuery();
@@ -27,12 +45,13 @@ export default function WalletsPage() {
     setConnectError(null);
     setBusy("phantom");
     try {
+      const { connectPhantomFlow } = await import("@/features/wallets/wallet-adapters");
       await connectPhantomFlow(
         async (provider) => nonceMutation.mutateAsync(provider),
         async (body) => connectPhantom.mutateAsync(body),
       );
     } catch (e) {
-      setConnectError(e instanceof Error ? e.message : "Phantom connect failed.");
+      setConnectError(resolveWalletConnectError(e, "Phantom"));
     } finally {
       setBusy(null);
     }
@@ -42,12 +61,13 @@ export default function WalletsPage() {
     setConnectError(null);
     setBusy("metamask");
     try {
+      const { connectMetaMaskFlow } = await import("@/features/wallets/wallet-adapters");
       await connectMetaMaskFlow(
         async (provider) => nonceMutation.mutateAsync(provider),
         async (body) => connectMetaMask.mutateAsync(body),
       );
     } catch (e) {
-      setConnectError(e instanceof Error ? e.message : "MetaMask connect failed.");
+      setConnectError(resolveWalletConnectError(e, "MetaMask"));
     } finally {
       setBusy(null);
     }
