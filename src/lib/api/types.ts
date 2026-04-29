@@ -64,8 +64,53 @@ export type UserProfile = {
   name: string;
   email: string;
   avatar_url: string | null;
+  theme_preference?: "light" | "dark" | "system";
   email_verified_at: string | null;
   role: string;
+};
+
+export type DashboardSummary = {
+  activity: { hoursThisWeek: number };
+  spending: { totalThisWeek: number; trend: Array<{ date: string; amount: number }> };
+  virtualCard: {
+    id: string | null;
+    brand: string | null;
+    currentBalance: number;
+    maskedNumber: string | null;
+    expiry: string | null;
+  };
+  contractType: { completionRate: number; completedCount: number };
+  notifications: { unreadCount: number };
+  totalBalance: number;
+};
+
+export type VirtualCard = {
+  id: string;
+  brand: string;
+  holder_name: string;
+  masked_number: string;
+  last_four: string;
+  expiry_month: string;
+  expiry_year: string;
+  current_balance: number;
+  currency: string;
+  is_active: boolean;
+};
+
+export type TransactionRecord = {
+  id: string;
+  type: "expense" | "income" | "transfer" | string;
+  merchant: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  transacted_at: string;
+  virtual_card_id: string | null;
+  metadata: Record<string, unknown>;
+};
+
+export type ThemePreferencePayload = {
+  theme_preference: "light" | "dark" | "system";
 };
 
 export type UserProfilePatchBody = {

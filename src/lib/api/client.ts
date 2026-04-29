@@ -72,7 +72,7 @@ export async function laravelFetch<T>(
     headers,
     body: initBody,
     signal,
-    credentials: "omit",
+    credentials: "include",
   });
 
   const contentType = res.headers.get("content-type") ?? "";

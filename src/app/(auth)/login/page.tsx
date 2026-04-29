@@ -86,6 +86,11 @@ function LoginForm() {
         </FormField>
         <input type="hidden" {...register("device_name")} />
         <SubmitButton pending={isSubmitting}>Sign in</SubmitButton>
+        <p className="text-right text-xs">
+          <Link href="/forgot-password" className="text-accent-muted hover:underline">
+            Forgot password?
+          </Link>
+        </p>
       </form>
       <p className="mt-6 text-center text-sm text-zinc-500">
         No account?{" "}

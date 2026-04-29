@@ -3,9 +3,33 @@
 @tailwind utilities;
 
 :root {
+  --surface: 245 247 252;
+  --surface-elevated: 255 255 255;
+  --surface-raised: 248 250 255;
+  --surface-border: 225 230 243;
+  --content-primary: 20 24 37;
+  --content-muted: 98 107 129;
+  --accent: 114 95 255;
+  --accent-muted: 138 124 255;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --surface: 14 18 28;
+  --surface-elevated: 20 26 38;
+  --surface-raised: 30 36 50;
+  --surface-border: 56 64 82;
+  --content-primary: 242 246 255;
+  --content-muted: 159 172 195;
+  --accent: 147 132 255;
+  --accent-muted: 181 170 255;
   color-scheme: dark;
 }
 
+.shadow-soft {
+  box-shadow: 0 8px 30px rgba(20, 23, 38, 0.08);
+}
+
 body {
-  @apply bg-surface text-zinc-100 antialiased;
+  @apply bg-surface text-content-primary antialiased transition-colors duration-200;
 }

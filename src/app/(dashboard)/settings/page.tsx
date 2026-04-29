@@ -10,9 +10,11 @@ import { SubmitButton } from "@/components/system/submit-button";
 import { FormField } from "@/components/system/form-field";
 import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { isApiClientError } from "@/lib/api/errors";
 import { mergeServerFieldErrors } from "@/lib/validation/merge-server-errors";
 import { useSettingsQuery, useUpdateSettingsMutation } from "@/features/app/use-settings";
+import { useTheme } from "@/lib/theme/theme-context";
 
 const settingsSchema = z.object({
   theme: z.enum(["light", "dark", "system"]),
@@ -27,6 +29,7 @@ const settingsSchema = z.object({
 type SettingsValues = z.infer<typeof settingsSchema>;
 
 export default function SettingsPage() {
+  const { setTheme } = useTheme();
   const settings = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
   const [banner, setBanner] = useState<{ tone: "success" | "error"; message: string } | null>(
@@ -73,6 +76,7 @@ export default function SettingsPage() {
         risk_preference: values.risk_preference,
         default_currency: values.default_currency.toUpperCase(),
       });
+      setTheme(values.theme);
       setBanner({ tone: "success", message: "Settings saved." });
     } catch (error) {
       if (mergeServerFieldErrors(error, form.setError)) return;
@@ -97,6 +101,9 @@ export default function SettingsPage() {
         title="Settings"
         description="Manage your account preferences synced with Laravel."
       />
+      <div className="mt-3">
+        <ThemeToggle />
+      </div>
       {banner ? <InlineAlert tone={banner.tone}>{banner.message}</InlineAlert> : null}
       <form
         onSubmit={form.handleSubmit(onSubmit)}

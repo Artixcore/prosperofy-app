@@ -15,13 +15,18 @@ const config: Config = {
       },
       colors: {
         surface: {
-          DEFAULT: "rgb(15 17 21)",
-          raised: "rgb(22 25 32)",
-          border: "rgb(42 48 60)",
+          DEFAULT: "rgb(var(--surface) / <alpha-value>)",
+          elevated: "rgb(var(--surface-elevated) / <alpha-value>)",
+          raised: "rgb(var(--surface-raised) / <alpha-value>)",
+          border: "rgb(var(--surface-border) / <alpha-value>)",
+        },
+        content: {
+          primary: "rgb(var(--content-primary) / <alpha-value>)",
+          muted: "rgb(var(--content-muted) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "rgb(99 102 241)",
-          muted: "rgb(129 140 248)",
+          DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+          muted: "rgb(var(--accent-muted) / <alpha-value>)",
         },
       },
     },
