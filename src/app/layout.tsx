@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", preload: false });
 
 export const dynamic = "force-dynamic";
 
