@@ -3,9 +3,11 @@ import { isApiClientError } from "./errors";
 /** User-visible message when server field errors were not mapped onto the form. */
 export function resolveAuthFormCatchMessage(error: unknown, fallback: string): string {
   if (isApiClientError(error)) {
-    return error.message;
-  }
-  if (error instanceof Error && error.message.trim() !== "") {
+    if (error.status === 401) return "Invalid credentials. Please try again.";
+    if (error.status === 419) return "Unable to connect. Please try again.";
+    if (error.code === "NETWORK_ERROR" || error.status === 0) {
+      return "Unable to connect. Please try again.";
+    }
     return error.message;
   }
   return fallback;

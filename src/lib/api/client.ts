@@ -67,13 +67,26 @@ export async function laravelFetch<T>(
     initBody = JSON.stringify(body);
   }
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: initBody,
-    signal,
-    credentials: "include",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method,
+      headers,
+      body: initBody,
+      signal,
+      credentials: "include",
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw error;
+    }
+
+    throw new ApiClientError("Unable to connect. Please try again.", {
+      status: 0,
+      code: "NETWORK_ERROR",
+      retryable: true,
+    });
+  }
 
   const contentType = res.headers.get("content-type") ?? "";
   const isJson = contentType.includes("application/json");
@@ -85,6 +98,16 @@ export async function laravelFetch<T>(
     throw new ApiClientError("Session expired. Please sign in again.", {
       status: 401,
       code: "UNAUTHENTICATED",
+      retryable: false,
+      requestId,
+      correlationId,
+    });
+  }
+
+  if (res.status === 419) {
+    throw new ApiClientError("Unable to connect. Please try again.", {
+      status: 419,
+      code: "HTTP_SESSION_EXPIRED",
       retryable: false,
       requestId,
       correlationId,

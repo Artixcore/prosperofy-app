@@ -2,6 +2,7 @@
 
 export const API = {
   auth: {
+    csrfCookie: "/sanctum/csrf-cookie",
     register: "/api/auth/register",
     login: "/api/auth/login",
     logout: "/api/auth/logout",
