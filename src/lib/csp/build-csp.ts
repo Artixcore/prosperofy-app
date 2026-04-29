@@ -7,7 +7,7 @@ export function buildContentSecurityPolicy(nonce: string): string {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    "font-src 'self'",
+    "font-src 'self' data:",
     `connect-src ${connectSrc()}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",

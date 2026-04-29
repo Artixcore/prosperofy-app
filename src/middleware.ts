@@ -42,7 +42,6 @@ export function middleware(request: NextRequest) {
   if (process.env.NODE_ENV !== "production") {
     return NextResponse.next();
   }
-
   const nonce = globalThis.crypto.randomUUID();
   const csp = buildContentSecurityPolicy(nonce);
   const requestHeaders = new Headers(request.headers);
