@@ -30,6 +30,7 @@ export function useUpdateSettingsMutation() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["app-settings"] });
+      qc.invalidateQueries({ queryKey: ["app-dashboard"] });
     },
   });
 }

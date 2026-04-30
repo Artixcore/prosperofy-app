@@ -59,7 +59,10 @@ export function useConnectPhantomMutation() {
         body,
         token,
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["wallets"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["wallets"] });
+      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
+    },
   });
 }
 
@@ -80,7 +83,10 @@ export function useConnectMetaMaskMutation() {
         body,
         token,
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["wallets"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["wallets"] });
+      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
+    },
   });
 }
 

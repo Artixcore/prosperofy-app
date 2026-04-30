@@ -1,10 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import {
-  useThemePreferenceQuery,
-  useUpdateThemePreferenceMutation,
-} from "@/features/app/use-theme-preference";
+import { useSettingsQuery, useUpdateSettingsMutation } from "@/features/app/use-settings";
+import { useAuth } from "@/lib/auth/session-context";
 
 export type ThemeMode = "light" | "dark" | "system";
 
@@ -22,10 +20,11 @@ function getSystemTheme(): "light" | "dark" {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { token } = useAuth();
   const [theme, setThemeState] = useState<ThemeMode>("system");
   const [systemTheme, setSystemTheme] = useState<"light" | "dark">("light");
-  const themeQuery = useThemePreferenceQuery();
-  const updateTheme = useUpdateThemePreferenceMutation();
+  const settingsQuery = useSettingsQuery();
+  const updateSettings = useUpdateSettingsMutation();
 
   useEffect(() => {
     setSystemTheme(getSystemTheme());
@@ -37,16 +36,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (themeQuery.data?.theme_preference) {
-      setThemeState(themeQuery.data.theme_preference);
-      localStorage.setItem("prosperofy-theme", themeQuery.data.theme_preference);
+    const serverTheme = settingsQuery.data?.settings?.theme;
+    if (serverTheme === "light" || serverTheme === "dark" || serverTheme === "system") {
+      setThemeState(serverTheme);
+      localStorage.setItem("prosperofy-theme", serverTheme);
       return;
     }
     const local = localStorage.getItem("prosperofy-theme");
     if (local === "light" || local === "dark" || local === "system") {
       setThemeState(local);
     }
-  }, [themeQuery.data?.theme_preference]);
+  }, [settingsQuery.data?.settings?.theme]);
 
   const resolvedTheme = theme === "system" ? systemTheme : theme;
 
@@ -56,13 +56,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.style.colorScheme = resolvedTheme;
   }, [resolvedTheme]);
 
-  const setTheme = useCallback((nextTheme: ThemeMode) => {
-    setThemeState(nextTheme);
-    localStorage.setItem("prosperofy-theme", nextTheme);
-    if (themeQuery.isSuccess) {
-      updateTheme.mutate(nextTheme);
-    }
-  }, [themeQuery.isSuccess, updateTheme]);
+  const setTheme = useCallback(
+    (nextTheme: ThemeMode) => {
+      setThemeState(nextTheme);
+      localStorage.setItem("prosperofy-theme", nextTheme);
+      if (token) {
+        updateSettings.mutate({ theme: nextTheme });
+      }
+    },
+    [token, updateSettings],
+  );
 
   const value = useMemo(
     () => ({

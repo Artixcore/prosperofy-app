@@ -30,6 +30,7 @@ export function useUpdateProfileMutation() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["app-profile"] });
+      qc.invalidateQueries({ queryKey: ["app-dashboard"] });
     },
   });
 }

@@ -190,3 +190,28 @@ export type StrategyPatchBody = {
   timeframe?: string;
   definition?: Record<string, unknown>;
 };
+
+/** Payload from `GET /api/app/dashboard` (subset used by the client dashboard). */
+export type AppDashboardPayload = {
+  profile: UserProfile;
+  summary: {
+    wallet_count: number;
+    strategy_count: number;
+    notification_unread_count: number;
+    last_login_at: string | null;
+  };
+  overview: DashboardSummary;
+  ledger_transactions: {
+    items: TransactionRecord[];
+    pagination: PaginationMeta;
+  };
+  wallets: ConnectedWallet[];
+  activity: { items: ActivityItem[] };
+  notifications: { unread_count: number; items: AppNotification[] };
+  strategies: {
+    items: StrategyRecord[];
+    recent_evaluations: unknown[];
+  };
+  analytics: { weekly_activity: Array<{ date: string; count: number }> };
+  widgets: Record<string, unknown>;
+};

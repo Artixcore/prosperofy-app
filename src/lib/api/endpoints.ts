@@ -9,6 +9,7 @@ export const API = {
     me: "/api/v1/auth/me",
   },
   app: {
+    dashboard: "/api/app/dashboard",
     profile: "/api/app/profile",
     settings: "/api/app/settings",
     notifications: {
