@@ -11,11 +11,21 @@ import type { DashboardSummary } from "@/lib/api/types";
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-3xl border border-surface-border bg-surface-elevated p-5 shadow-soft">
+    <section className="min-w-0 rounded-3xl border border-surface-border bg-surface-elevated p-5 shadow-soft">
       <h2 className="text-sm font-medium text-content-muted">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
+}
+
+function ChartShell({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className: string;
+}) {
+  return <div className={`relative w-full min-w-0 ${className}`}>{children}</div>;
 }
 
 export default function DashboardHomePage() {
@@ -63,7 +73,7 @@ export default function DashboardHomePage() {
       </section>
 
       <div className="grid gap-4 lg:grid-cols-12">
-        <div className="space-y-4 lg:col-span-8">
+        <div className="min-w-0 space-y-4 lg:col-span-8">
           {!overview && !dashboard.isError ? (
             <LoadingState label="Loading overview…" />
           ) : null}
@@ -73,13 +83,17 @@ export default function DashboardHomePage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Card title="Activity hours">
                   <p className="text-3xl font-semibold text-content-primary">{overview.activity.hoursThisWeek}h</p>
-                  <div className="mt-4 h-24">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={safeTrend}>
-                        <Bar dataKey="amount" radius={[6, 6, 0, 0]} fill="rgb(var(--accent))" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <ChartShell className="mt-4 h-40 min-h-[160px]">
+                    {safeTrend.length === 0 ? (
+                      <p className="text-sm text-content-muted">No data yet.</p>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={160}>
+                        <BarChart data={safeTrend}>
+                          <Bar dataKey="amount" radius={[6, 6, 0, 0]} fill="rgb(var(--accent))" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </ChartShell>
                 </Card>
                 <Card title="Portfolio snapshot">
                   <p className="text-xs text-content-muted">
@@ -96,20 +110,24 @@ export default function DashboardHomePage() {
                 <p className="text-3xl font-semibold text-content-primary">
                   ${safeSpend.toFixed(2)}
                 </p>
-                <div className="mt-4 h-36">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={safeTrend}>
-                      <defs>
-                        <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="rgb(var(--accent))" stopOpacity={0.5} />
-                          <stop offset="95%" stopColor="rgb(var(--accent))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke="rgb(var(--surface-border))" vertical={false} />
-                      <Area type="monotone" dataKey="amount" stroke="rgb(var(--accent))" fill="url(#spendGradient)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                <ChartShell className="mt-4 h-64 min-h-[240px]">
+                  {safeTrend.length === 0 ? (
+                    <p className="text-sm text-content-muted">No data yet.</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={240}>
+                      <AreaChart data={safeTrend}>
+                        <defs>
+                          <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="rgb(var(--accent))" stopOpacity={0.5} />
+                            <stop offset="95%" stopColor="rgb(var(--accent))" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke="rgb(var(--surface-border))" vertical={false} />
+                        <Area type="monotone" dataKey="amount" stroke="rgb(var(--accent))" fill="url(#spendGradient)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartShell>
               </Card>
             </>
           ) : null}
@@ -137,27 +155,31 @@ export default function DashboardHomePage() {
           </Card>
         </div>
 
-        <div className="space-y-4 lg:col-span-4">
+        <div className="min-w-0 space-y-4 lg:col-span-4">
           {overview ? (
             <Card title="Contract completion">
-              <div className="h-44">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: "Done", value: safeCompletionRate },
-                        { name: "Remaining", value: Math.max(0, 100 - safeCompletionRate) },
-                      ]}
-                      dataKey="value"
-                      innerRadius={55}
-                      outerRadius={80}
-                    >
-                      <Cell fill="rgb(var(--accent))" />
-                      <Cell fill="rgb(var(--surface-border))" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              <ChartShell className="h-64 min-h-[240px]">
+                {safeCompletionRate <= 0 ? (
+                  <p className="text-sm text-content-muted">No data yet.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Done", value: safeCompletionRate },
+                          { name: "Remaining", value: Math.max(0, 100 - safeCompletionRate) },
+                        ]}
+                        dataKey="value"
+                        innerRadius={55}
+                        outerRadius={80}
+                      >
+                        <Cell fill="rgb(var(--accent))" />
+                        <Cell fill="rgb(var(--surface-border))" />
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartShell>
               <p className="-mt-4 text-center text-3xl font-semibold text-content-primary">
                 {safeCompletionRate}%
               </p>
