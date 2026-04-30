@@ -40,6 +40,8 @@ export default function WalletsPage() {
   const connectMetaMask = useConnectMetaMaskMutation();
   const [connectError, setConnectError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"phantom" | "metamask" | null>(null);
+  const wallets = Array.isArray(data) ? data : [];
+  const hasInvalidDataShape = !isPending && !isError && typeof data !== "undefined" && !Array.isArray(data);
 
   async function handlePhantom() {
     setConnectError(null);
@@ -102,15 +104,22 @@ export default function WalletsPage() {
       {connectError ? <InlineAlert tone="error">{connectError}</InlineAlert> : null}
       {isPending ? <LoadingState /> : null}
       {isError ? <ErrorState error={error} onRetry={() => void refetch()} /> : null}
-      {!isPending && !isError && data?.length === 0 ? (
+      {hasInvalidDataShape ? (
+        <ErrorState
+          error={new Error("Unexpected wallets response. Please retry.")}
+          onRetry={() => void refetch()}
+          title="Unable to load wallets"
+        />
+      ) : null}
+      {!isPending && !isError && wallets.length === 0 && !hasInvalidDataShape ? (
         <EmptyState
           title="No wallets connected"
           description="Connect Phantom (Solana) or MetaMask (EVM) to link an address to your account."
         />
       ) : null}
-      {!isPending && !isError && data && data.length > 0 ? (
+      {!isPending && !isError && wallets.length > 0 ? (
         <ul className="space-y-2">
-          {data.map((w) => (
+          {wallets.map((w) => (
             <li key={w.id}>
               <Link
                 href={`/wallets/${w.id}`}

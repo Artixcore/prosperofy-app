@@ -127,7 +127,7 @@ function WalletDetailContent({ id }: { id: string }) {
             </Link>
             <button
               type="button"
-              onClick={() => refreshMut.mutateAsync({})}
+              onClick={() => void refreshMut.mutateAsync({})}
               disabled={refreshMut.isPending}
               className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
             >
