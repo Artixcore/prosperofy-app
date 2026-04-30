@@ -7,26 +7,28 @@ import type { ConnectedWallet, WalletNonceData } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
 
 export function useWalletsQuery() {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["wallets", token],
     queryFn: () =>
       laravelFetch<ConnectedWallet[]>(API.app.wallets.list, {
         token,
       }),
-    enabled: Boolean(token),
+    enabled: Boolean(authReady && isAuthenticated && token),
+    retry: false,
   });
 }
 
 export function useWalletQuery(id: string | null) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["wallet", id, token],
     queryFn: () =>
       laravelFetch<ConnectedWallet>(API.app.wallets.show(id!), {
         token,
       }),
-    enabled: Boolean(token && id),
+    enabled: Boolean(authReady && isAuthenticated && token && id),
+    retry: false,
   });
 }
 
