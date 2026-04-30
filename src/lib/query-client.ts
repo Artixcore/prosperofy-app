@@ -6,18 +6,19 @@ export function makeQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         staleTime: 30_000,
+        refetchOnWindowFocus: false,
         retry: (failureCount, error) => {
           if (isApiClientError(error)) {
-            if ([401, 403, 404].includes(error.status)) return false;
+            if ([401, 403, 404, 419, 422].includes(error.status)) return false;
             if (!error.retryable) return false;
           }
-          return failureCount < 2;
+          return failureCount < 1;
         },
       },
       mutations: {
         retry: (failureCount, error) => {
           if (isApiClientError(error)) {
-            if ([400, 401, 403, 404, 422].includes(error.status)) return false;
+            if ([400, 401, 403, 404, 419, 422].includes(error.status)) return false;
             if (!error.retryable) return false;
           }
           return failureCount < 1;

@@ -7,14 +7,14 @@ import type { UserProfile, UserProfilePatchBody } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
 
 export function useProfileQuery() {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-profile", token],
     queryFn: () =>
       laravelFetch<UserProfile>(API.app.profile, {
         token,
       }),
-    enabled: Boolean(token),
+    enabled: Boolean(authReady && isAuthenticated && token),
   });
 }
 

@@ -20,13 +20,13 @@ function toActivityPath(params?: ActivityQueryParams): string {
 }
 
 export function useActivityQuery(params?: ActivityQueryParams) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-activity", token, params?.perPage, params?.page],
     queryFn: () =>
       laravelFetch<AppListResponse<ActivityItem>>(toActivityPath(params), {
         token,
       }),
-    enabled: Boolean(token),
+    enabled: Boolean(authReady && isAuthenticated && token),
   });
 }

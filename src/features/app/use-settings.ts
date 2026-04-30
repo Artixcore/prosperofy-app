@@ -7,14 +7,14 @@ import type { UserSettingsPayload } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
 
 export function useSettingsQuery() {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-settings", token],
     queryFn: () =>
       laravelFetch<UserSettingsPayload>(API.app.settings, {
         token,
       }),
-    enabled: Boolean(token),
+    enabled: Boolean(authReady && isAuthenticated && token),
   });
 }
 

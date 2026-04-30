@@ -22,14 +22,14 @@ function toNotificationsPath(params?: NotificationsQueryParams): string {
 }
 
 export function useNotificationsQuery(params?: NotificationsQueryParams) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-notifications", token, params?.unread, params?.perPage, params?.page],
     queryFn: () =>
       laravelFetch<AppListResponse<AppNotification>>(toNotificationsPath(params), {
         token,
       }),
-    enabled: Boolean(token),
+    enabled: Boolean(authReady && isAuthenticated && token),
   });
 }
 

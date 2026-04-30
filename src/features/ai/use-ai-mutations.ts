@@ -76,14 +76,14 @@ function isTerminalJobStatus(status: string): boolean {
 }
 
 export function useOrchestrationJobQuery(jobId: string | null) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["orchestration-job", jobId, token],
     queryFn: () =>
       laravelFetch<OrchestrationJob>(API.app.v1.orchestrationJob(jobId!), {
         token,
       }),
-    enabled: Boolean(token && jobId),
+    enabled: Boolean(authReady && isAuthenticated && token && jobId),
     refetchInterval: (query) => {
       const s = query.state.data?.status;
       if (!s || isTerminalJobStatus(s)) return false;

@@ -26,26 +26,26 @@ function addPagination(path: string, params?: PaginationParams): string {
 }
 
 export function useStrategiesQuery(params?: PaginationParams) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-strategies", token, params?.perPage, params?.page],
     queryFn: () =>
       laravelFetch<AppListResponse<StrategyRecord>>(addPagination(API.app.strategies.list, params), {
         token,
       }),
-    enabled: Boolean(token),
+    enabled: Boolean(authReady && isAuthenticated && token),
   });
 }
 
 export function useStrategyQuery(id: string | null) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-strategy", id, token],
     queryFn: () =>
       laravelFetch<StrategyRecord>(API.app.strategies.show(id!), {
         token,
       }),
-    enabled: Boolean(token && id),
+    enabled: Boolean(authReady && isAuthenticated && token && id),
   });
 }
 
@@ -83,7 +83,7 @@ export function useUpdateStrategyMutation(id: string) {
 }
 
 export function useStrategyEvaluationsQuery(strategyId: string | null, params?: PaginationParams) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-strategy-evaluations", strategyId, token, params?.perPage, params?.page],
     queryFn: () =>
@@ -93,6 +93,6 @@ export function useStrategyEvaluationsQuery(strategyId: string | null, params?: 
           token,
         },
       ),
-    enabled: Boolean(token && strategyId),
+    enabled: Boolean(authReady && isAuthenticated && token && strategyId),
   });
 }
