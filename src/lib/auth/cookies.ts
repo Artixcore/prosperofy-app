@@ -4,7 +4,8 @@ const MAX_AGE_SEC = 60 * 60 * 24 * 7;
 /** MVP session flag for middleware (not httpOnly). Token stays in sessionStorage. */
 export function setAuthCookie(): void {
   if (typeof document === "undefined") return;
-  document.cookie = `${AUTH_FLAG}=1; path=/; max-age=${MAX_AGE_SEC}; SameSite=Lax`;
+  const secureFlag = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${AUTH_FLAG}=1; path=/; max-age=${MAX_AGE_SEC}; SameSite=Lax${secureFlag}`;
 }
 
 export function clearAuthCookie(): void {

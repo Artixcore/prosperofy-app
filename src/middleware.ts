@@ -3,8 +3,6 @@ import type { NextRequest } from "next/server";
 import { buildContentSecurityPolicy } from "@/lib/csp/build-csp";
 import { resolveSafeNextPath } from "@/lib/auth/safe-next";
 
-const AUTH_ROUTES = ["/login", "/register"];
-
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/profile",
@@ -34,11 +32,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (AUTH_ROUTES.includes(pathname) && authed) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
+  // `pf_authed` is a non-httpOnly UX hint. Never use it to force auth-route redirects.
 
   if (process.env.NODE_ENV !== "production") {
     return NextResponse.next();
