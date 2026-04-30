@@ -7,6 +7,7 @@ import { useAppDashboardQuery } from "@/features/app/use-app-dashboard";
 import { useNotificationsQuery } from "@/features/app/use-notifications";
 import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
+import type { DashboardSummary } from "@/lib/api/types";
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -21,8 +22,14 @@ export default function DashboardHomePage() {
   const dashboard = useAppDashboardQuery();
   const notifications = useNotificationsQuery({ perPage: 4 });
 
-  const overview = dashboard.data?.overview;
+  const overview: DashboardSummary | null = dashboard.data?.overview ?? null;
+  const safeTrend = Array.isArray(overview?.spending?.trend) ? overview.spending.trend : [];
   const ledgerItems = dashboard.data?.ledger_transactions?.items ?? [];
+  const toAmount = (value: unknown): number => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+  const safeBalance = toAmount(overview?.virtualCard?.currentBalance);
+  const safeSpend = toAmount(overview?.spending?.totalThisWeek);
+  const safeCompletionRate = toAmount(overview?.contractType?.completionRate);
+  const safeUnread = toAmount(overview?.notifications?.unreadCount);
 
   if (dashboard.isPending) {
     return <LoadingState label="Loading your financial dashboard..." />;
@@ -68,7 +75,7 @@ export default function DashboardHomePage() {
                   <p className="text-3xl font-semibold text-content-primary">{overview.activity.hoursThisWeek}h</p>
                   <div className="mt-4 h-24">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={overview.spending.trend}>
+                      <BarChart data={safeTrend}>
                         <Bar dataKey="amount" radius={[6, 6, 0, 0]} fill="rgb(var(--accent))" />
                       </BarChart>
                     </ResponsiveContainer>
@@ -79,7 +86,7 @@ export default function DashboardHomePage() {
                     {overview.virtualCard.maskedNumber ?? "No linked portfolio items yet"}
                   </p>
                   <p className="mt-2 text-3xl font-semibold text-content-primary">
-                    ${overview.virtualCard.currentBalance.toFixed(2)}
+                    ${safeBalance.toFixed(2)}
                   </p>
                   <p className="mt-1 text-sm text-content-muted">{overview.virtualCard.expiry ?? "--/--"}</p>
                 </Card>
@@ -87,11 +94,11 @@ export default function DashboardHomePage() {
 
               <Card title="Total spent this week">
                 <p className="text-3xl font-semibold text-content-primary">
-                  ${overview.spending.totalThisWeek.toFixed(2)}
+                  ${safeSpend.toFixed(2)}
                 </p>
                 <div className="mt-4 h-36">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={overview.spending.trend}>
+                    <AreaChart data={safeTrend}>
                       <defs>
                         <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="rgb(var(--accent))" stopOpacity={0.5} />
@@ -138,8 +145,8 @@ export default function DashboardHomePage() {
                   <PieChart>
                     <Pie
                       data={[
-                        { name: "Done", value: overview.contractType.completionRate },
-                        { name: "Remaining", value: 100 - overview.contractType.completionRate },
+                        { name: "Done", value: safeCompletionRate },
+                        { name: "Remaining", value: Math.max(0, 100 - safeCompletionRate) },
                       ]}
                       dataKey="value"
                       innerRadius={55}
@@ -152,7 +159,7 @@ export default function DashboardHomePage() {
                 </ResponsiveContainer>
               </div>
               <p className="-mt-4 text-center text-3xl font-semibold text-content-primary">
-                {overview.contractType.completionRate}%
+                {safeCompletionRate}%
               </p>
             </Card>
           ) : null}
@@ -172,7 +179,7 @@ export default function DashboardHomePage() {
           </Card>
 
           {overview ? (
-            <Card title={`Notifications (${overview.notifications.unreadCount})`}>
+            <Card title={`Notifications (${safeUnread})`}>
               {notifications.isError ? (
                 <ErrorState
                   error={notifications.error}
