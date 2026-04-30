@@ -37,6 +37,9 @@ export default function RegisterPage() {
   async function onSubmit(data: RegisterInput) {
     setFormError(null);
     try {
+      await laravelFetch<Record<string, never>>(API.auth.csrfCookie, {
+        expectNoContent: true,
+      });
       const payload = await laravelFetch<AuthSuccessPayload>(API.auth.register, {
         method: "POST",
         body: data,

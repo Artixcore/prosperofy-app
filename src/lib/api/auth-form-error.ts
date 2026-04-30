@@ -4,7 +4,7 @@ import { isApiClientError } from "./errors";
 export function resolveAuthFormCatchMessage(error: unknown, fallback: string): string {
   if (isApiClientError(error)) {
     if (error.status === 401) return "Invalid credentials. Please try again.";
-    if (error.status === 419) return "Session expired. Please try again.";
+    if (error.status === 419) return "Session expired. Please refresh and try again.";
     if (error.code === "NETWORK_ERROR" || error.status === 0) {
       return "Connection error. Please try again.";
     }
@@ -15,6 +15,15 @@ export function resolveAuthFormCatchMessage(error: unknown, fallback: string): s
 
 export function logAuthFormErrorInDevelopment(error: unknown): void {
   if (process.env.NODE_ENV === "development") {
-    console.error(error);
+    if (isApiClientError(error)) {
+      console.warn("[auth-form]", {
+        status: error.status,
+        code: error.code,
+        requestId: error.requestId,
+        correlationId: error.correlationId,
+      });
+      return;
+    }
+    console.warn("[auth-form]", { type: "unexpected_error" });
   }
 }

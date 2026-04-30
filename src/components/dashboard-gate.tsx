@@ -8,19 +8,24 @@ import { clearAuthCookie } from "@/lib/auth/cookies";
 import { loadSession } from "@/lib/auth/storage";
 
 export function DashboardGate({ children }: { children: ReactNode }) {
-  const { hydrated, token } = useAuth();
+  const { authStatus } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (authStatus === "loading") return;
+    if (authStatus !== "authenticated") {
+      clearAuthCookie();
+      router.replace("/login");
+      return;
+    }
     const s = loadSession();
-    if (!s?.token || !token) {
+    if (!s?.token) {
       clearAuthCookie();
       router.replace("/login");
     }
-  }, [hydrated, token, router]);
+  }, [authStatus, router]);
 
-  if (!hydrated || !token) {
+  if (authStatus !== "authenticated") {
     return (
       <div className="min-h-screen bg-surface">
         <LoadingState label="Restoring session…" />

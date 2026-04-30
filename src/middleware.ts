@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { buildContentSecurityPolicy } from "@/lib/csp/build-csp";
+import { resolveSafeNextPath } from "@/lib/auth/safe-next";
 
 const AUTH_ROUTES = ["/login", "/register"];
 
@@ -29,7 +30,7 @@ export function middleware(request: NextRequest) {
   if (isProtectedPath(pathname) && !authed) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", pathname);
+    url.searchParams.set("next", resolveSafeNextPath(pathname));
     return NextResponse.redirect(url);
   }
 

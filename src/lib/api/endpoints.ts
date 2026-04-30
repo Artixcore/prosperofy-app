@@ -41,14 +41,14 @@ export const API = {
       txBroadcast: (id: string) =>
         `/api/app/wallets/${id}/transactions/broadcast` as const,
     },
-    v1: {
-      analysisMarket: "/api/app/v1/analysis/market",
-      strategyGenerate: "/api/app/v1/strategy/generate",
-      riskScore: "/api/app/v1/risk/score",
-      quantBacktestTrend: "/api/app/v1/quant/backtest/trend",
-      strategyEvaluateDispatch: "/api/app/v1/strategy/evaluate/dispatch",
+    ai: {
+      analysisMarket: "/api/app/analysis/market",
+      strategyGenerate: "/api/app/strategy/generate",
+      riskScore: "/api/app/risk/score",
+      quantBacktestTrend: "/api/app/quant/backtest/trend",
+      strategyEvaluateDispatch: "/api/app/strategy/evaluate/dispatch",
       orchestrationJob: (jobId: string) =>
-        `/api/app/v1/orchestration/jobs/${jobId}` as const,
+        `/api/app/orchestration/jobs/${jobId}` as const,
     },
   },
 } as const;

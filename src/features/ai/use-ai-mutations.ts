@@ -10,7 +10,7 @@ export function useMarketAnalysisMutation() {
   const { token } = useAuth();
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>
-      laravelFetch<Record<string, unknown>>(API.app.v1.analysisMarket, {
+      laravelFetch<Record<string, unknown>>(API.app.ai.analysisMarket, {
         method: "POST",
         body,
         token,
@@ -22,7 +22,7 @@ export function useStrategyGenerateMutation() {
   const { token } = useAuth();
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>
-      laravelFetch<Record<string, unknown>>(API.app.v1.strategyGenerate, {
+      laravelFetch<Record<string, unknown>>(API.app.ai.strategyGenerate, {
         method: "POST",
         body,
         token,
@@ -34,7 +34,7 @@ export function useRiskScoreMutation() {
   const { token } = useAuth();
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>
-      laravelFetch<Record<string, unknown>>(API.app.v1.riskScore, {
+      laravelFetch<Record<string, unknown>>(API.app.ai.riskScore, {
         method: "POST",
         body,
         token,
@@ -46,7 +46,7 @@ export function useQuantBacktestMutation() {
   const { token } = useAuth();
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>
-      laravelFetch<Record<string, unknown>>(API.app.v1.quantBacktestTrend, {
+      laravelFetch<Record<string, unknown>>(API.app.ai.quantBacktestTrend, {
         method: "POST",
         body,
         token,
@@ -63,7 +63,7 @@ export function useStrategyEvaluateDispatchMutation() {
         job_id?: string;
         correlation_id?: string;
         status?: string;
-      }>(API.app.v1.strategyEvaluateDispatch, {
+      }>(API.app.ai.strategyEvaluateDispatch, {
         method: "POST",
         body,
         token,
@@ -75,18 +75,21 @@ function isTerminalJobStatus(status: string): boolean {
   return ["completed", "failed", "cancelled"].includes(status);
 }
 
+const MAX_JOB_POLL_UPDATES = 120;
+
 export function useOrchestrationJobQuery(jobId: string | null) {
   const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["orchestration-job", jobId, token],
     queryFn: () =>
-      laravelFetch<OrchestrationJob>(API.app.v1.orchestrationJob(jobId!), {
+      laravelFetch<OrchestrationJob>(API.app.ai.orchestrationJob(jobId!), {
         token,
       }),
     enabled: Boolean(authReady && isAuthenticated && token && jobId),
     refetchInterval: (query) => {
       const s = query.state.data?.status;
       if (!s || isTerminalJobStatus(s)) return false;
+      if (query.state.dataUpdateCount >= MAX_JOB_POLL_UPDATES) return false;
       return 2500;
     },
   });

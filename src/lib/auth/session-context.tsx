@@ -23,12 +23,15 @@ import {
 } from "@/lib/auth/storage";
 import { AUTH_UNAUTHORIZED_EVENT } from "@/lib/api/client";
 
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
 type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   hydrated: boolean;
   authReady: boolean;
   isAuthenticated: boolean;
+  authStatus: AuthStatus;
   login: (payload: AuthSuccessPayload) => void;
   logout: () => Promise<void>;
   setFromSession: () => void;
@@ -43,6 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const isAuthenticated = Boolean(token && user);
   const authReady = hydrated;
+  const authStatus: AuthStatus = !hydrated
+    ? "loading"
+    : isAuthenticated
+      ? "authenticated"
+      : "unauthenticated";
 
   const applySession = useCallback((s: StoredSession) => {
     setUser(s.user);
@@ -127,11 +135,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       hydrated,
       authReady,
       isAuthenticated,
+      authStatus,
       login,
       logout,
       setFromSession,
     }),
-    [user, token, hydrated, authReady, isAuthenticated, login, logout, setFromSession],
+    [user, token, hydrated, authReady, isAuthenticated, authStatus, login, logout, setFromSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

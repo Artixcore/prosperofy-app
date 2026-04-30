@@ -114,7 +114,7 @@ export default function WalletsPage() {
       ) : null}
       {!isPending && !isError && wallets.length === 0 && !hasInvalidDataShape ? (
         <EmptyState
-          title="No wallets connected"
+          title="No wallet connected yet"
           description="Connect Phantom (Solana) or MetaMask (EVM) to link an address to your account."
         />
       ) : null}

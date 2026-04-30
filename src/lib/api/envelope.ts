@@ -44,6 +44,14 @@ function asMessage(value: unknown, fallback: string): string {
   return fallback;
 }
 
+function fallbackMessageForStatus(status: number): string {
+  if (status === 401) return "Please sign in again.";
+  if (status === 403) return "You do not have permission to view this.";
+  if (status === 419) return "Session expired. Please refresh and try again.";
+  if (status >= 500) return "Something went wrong. Please try again.";
+  return "Request failed. Please try again.";
+}
+
 export function parseEnvelope<T>(json: unknown, httpStatus: number, context: EnvelopeContext = {}): T {
   if (!json || typeof json !== "object") {
     throw new ApiClientError("Invalid response from server.", {
@@ -79,7 +87,7 @@ export function parseEnvelope<T>(json: unknown, httpStatus: number, context: Env
   const fieldErrors = body.errors ?? {};
   const message = asMessage(
     body.message,
-    httpStatus === 403 ? "You do not have permission to perform this action." : "Request failed.",
+    fallbackMessageForStatus(httpStatus),
   );
 
   throw new ApiClientError(message, {

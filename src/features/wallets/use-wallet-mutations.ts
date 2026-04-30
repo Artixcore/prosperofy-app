@@ -3,8 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
+import { ApiClientError } from "@/lib/api/errors";
 import type { ConnectedWallet, WalletNonceData } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
+
+function assertAuthenticatedToken(token: string | null): string {
+  if (token) return token;
+  throw new ApiClientError("Please sign in again.", {
+    status: 401,
+    code: "UNAUTHENTICATED",
+    retryable: false,
+  });
+}
 
 export function useWalletsQuery() {
   const { token, authReady, isAuthenticated } = useAuth();
@@ -33,14 +43,22 @@ export function useWalletQuery(id: string | null) {
 }
 
 export function useWalletNonceMutation() {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useMutation({
-    mutationFn: (provider: "phantom" | "metamask") =>
-      laravelFetch<WalletNonceData>(API.app.wallets.nonce, {
+    mutationFn: (provider: "phantom" | "metamask") => {
+      if (!authReady || !isAuthenticated) {
+        throw new ApiClientError("Please sign in again.", {
+          status: 401,
+          code: "UNAUTHENTICATED",
+          retryable: false,
+        });
+      }
+      return laravelFetch<WalletNonceData>(API.app.wallets.nonce, {
         method: "POST",
         body: { provider },
-        token,
-      }),
+        token: assertAuthenticatedToken(token),
+      });
+    },
   });
 }
 
@@ -59,7 +77,7 @@ export function useConnectPhantomMutation() {
       laravelFetch<ConnectedWallet>(API.app.wallets.connectPhantom, {
         method: "POST",
         body,
-        token,
+        token: assertAuthenticatedToken(token),
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["wallets"] });
@@ -83,7 +101,7 @@ export function useConnectMetaMaskMutation() {
       laravelFetch<ConnectedWallet>(API.app.wallets.connectMetaMask, {
         method: "POST",
         body,
-        token,
+        token: assertAuthenticatedToken(token),
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["wallets"] });
@@ -99,7 +117,7 @@ export function useBalanceRefreshMutation(walletId: string) {
       laravelFetch<Record<string, unknown>>(API.app.wallets.balanceRefresh(walletId), {
         method: "POST",
         body: body ?? {},
-        token,
+        token: assertAuthenticatedToken(token),
       }),
   });
 }
@@ -111,7 +129,7 @@ export function usePrepareTxMutation(walletId: string) {
       laravelFetch<Record<string, unknown>>(API.app.wallets.txPrepare(walletId), {
         method: "POST",
         body,
-        token,
+        token: assertAuthenticatedToken(token),
       }),
   });
 }
@@ -123,7 +141,7 @@ export function useSimulateTxMutation(walletId: string) {
       laravelFetch<Record<string, unknown>>(API.app.wallets.txSimulate(walletId), {
         method: "POST",
         body,
-        token,
+        token: assertAuthenticatedToken(token),
       }),
   });
 }
@@ -138,7 +156,7 @@ export function useBroadcastTxMutation(walletId: string) {
       laravelFetch<Record<string, unknown>>(API.app.wallets.txBroadcast(walletId), {
         method: "POST",
         body,
-        token,
+        token: assertAuthenticatedToken(token),
       }),
   });
 }

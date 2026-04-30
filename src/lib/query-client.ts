@@ -9,7 +9,7 @@ export function makeQueryClient(): QueryClient {
         refetchOnWindowFocus: false,
         retry: (failureCount, error) => {
           if (isApiClientError(error)) {
-            if ([401, 403, 404, 419, 422].includes(error.status)) return false;
+            if ([401, 403, 404, 419, 422, 429].includes(error.status)) return false;
             if (!error.retryable) return false;
           }
           return failureCount < 1;
@@ -18,7 +18,7 @@ export function makeQueryClient(): QueryClient {
       mutations: {
         retry: (failureCount, error) => {
           if (isApiClientError(error)) {
-            if ([400, 401, 403, 404, 419, 422].includes(error.status)) return false;
+            if ([400, 401, 403, 404, 419, 422, 429].includes(error.status)) return false;
             if (!error.retryable) return false;
           }
           return failureCount < 1;

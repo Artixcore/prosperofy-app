@@ -13,6 +13,7 @@ import {
   resolveAuthFormCatchMessage,
 } from "@/lib/api/auth-form-error";
 import { useAuth } from "@/lib/auth/session-context";
+import { resolveSafeNextPath } from "@/lib/auth/safe-next";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth";
 import { mergeServerFieldErrors } from "@/lib/validation/merge-server-errors";
 import { FormField } from "@/components/system/form-field";
@@ -23,7 +24,7 @@ import { LoadingState } from "@/components/system/loading-state";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = resolveSafeNextPath(searchParams.get("next"));
   const { login } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -48,7 +49,7 @@ function LoginForm() {
         body: data,
       });
       login(payload);
-      router.replace(next.startsWith("/") ? next : "/dashboard");
+      router.replace(next);
     } catch (e) {
       logAuthFormErrorInDevelopment(e);
       if (!mergeServerFieldErrors(e, setError)) {

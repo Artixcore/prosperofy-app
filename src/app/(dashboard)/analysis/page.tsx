@@ -56,7 +56,7 @@ export default function AnalysisPage() {
     <>
       <PageHeader
         title="Market analysis"
-        description="POST /api/app/v1/analysis/market — Laravel orchestrates the AI service; the browser never calls it directly."
+        description="POST /api/app/analysis/market — Laravel orchestrates the AI service; the browser never calls it directly."
       />
       {banner ? <InlineAlert tone="error">{banner}</InlineAlert> : null}
       <form

@@ -37,6 +37,7 @@ export type LaravelFetchOptions = {
   token?: string | null;
   signal?: AbortSignal;
   expectNoContent?: boolean;
+  _csrfRetried?: boolean;
 };
 
 function randomId(): string {
@@ -67,6 +68,30 @@ function isMutatingMethod(method: LaravelFetchOptions["method"]): boolean {
   return method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
 }
 
+function getTimeoutMs(): number {
+  const raw = process.env.NEXT_PUBLIC_API_TIMEOUT_MS;
+  if (!raw) return 15_000;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 15_000;
+  return Math.floor(parsed);
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
+}
+
+function statusMessage(status: number): string {
+  if (status === 400) return "Request is invalid. Please review your input and try again.";
+  if (status === 401) return "Please sign in again.";
+  if (status === 403) return "You do not have permission to view this.";
+  if (status === 404) return "Requested data was not found.";
+  if (status === 419) return "Session expired. Please refresh and try again.";
+  if (status === 422) return "Some fields need your attention.";
+  if (status === 429) return "Too many requests. Please wait and try again.";
+  if (status >= 500) return "Something went wrong. Please try again.";
+  return "Request failed. Please try again.";
+}
+
 function logApiResponseIssue(details: {
   endpoint: string;
   status: number;
@@ -79,6 +104,27 @@ function logApiResponseIssue(details: {
   console.warn("[api-client] response issue", details);
 }
 
+async function refreshCsrfCookie(signal?: AbortSignal): Promise<void> {
+  const url = `${getBaseUrl()}${"/sanctum/csrf-cookie"}`;
+  const res = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+      "X-Correlation-Id": randomId(),
+    },
+    signal,
+  });
+  if (!res.ok) {
+    throw new ApiClientError("Session expired. Please refresh and try again.", {
+      status: 419,
+      code: "CSRF_REFRESH_FAILED",
+      retryable: false,
+    });
+  }
+}
+
 /**
  * Typed fetch to Laravel core only. Expects Prosperofy JSON envelope on success bodies.
  */
@@ -86,7 +132,7 @@ export async function laravelFetch<T>(
   path: string,
   options: LaravelFetchOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, token, signal, expectNoContent = false } = options;
+  const { method = "GET", body, token, signal, expectNoContent = false, _csrfRetried = false } = options;
   const url = `${getBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 
   const headers: Record<string, string> = {
@@ -112,18 +158,37 @@ export async function laravelFetch<T>(
     }
   }
 
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    timeoutController.abort();
+  }, getTimeoutMs());
+  if (typeof (timeoutId as { unref?: () => void }).unref === "function") {
+    (timeoutId as { unref: () => void }).unref();
+  }
+  const combinedController = new AbortController();
+  const onAbort = () => combinedController.abort();
+  signal?.addEventListener("abort", onAbort, { once: true });
+  timeoutController.signal.addEventListener("abort", onAbort, { once: true });
+
   let res: Response;
   try {
     res = await fetch(url, {
       method,
       headers,
       body: initBody,
-      signal,
+      signal: combinedController.signal,
       credentials: "include",
     });
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw error;
+    if (isAbortError(error)) {
+      if (signal?.aborted) {
+        throw error;
+      }
+      throw new ApiClientError("Request timed out. Please try again.", {
+        status: 0,
+        code: "TIMEOUT",
+        retryable: true,
+      });
     }
 
     throw new ApiClientError("Unable to connect. Please try again.", {
@@ -131,6 +196,10 @@ export async function laravelFetch<T>(
       code: "NETWORK_ERROR",
       retryable: true,
     });
+  } finally {
+    clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", onAbort);
+    timeoutController.signal.removeEventListener("abort", onAbort);
   }
 
   const contentType = res.headers.get("content-type") ?? "";
@@ -142,7 +211,7 @@ export async function laravelFetch<T>(
 
   if (res.status === 401) {
     emitUnauthorizedEvent();
-    throw new ApiClientError("Session expired. Please sign in again.", {
+    throw new ApiClientError(statusMessage(401), {
       status: 401,
       code: "UNAUTHENTICATED",
       retryable: false,
@@ -152,7 +221,21 @@ export async function laravelFetch<T>(
   }
 
   if (res.status === 419) {
-    throw new ApiClientError("Session expired. Please try again.", {
+    if (isMutatingMethod(method) && !_csrfRetried) {
+      try {
+        await refreshCsrfCookie(signal);
+      } catch {
+        throw new ApiClientError(statusMessage(419), {
+          status: 419,
+          code: "HTTP_SESSION_EXPIRED",
+          retryable: false,
+          requestId,
+          correlationId,
+        });
+      }
+      return laravelFetch<T>(path, { ...options, _csrfRetried: true });
+    }
+    throw new ApiClientError(statusMessage(419), {
       status: 419,
       code: "HTTP_SESSION_EXPIRED",
       retryable: false,
@@ -161,11 +244,11 @@ export async function laravelFetch<T>(
     });
   }
 
-  if (expectNoContent && (res.status === 204 || hasExplicitZeroLength)) {
+  if (expectNoContent && (res.status === 204 || res.status === 205 || hasExplicitZeroLength)) {
     return {} as T;
   }
 
-  if (res.status === 204) {
+  if (res.status === 204 || res.status === 205) {
     return {} as T;
   }
 
@@ -209,11 +292,7 @@ export async function laravelFetch<T>(
     });
 
     throw new ApiClientError(
-      res.status >= 500
-        ? "The server is temporarily unavailable. Please try again shortly."
-        : res.status === 403
-          ? "You do not have permission to perform this action."
-          : "Unexpected response from server. Please try again.",
+      res.status === 401 ? "Please sign in again." : statusMessage(res.status),
       {
       status: res.status,
       code: "NON_JSON_RESPONSE",
@@ -236,7 +315,7 @@ export async function laravelFetch<T>(
       correlationId,
       code: "INVALID_JSON_RESPONSE",
     });
-    throw new ApiClientError("Unexpected response from server. Please try again.", {
+    throw new ApiClientError(statusMessage(res.status), {
       status: res.status,
       code: "INVALID_JSON_RESPONSE",
       retryable: res.status >= 500,
@@ -246,20 +325,13 @@ export async function laravelFetch<T>(
   }
 
   if (!res.ok && (!json || typeof json !== "object")) {
-    throw new ApiClientError(
-      res.status === 403
-        ? "You do not have permission to perform this action."
-        : res.status >= 500
-          ? "The server is temporarily unavailable. Please try again shortly."
-          : "Request failed.",
-      {
+    throw new ApiClientError(statusMessage(res.status), {
       status: res.status,
       code: "HTTP_ERROR",
       retryable: res.status >= 500,
       requestId,
       correlationId,
-      },
-    );
+    });
   }
 
   return parseEnvelope<T>(json, res.status, {
