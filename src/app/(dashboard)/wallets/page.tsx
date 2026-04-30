@@ -14,7 +14,7 @@ import {
   useWalletsQuery,
 } from "@/features/wallets/use-wallet-mutations";
 
-function resolveWalletConnectError(error: unknown, wallet: "Phantom" | "MetaMask"): string {
+function resolveWalletConnectError(error: unknown): string {
   if (error instanceof Error && typeof error.message === "string") {
     const message = error.message.trim();
     if (message !== "") {
@@ -24,13 +24,14 @@ function resolveWalletConnectError(error: unknown, wallet: "Phantom" | "MetaMask
         || message.includes("No Ethereum account available.")
         || message.includes("Could not read Phantom public key.")
         || message.includes("Unexpected signature format from wallet.")
+        || message.includes("Could not start wallet connection.")
       ) {
         return message;
       }
     }
   }
 
-  return `${wallet} connection failed. Please try again.`;
+  return "Could not start wallet connection. Please try again.";
 }
 
 export default function WalletsPage() {
@@ -53,7 +54,7 @@ export default function WalletsPage() {
         async (body) => connectPhantom.mutateAsync(body),
       );
     } catch (e) {
-      setConnectError(resolveWalletConnectError(e, "Phantom"));
+      setConnectError(resolveWalletConnectError(e));
     } finally {
       setBusy(null);
     }
@@ -69,7 +70,7 @@ export default function WalletsPage() {
         async (body) => connectMetaMask.mutateAsync(body),
       );
     } catch (e) {
-      setConnectError(resolveWalletConnectError(e, "MetaMask"));
+      setConnectError(resolveWalletConnectError(e));
     } finally {
       setBusy(null);
     }

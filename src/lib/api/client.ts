@@ -11,7 +11,11 @@ function getBaseUrl(): string {
   if (!base) {
     throw new Error("NEXT_PUBLIC_LARAVEL_API_BASE_URL is not configured.");
   }
-  return base.replace(/\/+$/, "");
+  const normalized = base.replace(/\/+$/, "");
+  if (/\/api$/i.test(normalized)) {
+    throw new Error("NEXT_PUBLIC_LARAVEL_API_BASE_URL must not include /api suffix.");
+  }
+  return normalized;
 }
 
 function emitUnauthorizedEvent(): void {
