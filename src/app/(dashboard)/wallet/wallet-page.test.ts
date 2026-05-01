@@ -1,12 +1,13 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { createElement } from "react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import WalletPage from "./page";
 
 const createMock = vi.fn();
 
 vi.mock("next/link", () => ({
-  default: ({ children }: any) => children,
+  default: ({ children }: { children: ReactNode }) => children,
 }));
 
 vi.mock("@/features/wallets/use-wallet-mutations", () => ({
@@ -24,6 +25,10 @@ vi.mock("@/features/wallets/use-wallet-mutations", () => ({
   useAppWalletChallengeMutation: () => ({ mutateAsync: vi.fn() }),
   useAppWalletConnectMutation: () => ({ mutateAsync: vi.fn() }),
   useCreateWflWalletMutation: () => ({ mutateAsync: createMock }),
+}));
+
+vi.mock("@/components/system/toast-context", () => ({
+  useToast: () => ({ pushToast: vi.fn() }),
 }));
 
 describe("wallet dashboard", () => {

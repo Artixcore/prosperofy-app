@@ -7,12 +7,12 @@ export function LoadingState({
 }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-3 py-16 text-zinc-400 ${className}`}
+      className={`flex flex-col items-center justify-center gap-3 py-16 text-content-muted ${className}`}
       role="status"
       aria-live="polite"
     >
       <div
-        className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-accent"
+        className="h-8 w-8 animate-spin rounded-full border-2 border-surface-border border-t-accent"
         aria-hidden
       />
       <p className="text-sm">{label}</p>

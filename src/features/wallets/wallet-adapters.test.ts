@@ -3,7 +3,7 @@ import { connectMetaMaskFlow, connectPhantomFlow } from "./wallet-adapters";
 
 describe("wallet adapters", () => {
   it("renders Phantom unavailable state via error", async () => {
-    (globalThis as any).window = {};
+    (globalThis as { window: unknown }).window = {};
     await expect(
       connectPhantomFlow(
         async () => ({ challenge_id: 1, message: "m" }),
@@ -13,7 +13,7 @@ describe("wallet adapters", () => {
   });
 
   it("renders MetaMask unavailable state via error", async () => {
-    (globalThis as any).window = {};
+    (globalThis as { window: unknown }).window = {};
     await expect(
       connectMetaMaskFlow(
         async () => ({ challenge_id: 1, message: "m" }),
@@ -26,7 +26,7 @@ describe("wallet adapters", () => {
     const requestMock = vi.fn()
       .mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"])
       .mockResolvedValueOnce("0xabcd");
-    (globalThis as any).window = {
+    (globalThis as { window: unknown }).window = {
       ethereum: { request: requestMock },
     };
     const connectApi = vi.fn().mockResolvedValue({});
@@ -41,7 +41,7 @@ describe("wallet adapters", () => {
     const requestMock = vi.fn()
       .mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"])
       .mockResolvedValueOnce("invalid");
-    (globalThis as any).window = {
+    (globalThis as { window: unknown }).window = {
       ethereum: { request: requestMock },
     };
     await expect(

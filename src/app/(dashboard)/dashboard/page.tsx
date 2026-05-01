@@ -1,261 +1,200 @@
 "use client";
 
 import Link from "next/link";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
-import { CreditCard, FilePlus2, Wallet } from "lucide-react";
-import { useAppDashboardQuery } from "@/features/app/use-app-dashboard";
-import { useNotificationsQuery } from "@/features/app/use-notifications";
+import { CreditCard, ShieldCheck, Wallet } from "lucide-react";
 import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
-import { SafeChartContainer } from "@/components/system/safe-chart-container";
-import type { DashboardSummary } from "@/lib/api/types";
+import { InlineAlert } from "@/components/system/inline-alert";
+import { useToast } from "@/components/system/toast-context";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { formatChainName, formatWalletProvider } from "@/lib/formatters";
+import {
+  useAppWalletOverviewQuery,
+  useCreateWflWalletMutation,
+} from "@/features/wallets/use-wallet-mutations";
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="min-w-0 rounded-3xl border border-surface-border bg-surface-elevated p-5 shadow-soft">
-      <h2 className="text-sm font-medium text-content-muted">{title}</h2>
+    <section className="min-w-0 rounded-2xl border border-surface-border bg-surface-elevated p-5 shadow-soft">
+      <h2 className="text-base font-semibold text-content-primary">{title}</h2>
+      {description ? <p className="mt-1 text-sm text-content-muted">{description}</p> : null}
       <div className="mt-4">{children}</div>
     </section>
   );
 }
 
-function ChartShell({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className: string;
-}) {
-  return <div className={`relative w-full min-w-0 ${className}`}>{children}</div>;
-}
-
-function asFiniteNumber(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-type TrendPoint = { date: string; amount: number };
-
-function toTrendPoints(value: unknown): TrendPoint[] {
-  if (!Array.isArray(value)) return [];
-  return value
-    .map((point) => {
-      if (!point || typeof point !== "object") return null;
-      const record = point as Record<string, unknown>;
-      const date = typeof record.date === "string" ? record.date : "";
-      const amount = asFiniteNumber(record.amount);
-      if (!date) return null;
-      return { date, amount };
-    })
-    .filter((point): point is TrendPoint => point !== null);
-}
-
 export default function DashboardHomePage() {
-  const dashboard = useAppDashboardQuery();
-  const notifications = useNotificationsQuery({ perPage: 4 });
+  const walletOverview = useAppWalletOverviewQuery();
+  const createWflWallet = useCreateWflWalletMutation();
+  const { pushToast } = useToast();
 
-  const overview: DashboardSummary | null = dashboard.data?.overview ?? null;
-  const safeTrend = toTrendPoints(overview?.spending?.trend);
-  const ledgerItems = dashboard.data?.ledger_transactions?.items ?? [];
-  const safeBalance = asFiniteNumber(overview?.virtualCard?.currentBalance);
-  const safeSpend = asFiniteNumber(overview?.spending?.totalThisWeek);
-  const safeCompletionRate = asFiniteNumber(overview?.contractType?.completionRate);
-  const safeUnread = asFiniteNumber(overview?.notifications?.unreadCount);
-  const safeActivityHours = asFiniteNumber(overview?.activity?.hoursThisWeek);
-
-  if (dashboard.isPending) {
-    return <LoadingState label="Loading your financial dashboard..." />;
+  async function handleCreateWallet() {
+    try {
+      await createWflWallet.mutateAsync();
+      pushToast({
+        tone: "success",
+        title: "WFL Wallet created",
+        description: "Your wallet summary has been refreshed.",
+      });
+    } catch (error) {
+      pushToast({
+        tone: "error",
+        title: "Wallet creation failed",
+        description: normalizeApiError(error),
+      });
+    }
   }
 
+  if (walletOverview.isPending) {
+    return <LoadingState label="Loading your wallet dashboard..." />;
+  }
+
+  const data = walletOverview.data;
+  const wflWallet = data?.wfl_wallet;
+  const connectedWallets = data?.connected_wallets ?? [];
+  const activity = data?.recent_activity ?? [];
+
   return (
-    <div className="space-y-4">
-      {dashboard.isError ? (
+    <div className="space-y-5">
+      {walletOverview.isError ? (
         <ErrorState
-          error={dashboard.error}
+          error={walletOverview.error}
           title="Dashboard data unavailable"
-          onRetry={() => void dashboard.refetch()}
+          onRetry={() => void walletOverview.refetch()}
         />
       ) : null}
 
-      <section className="rounded-3xl border border-surface-border bg-surface-elevated p-5 shadow-soft">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section className="rounded-2xl border border-surface-border bg-surface-elevated p-5 shadow-soft">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm text-content-muted">Client Dashboard</p>
+            <p className="text-sm text-content-muted">Wallet Dashboard</p>
             <h1 className="mt-1 text-2xl font-semibold text-content-primary">Welcome back to Prosperofy</h1>
+            <p className="mt-1 text-sm text-content-muted">
+              Monitor WFL status, connected wallets, assets, and wallet activity.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="rounded-xl border border-surface-border px-3 py-2 text-sm text-content-muted" type="button">
-              20-27 Jan 2026
-            </button>
-            <button className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white" type="button">
-              Add Widget
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/wallet" className="rounded-xl border border-surface-border px-3 py-2 text-sm text-content-primary hover:bg-surface-raised">
+              View Wallets
+            </Link>
+            <button
+              className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              onClick={() => void handleCreateWallet()}
+              disabled={createWflWallet.isPending}
+            >
+              {createWflWallet.isPending ? "Creating..." : "Create WFL Wallet"}
             </button>
           </div>
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-12">
-        <div className="min-w-0 space-y-4 lg:col-span-8">
-          {!overview && !dashboard.isError ? (
-            <LoadingState label="Loading overview…" />
-          ) : null}
+      {!data ? <InlineAlert>Wallet data is not available right now.</InlineAlert> : null}
 
-          {overview ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Card title="Activity hours">
-                  <p className="text-3xl font-semibold text-content-primary">{safeActivityHours}h</p>
-                  <ChartShell className="mt-4">
-                    {safeTrend.length === 0 ? (
-                      <p className="text-sm text-content-muted">No data yet.</p>
-                    ) : (
-                      <SafeChartContainer size="small">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={240}>
-                          <BarChart data={safeTrend}>
-                            <Bar dataKey="amount" radius={[6, 6, 0, 0]} fill="rgb(var(--accent))" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </SafeChartContainer>
-                    )}
-                  </ChartShell>
-                </Card>
-                <Card title="Portfolio snapshot">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card title="Total Balance" description="Fiat valuation is not provided by current API.">
+          <p className="text-3xl font-semibold text-content-primary">Balance unavailable</p>
+          <p className="mt-2 text-sm text-content-muted">Use Assets to view per-token balances.</p>
+        </Card>
+
+        <Card title="WFL Wallet Status" description="Internal wallet managed by Laravel core.">
+          <p className="text-2xl font-semibold text-content-primary">{wflWallet?.status ?? "No WFL Wallet yet"}</p>
+          <p className="mt-2 text-sm text-content-muted">
+            Supported chains: {data?.supported_chains?.map((chain) => formatChainName(chain)).join(", ") ?? "Not available"}
+          </p>
+        </Card>
+
+        <Card title="Connected Wallets" description="External wallet connections verified by challenge signatures.">
+          <p className="text-3xl font-semibold text-content-primary">{connectedWallets.length}</p>
+          <p className="mt-2 text-sm text-content-muted">
+            {connectedWallets.length === 0 ? "No external wallets connected." : "Connections are ready."}
+          </p>
+        </Card>
+
+        <Card title="Assets" description="Token list from /api/app/wallet/assets.">
+          <p className="text-sm text-content-muted">
+            View token balances and network details from your wallet assets page.
+          </p>
+          <Link
+            href="/wallet/assets"
+            className="mt-3 inline-flex rounded-lg border border-surface-border px-3 py-2 text-sm text-content-primary hover:bg-surface-raised"
+          >
+            View Assets
+          </Link>
+        </Card>
+
+        <Card title="Recent Activity" description="Last wallet activity records from Laravel.">
+          {activity.length === 0 ? (
+            <p className="text-sm text-content-muted">No wallet activity found yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {activity.slice(0, 4).map((item) => (
+                <li key={item.id} className="rounded-lg border border-surface-border bg-surface px-3 py-2">
+                  <p className="text-sm font-medium text-content-primary">{item.action}</p>
                   <p className="text-xs text-content-muted">
-                    {overview.virtualCard.maskedNumber ?? "No linked portfolio items yet"}
+                    {formatChainName(item.chain)} • {new Date(item.created_at).toLocaleString()}
                   </p>
-                  <p className="mt-2 text-3xl font-semibold text-content-primary">
-                    ${safeBalance.toFixed(2)}
-                  </p>
-                  <p className="mt-1 text-sm text-content-muted">{overview.virtualCard.expiry ?? "--/--"}</p>
-                </Card>
-              </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link href="/wallet/activity" className="mt-3 inline-flex rounded-lg border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">
+            View Activity
+          </Link>
+        </Card>
 
-              <Card title="Total spent this week">
-                <p className="text-3xl font-semibold text-content-primary">
-                  ${safeSpend.toFixed(2)}
-                </p>
-                <ChartShell className="mt-4">
-                  {safeTrend.length === 0 ? (
-                    <p className="text-sm text-content-muted">No data yet.</p>
-                  ) : (
-                    <SafeChartContainer size="large">
-                      <ResponsiveContainer width="100%" height="100%" minWidth={240}>
-                        <AreaChart data={safeTrend}>
-                          <defs>
-                            <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="rgb(var(--accent))" stopOpacity={0.5} />
-                              <stop offset="95%" stopColor="rgb(var(--accent))" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid stroke="rgb(var(--surface-border))" vertical={false} />
-                          <Area type="monotone" dataKey="amount" stroke="rgb(var(--accent))" fill="url(#spendGradient)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </SafeChartContainer>
-                  )}
-                </ChartShell>
-              </Card>
-            </>
-          ) : null}
-
-          <Card title="Recent ledger activity">
-            {dashboard.isError ? (
-              <p className="text-sm text-content-muted">Load the dashboard above to see transactions.</p>
-            ) : ledgerItems.length === 0 ? (
-              <p className="text-sm text-content-muted">No transactions yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {ledgerItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between rounded-xl bg-surface-raised p-3">
-                    <div>
-                      <p className="text-sm font-medium text-content-primary">{item.merchant ?? "Transaction"}</p>
-                      <p className="text-xs text-content-muted">
-                        {item.transacted_at ? new Date(item.transacted_at).toLocaleDateString() : "—"}
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold text-content-primary">
-                      ${asFiniteNumber(item.amount).toFixed(2)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
-
-        <div className="min-w-0 space-y-4 lg:col-span-4">
-          {overview ? (
-            <Card title="Contract completion">
-              <ChartShell className="">
-                {safeCompletionRate <= 0 ? (
-                  <p className="text-sm text-content-muted">No data yet.</p>
-                ) : (
-                  <SafeChartContainer size="large">
-                    <ResponsiveContainer width="100%" height="100%" minWidth={240}>
-                      <PieChart>
-                        <Pie
-                          data={[
-                            { name: "Done", value: safeCompletionRate },
-                            { name: "Remaining", value: Math.max(0, 100 - safeCompletionRate) },
-                          ]}
-                          dataKey="value"
-                          innerRadius={55}
-                          outerRadius={80}
-                        >
-                          <Cell fill="rgb(var(--accent))" />
-                          <Cell fill="rgb(var(--surface-border))" />
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </SafeChartContainer>
-                )}
-              </ChartShell>
-              <p className="-mt-4 text-center text-3xl font-semibold text-content-primary">
-                {safeCompletionRate}%
-              </p>
-            </Card>
-          ) : null}
-
-          <Card title="Quick actions">
-            <div className="grid gap-2">
-              <Link href="/wallets" className="flex items-center gap-2 rounded-xl bg-surface-raised p-3 text-sm">
-                <Wallet className="h-4 w-4" /> Connect wallet
-              </Link>
-              <Link href="/analysis" className="flex items-center gap-2 rounded-xl bg-surface-raised p-3 text-sm">
-                <CreditCard className="h-4 w-4" /> Create analysis
-              </Link>
-              <Link href="/strategy" className="flex items-center gap-2 rounded-xl bg-surface-raised p-3 text-sm">
-                <FilePlus2 className="h-4 w-4" /> Create report
-              </Link>
-            </div>
-          </Card>
-
-          {overview ? (
-            <Card title={`Notifications (${safeUnread})`}>
-              {notifications.isError ? (
-                <ErrorState
-                  error={notifications.error}
-                  title="Notifications unavailable"
-                  onRetry={() => void notifications.refetch()}
-                />
-              ) : notifications.isPending ? (
-                <p className="text-sm text-content-muted">Loading notifications…</p>
-              ) : (
-                <div className="space-y-2">
-                  {(notifications.data?.items ?? []).map((n) => (
-                    <div key={n.id} className="rounded-xl bg-surface-raised p-3">
-                      <p className="text-sm text-content-primary">{n.title}</p>
-                      <p className="text-xs text-content-muted">{n.body}</p>
-                    </div>
-                  ))}
-                  {(notifications.data?.items ?? []).length === 0 ? (
-                    <p className="text-sm text-content-muted">No notifications.</p>
-                  ) : null}
-                </div>
-              )}
-            </Card>
-          ) : null}
-        </div>
+        <Card title="Security Status" description="No private keys or seed phrases are exposed in UI.">
+          <div className="rounded-lg border border-emerald-300/50 bg-emerald-50 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/40">
+            <p className="flex items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-100">
+              <ShieldCheck className="h-4 w-4" />
+              Protected session and scoped wallet access
+            </p>
+          </div>
+          <div className="mt-3 grid gap-2">
+            <Link href="/wallet" className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">
+              <Wallet className="h-4 w-4" />
+              Open Wallet
+            </Link>
+            <Link href="/analysis" className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">
+              <CreditCard className="h-4 w-4" />
+              Open Agents
+            </Link>
+          </div>
+        </Card>
       </div>
+
+      {connectedWallets.length > 0 ? (
+        <Card title="Wallet Connections" description="Providers currently linked to your account.">
+          <div className="grid gap-2 md:grid-cols-2">
+            {connectedWallets.map((wallet) => (
+              <div key={wallet.id} className="rounded-xl border border-surface-border bg-surface-raised p-3">
+                <p className="text-sm font-semibold text-content-primary">{formatWalletProvider(wallet.provider)}</p>
+                <p className="text-xs text-content-muted">{formatChainName(wallet.chain_type)}</p>
+                <p className="mt-2 break-all text-xs font-mono text-content-primary">{wallet.address}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+      {connectedWallets.length === 0 ? (
+        <InlineAlert tone="info">
+          No external wallets connected. Use the wallet page to connect Phantom or MetaMask.
+        </InlineAlert>
+      ) : null}
+      {createWflWallet.isError ? (
+        <InlineAlert tone="error">{normalizeApiError(createWflWallet.error)}</InlineAlert>
+      ) : null}
+      {!wflWallet ? (
+        <InlineAlert tone="warning">No WFL Wallet yet. Create one to enable internal wallet features.</InlineAlert>
+      ) : null}
     </div>
   );
 }
