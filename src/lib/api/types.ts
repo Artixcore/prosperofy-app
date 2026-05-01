@@ -65,6 +65,10 @@ export type WalletOverview = {
   connected_wallets: ConnectedWallet[];
   supported_chains: string[];
   recent_activity: Array<{ id: number; action: string; chain: string | null; created_at: string }>;
+  /** Alias of recent_activity for dashboard contracts */
+  activity?: Array<{ id: number; action: string; chain: string | null; created_at: string }>;
+  assets?: WalletAssetItem[];
+  summary?: { total_balance: string; currency: string };
 };
 
 export type WalletAssetItem = {
