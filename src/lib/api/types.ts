@@ -193,9 +193,56 @@ export type UserSettings = {
   default_currency?: string;
 };
 
-export type UserSettingsPayload = {
+export type UserSettingsPreferencesBody = {
+  theme?: UserSettings["theme"];
+  timezone?: string;
+  notifications?: UserSettingsNotifications;
+  risk_preference?: UserSettings["risk_preference"];
+  default_currency?: string;
+};
+
+export type AppSettingsSecurityOverview = {
+  two_factor: {
+    enabled: boolean;
+    method: string | null;
+    confirmed_at: string | null;
+  };
+  passphrase_set: boolean;
+  email_verified: boolean;
+};
+
+export type ExchangeProviderId = "binance" | "coinbase" | "bybit";
+
+export type ExchangeConnectionSummary = {
+  id?: string;
+  exchange: ExchangeProviderId | string;
+  connection_id?: string | null;
+  label?: string | null;
+  status: string;
+  key_fingerprint?: string | null;
+  key_display_suffix?: string | null;
+  permissions?: Record<string, unknown> | null;
+  last_verified_at?: string | null;
+  failure_reason_code?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+/** GET /api/app/settings — envelope `data` */
+export type AppSettingsOverviewData = {
+  settings: UserSettings;
+  profile: UserProfile;
+  security: AppSettingsSecurityOverview;
+  exchanges: ExchangeConnectionSummary[];
+};
+
+/** PATCH /api/app/settings — envelope `data` */
+export type UserSettingsPatchResponse = {
   settings: UserSettings;
 };
+
+/** @deprecated alias */
+export type UserSettingsPayload = AppSettingsOverviewData;
 
 export type AppNotification = {
   id: string;

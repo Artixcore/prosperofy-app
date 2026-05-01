@@ -11,6 +11,19 @@ export const API = {
     dashboard: "/api/app/dashboard",
     profile: "/api/app/profile",
     settings: "/api/app/settings",
+    settingsProfile: "/api/app/settings/profile",
+    settingsPassword: "/api/app/settings/password",
+    settingsPassphrase: "/api/app/settings/passphrase",
+    settingsPassphraseVerify: "/api/app/settings/passphrase/verify",
+    settingsTwoFactor: "/api/app/settings/2fa",
+    settingsTwoFactorSetup: "/api/app/settings/2fa/setup",
+    settingsTwoFactorConfirm: "/api/app/settings/2fa/confirm",
+    settingsTwoFactorDisable: "/api/app/settings/2fa/disable",
+    settingsExchanges: "/api/app/settings/exchanges",
+    settingsExchangeTest: (id: string) =>
+      `/api/app/settings/exchanges/${encodeURIComponent(id)}/test` as const,
+    settingsExchange: (id: string) =>
+      `/api/app/settings/exchanges/${encodeURIComponent(id)}` as const,
     notifications: {
       list: "/api/app/notifications",
       readAll: "/api/app/notifications/read-all",

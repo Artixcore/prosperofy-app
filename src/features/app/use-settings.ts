@@ -3,7 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
-import type { UserSettingsPayload } from "@/lib/api/types";
+import type {
+  AppSettingsOverviewData,
+  UserSettingsPatchResponse,
+  UserSettingsPreferencesBody,
+} from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
 
 export function useSettingsQuery() {
@@ -11,7 +15,7 @@ export function useSettingsQuery() {
   return useQuery({
     queryKey: ["app-settings", token],
     queryFn: () =>
-      laravelFetch<UserSettingsPayload>(API.app.settings, {
+      laravelFetch<AppSettingsOverviewData>(API.app.settings, {
         token,
       }),
     enabled: Boolean(authReady && isAuthenticated && token),
@@ -22,8 +26,8 @@ export function useUpdateSettingsMutation() {
   const { token } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: UserSettingsPayload["settings"]) =>
-      laravelFetch<UserSettingsPayload>(API.app.settings, {
+    mutationFn: (body: UserSettingsPreferencesBody) =>
+      laravelFetch<UserSettingsPatchResponse>(API.app.settings, {
         method: "PATCH",
         body,
         token,
