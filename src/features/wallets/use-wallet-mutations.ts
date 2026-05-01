@@ -5,10 +5,10 @@ import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
 import type {
+  AppWalletConnectBody,
   ConnectedWallet,
   WalletAssetItem,
-  WalletChallengeData,
-  WalletNonceData,
+  WalletChallengeResponse,
   WalletOverview,
 } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
@@ -45,74 +45,6 @@ export function useWalletQuery(id: string | null) {
       }),
     enabled: Boolean(authReady && isAuthenticated && token && id),
     retry: false,
-  });
-}
-
-export function useWalletNonceMutation() {
-  const { token, authReady, isAuthenticated } = useAuth();
-  return useMutation({
-    mutationFn: (provider: "phantom" | "metamask") => {
-      if (!authReady || !isAuthenticated) {
-        throw new ApiClientError("Please sign in again.", {
-          status: 401,
-          code: "UNAUTHENTICATED",
-          retryable: false,
-        });
-      }
-      return laravelFetch<WalletNonceData>(API.app.wallets.nonce, {
-        method: "POST",
-        body: { provider },
-        token: assertAuthenticatedToken(token),
-      });
-    },
-  });
-}
-
-export function useConnectPhantomMutation() {
-  const { token } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: {
-      nonce: string;
-      message: string;
-      signature: string;
-      publicKey: string;
-      network?: string;
-      label?: string;
-    }) =>
-      laravelFetch<ConnectedWallet>(API.app.wallets.connectPhantom, {
-        method: "POST",
-        body,
-        token: assertAuthenticatedToken(token),
-      }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["wallets"] });
-      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
-    },
-  });
-}
-
-export function useConnectMetaMaskMutation() {
-  const { token } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: {
-      nonce: string;
-      message: string;
-      signature: string;
-      address: string;
-      network?: string;
-      label?: string;
-    }) =>
-      laravelFetch<ConnectedWallet>(API.app.wallets.connectMetaMask, {
-        method: "POST",
-        body,
-        token: assertAuthenticatedToken(token),
-      }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["wallets"] });
-      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
-    },
   });
 }
 
@@ -201,7 +133,7 @@ export function useAppWalletChallengeMutation() {
   const { token } = useAuth();
   return useMutation({
     mutationFn: (body: { provider: "phantom" | "metamask"; chain: "solana" | "ethereum"; address?: string; publicKey?: string }) =>
-      laravelFetch<WalletChallengeData>(API.app.wallet.challenge, {
+      laravelFetch<WalletChallengeResponse>(API.app.wallet.challenge, {
         method: "POST",
         body,
         token: assertAuthenticatedToken(token),
@@ -213,15 +145,7 @@ export function useAppWalletConnectMutation() {
   const { token } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: {
-      provider: "phantom" | "metamask";
-      chain: "solana" | "ethereum";
-      signature: string;
-      message: string;
-      challenge_id: number;
-      publicKey?: string;
-      address?: string;
-    }) =>
+    mutationFn: (body: AppWalletConnectBody) =>
       laravelFetch<Record<string, unknown>>(API.app.wallet.connect, {
         method: "POST",
         body,
@@ -229,6 +153,8 @@ export function useAppWalletConnectMutation() {
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+      void qc.invalidateQueries({ queryKey: ["wallets"] });
+      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
     },
   });
 }

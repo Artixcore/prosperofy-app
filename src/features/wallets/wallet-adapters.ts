@@ -1,4 +1,21 @@
 import bs58 from "bs58";
+import type {
+  MetaMaskConnectSignedBody,
+  PhantomConnectSignedBody,
+  WalletChallengeResponse,
+} from "@/lib/api/types";
+
+export const WALLET_CHALLENGE_EXPIRED_MESSAGE =
+  "Wallet connection challenge expired. Please try again.";
+
+/** Validates challenge id from Laravel before signing or calling `/wallet/connect`. */
+export function requireWalletChallengeId(challenge_id: unknown): number {
+  const n = typeof challenge_id === "number" ? challenge_id : Number(challenge_id);
+  if (!Number.isFinite(n) || n < 1) {
+    throw new Error(WALLET_CHALLENGE_EXPIRED_MESSAGE);
+  }
+  return n;
+}
 
 function isUserRejectedWalletError(e: unknown): boolean {
   if (!e || typeof e !== "object") return false;
@@ -25,30 +42,17 @@ function signingMessageFromNonce(data: {
 }
 
 export async function connectPhantomFlow(
-  getNonce: (provider: "phantom") => Promise<{
-    challenge_id?: number;
-    nonce?: string;
-    message?: string;
-    signMessage?: string;
-  }>,
-  connectApi: (body: {
-    challenge_id?: number;
-    provider?: "phantom";
-    chain?: "solana";
-    message: string;
-    signature: string;
-    publicKey: string;
-    network?: string;
-    label?: string;
-  }) => Promise<unknown>,
+  fetchChallenge: (provider: "phantom") => Promise<WalletChallengeResponse>,
+  connectApi: (body: PhantomConnectSignedBody) => Promise<unknown>,
 ): Promise<void> {
+  const challengePayload = await fetchChallenge("phantom");
+  const challenge_id = requireWalletChallengeId(challengePayload.challenge_id);
+  const message = signingMessageFromNonce(challengePayload);
+
   const sol = window.solana;
   if (!sol?.signMessage) {
     throw new Error("Phantom not available. Install the Phantom extension.");
   }
-
-  const noncePayload = await getNonce("phantom");
-  const message = signingMessageFromNonce(noncePayload);
 
   if (!sol.publicKey) {
     await sol.connect?.({ onlyIfTrusted: false });
@@ -69,7 +73,7 @@ export async function connectPhantomFlow(
   const signature = bs58.encode(signed.signature);
 
   await connectApi({
-    challenge_id: noncePayload.challenge_id,
+    challenge_id,
     provider: "phantom",
     chain: "solana",
     message,
@@ -79,30 +83,17 @@ export async function connectPhantomFlow(
 }
 
 export async function connectMetaMaskFlow(
-  getNonce: (provider: "metamask") => Promise<{
-    challenge_id?: number;
-    nonce?: string;
-    message?: string;
-    signMessage?: string;
-  }>,
-  connectApi: (body: {
-    challenge_id?: number;
-    provider?: "metamask";
-    chain?: "ethereum";
-    message: string;
-    signature: string;
-    address: string;
-    network?: string;
-    label?: string;
-  }) => Promise<unknown>,
+  fetchChallenge: (provider: "metamask") => Promise<WalletChallengeResponse>,
+  connectApi: (body: MetaMaskConnectSignedBody) => Promise<unknown>,
 ): Promise<void> {
+  const challengePayload = await fetchChallenge("metamask");
+  const challenge_id = requireWalletChallengeId(challengePayload.challenge_id);
+  const message = signingMessageFromNonce(challengePayload);
+
   const eth = window.ethereum;
   if (!eth?.request) {
     throw new Error("MetaMask not available. Install MetaMask.");
   }
-
-  const noncePayload = await getNonce("metamask");
-  const message = signingMessageFromNonce(noncePayload);
 
   const accounts = (await eth.request({
     method: "eth_requestAccounts",
@@ -130,7 +121,7 @@ export async function connectMetaMaskFlow(
   }
 
   await connectApi({
-    challenge_id: noncePayload.challenge_id,
+    challenge_id,
     provider: "metamask",
     chain: "ethereum",
     message,

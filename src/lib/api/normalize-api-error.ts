@@ -35,8 +35,8 @@ export function normalizeApiError(error: unknown): string {
       if (m.includes("Wallet service did not return")) {
         return "Wallet connection failed. Please try again.";
       }
-      if (m.includes("Invalid challenge from server")) {
-        return "Wallet connection failed. Invalid challenge from server. Please try again.";
+      if (m.includes("Wallet connection challenge expired")) {
+        return "Wallet connection challenge expired. Please try again.";
       }
     }
     return "We could not process your request. Please try again.";

@@ -47,11 +47,37 @@ export type WalletNonceData = {
   id?: string;
 };
 
-export type WalletChallengeData = {
+/** Laravel `POST /api/app/wallet/challenge` success `data` payload */
+export type WalletChallengeResponse = {
   challenge_id: number;
   message: string;
-  expires_at: string;
+  expires_at?: string;
 };
+
+export type AppWalletConnectBase = {
+  signature: string;
+  message: string;
+  challenge_id: number;
+};
+
+/** Laravel `POST /api/app/wallet/connect` body for Phantom (requires `publicKey`) */
+export type AppWalletConnectPhantomBody = AppWalletConnectBase & {
+  provider: "phantom";
+  chain: "solana";
+  publicKey: string;
+};
+
+/** Laravel `POST /api/app/wallet/connect` body for MetaMask */
+export type AppWalletConnectMetaMaskBody = AppWalletConnectBase & {
+  provider: "metamask";
+  chain: "ethereum";
+  address: string;
+};
+
+export type AppWalletConnectBody = AppWalletConnectPhantomBody | AppWalletConnectMetaMaskBody;
+
+export type PhantomConnectSignedBody = AppWalletConnectPhantomBody;
+export type MetaMaskConnectSignedBody = AppWalletConnectMetaMaskBody;
 
 export type WalletOverview = {
   wfl_wallet: {

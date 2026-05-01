@@ -8,37 +8,16 @@ import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
 import { InlineAlert } from "@/components/system/inline-alert";
 import {
-  useConnectMetaMaskMutation,
-  useConnectPhantomMutation,
-  useWalletNonceMutation,
+  useAppWalletChallengeMutation,
+  useAppWalletConnectMutation,
   useWalletsQuery,
 } from "@/features/wallets/use-wallet-mutations";
-
-function resolveWalletConnectError(error: unknown): string {
-  if (error instanceof Error && typeof error.message === "string") {
-    const message = error.message.trim();
-    if (message !== "") {
-      // Keep known user-actionable wallet errors, hide unexpected internal details.
-      if (
-        message.includes("not available")
-        || message.includes("No Ethereum account available.")
-        || message.includes("Could not read Phantom public key.")
-        || message.includes("Unexpected signature format from wallet.")
-        || message.includes("Could not start wallet connection.")
-      ) {
-        return message;
-      }
-    }
-  }
-
-  return "Could not start wallet connection. Please try again.";
-}
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 
 export default function WalletsPage() {
   const { data, isPending, isError, error, refetch } = useWalletsQuery();
-  const nonceMutation = useWalletNonceMutation();
-  const connectPhantom = useConnectPhantomMutation();
-  const connectMetaMask = useConnectMetaMaskMutation();
+  const challenge = useAppWalletChallengeMutation();
+  const connect = useAppWalletConnectMutation();
   const [connectError, setConnectError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"phantom" | "metamask" | null>(null);
   const wallets = Array.isArray(data) ? data : [];
@@ -50,19 +29,19 @@ export default function WalletsPage() {
     try {
       const { connectPhantomFlow } = await import("@/features/wallets/wallet-adapters");
       await connectPhantomFlow(
-        async (provider) => nonceMutation.mutateAsync(provider),
-        async (body) =>
-          connectPhantom.mutateAsync({
-            nonce: body.nonce ?? "",
-            message: body.message,
+        () => challenge.mutateAsync({ provider: "phantom", chain: "solana" }),
+        (body) =>
+          connect.mutateAsync({
+            provider: "phantom",
+            chain: "solana",
             signature: body.signature,
+            message: body.message,
             publicKey: body.publicKey,
-            network: body.network,
-            label: body.label,
+            challenge_id: body.challenge_id,
           }),
       );
     } catch (e) {
-      setConnectError(resolveWalletConnectError(e));
+      setConnectError(normalizeApiError(e));
     } finally {
       setBusy(null);
     }
@@ -74,19 +53,19 @@ export default function WalletsPage() {
     try {
       const { connectMetaMaskFlow } = await import("@/features/wallets/wallet-adapters");
       await connectMetaMaskFlow(
-        async (provider) => nonceMutation.mutateAsync(provider),
-        async (body) =>
-          connectMetaMask.mutateAsync({
-            nonce: body.nonce ?? "",
-            message: body.message,
+        () => challenge.mutateAsync({ provider: "metamask", chain: "ethereum" }),
+        (body) =>
+          connect.mutateAsync({
+            provider: "metamask",
+            chain: "ethereum",
             signature: body.signature,
+            message: body.message,
             address: body.address,
-            network: body.network,
-            label: body.label,
+            challenge_id: body.challenge_id,
           }),
       );
     } catch (e) {
-      setConnectError(resolveWalletConnectError(e));
+      setConnectError(normalizeApiError(e));
     } finally {
       setBusy(null);
     }
@@ -96,12 +75,12 @@ export default function WalletsPage() {
     <>
       <PageHeader
         title="Wallets"
-        description="Nonce and verification go through Laravel, which calls the internal wallet service. Your browser never talks to that service directly."
+        description="Challenge and signature verification go through Laravel, which calls the internal wallet service. Your browser never talks to that service directly."
         action={
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled={busy !== null}
+              disabled={busy !== null || connect.isPending || challenge.isPending}
               onClick={() => void handlePhantom()}
               className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
             >
@@ -109,7 +88,7 @@ export default function WalletsPage() {
             </button>
             <button
               type="button"
-              disabled={busy !== null}
+              disabled={busy !== null || connect.isPending || challenge.isPending}
               onClick={() => void handleMetaMask()}
               className="rounded-md border border-surface-border px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-surface-raised disabled:opacity-50"
             >

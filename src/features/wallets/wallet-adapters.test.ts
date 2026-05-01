@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { WalletChallengeResponse } from "@/lib/api/types";
 import { connectMetaMaskFlow, connectPhantomFlow } from "./wallet-adapters";
 
 describe("wallet adapters", () => {
@@ -20,6 +21,26 @@ describe("wallet adapters", () => {
         async () => ({}),
       ),
     ).rejects.toThrow("MetaMask not available");
+  });
+
+  it("rejects Phantom flow when challenge_id is missing", async () => {
+    (globalThis as { window: unknown }).window = {};
+    await expect(
+      connectPhantomFlow(
+        async () => ({ message: "m" }) as WalletChallengeResponse,
+        async () => ({}),
+      ),
+    ).rejects.toThrow("Wallet connection challenge expired. Please try again.");
+  });
+
+  it("rejects MetaMask flow when challenge_id is missing", async () => {
+    (globalThis as { window: unknown }).window = {};
+    await expect(
+      connectMetaMaskFlow(
+        async () => ({ message: "Sign me" }) as WalletChallengeResponse,
+        async () => ({}),
+      ),
+    ).rejects.toThrow("Wallet connection challenge expired. Please try again.");
   });
 
   it("connect flow success for MetaMask calls API", async () => {
