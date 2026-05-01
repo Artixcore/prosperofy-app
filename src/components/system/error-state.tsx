@@ -9,9 +9,10 @@ type Props = {
 
 export function ErrorState({ error, onRetry, title = "Something went wrong" }: Props) {
   const message = normalizeApiError(error);
-  const code = isApiClientError(error) ? error.code : undefined;
-  const requestId = isApiClientError(error) ? error.requestId : undefined;
-  const correlationId = isApiClientError(error) ? error.correlationId : undefined;
+  const isServerFailure = isApiClientError(error) && error.status >= 500;
+  const code = isApiClientError(error) && !isServerFailure ? error.code : undefined;
+  const requestId = isApiClientError(error) && !isServerFailure ? error.requestId : undefined;
+  const correlationId = isApiClientError(error) && !isServerFailure ? error.correlationId : undefined;
   const canRetry = isApiClientError(error) ? error.retryable : Boolean(onRetry);
 
   return (

@@ -51,4 +51,20 @@ describe("wallet adapters", () => {
       ),
     ).rejects.toThrow("Unexpected signature format");
   });
+
+  it("maps MetaMask user rejection to cancelled signing error", async () => {
+    const requestMock = vi.fn().mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"]).mockRejectedValueOnce({
+      code: 4001,
+      message: "User rejected the request.",
+    });
+    (globalThis as { window: unknown }).window = {
+      ethereum: { request: requestMock },
+    };
+    await expect(
+      connectMetaMaskFlow(
+        async () => ({ challenge_id: 10, message: "Sign me" }),
+        async () => ({}),
+      ),
+    ).rejects.toThrow("Wallet signing was cancelled.");
+  });
 });

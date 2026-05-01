@@ -1,5 +1,18 @@
 import bs58 from "bs58";
 
+function isUserRejectedWalletError(e: unknown): boolean {
+  if (!e || typeof e !== "object") return false;
+  const o = e as { code?: number; message?: string };
+  if (o.code === 4001) return true;
+  const msg = String(o.message ?? "").toLowerCase();
+  return (
+    msg.includes("user rejected") ||
+    msg.includes("user cancelled") ||
+    msg.includes("user denied") ||
+    msg.includes("cancelled")
+  );
+}
+
 function signingMessageFromNonce(data: {
   message?: string;
   signMessage?: string;
@@ -20,7 +33,6 @@ export async function connectPhantomFlow(
   }>,
   connectApi: (body: {
     challenge_id?: number;
-    nonce?: string;
     provider?: "phantom";
     chain?: "solana";
     message: string;
@@ -45,12 +57,19 @@ export async function connectPhantomFlow(
   if (!pk) throw new Error("Could not read Phantom public key.");
 
   const encoded = new TextEncoder().encode(message);
-  const signed = await sol.signMessage(encoded);
+  let signed;
+  try {
+    signed = await sol.signMessage(encoded);
+  } catch (e: unknown) {
+    if (isUserRejectedWalletError(e)) {
+      throw new Error("Wallet signing was cancelled.");
+    }
+    throw e;
+  }
   const signature = bs58.encode(signed.signature);
 
   await connectApi({
     challenge_id: noncePayload.challenge_id,
-    nonce: noncePayload.nonce,
     provider: "phantom",
     chain: "solana",
     message,
@@ -68,7 +87,6 @@ export async function connectMetaMaskFlow(
   }>,
   connectApi: (body: {
     challenge_id?: number;
-    nonce?: string;
     provider?: "metamask";
     chain?: "ethereum";
     message: string;
@@ -94,10 +112,18 @@ export async function connectMetaMaskFlow(
     throw new Error("No Ethereum account available.");
   }
 
-  const signature = (await eth.request({
-    method: "personal_sign",
-    params: [message, address],
-  })) as string;
+  let signature: string;
+  try {
+    signature = (await eth.request({
+      method: "personal_sign",
+      params: [message, address],
+    })) as string;
+  } catch (e: unknown) {
+    if (isUserRejectedWalletError(e)) {
+      throw new Error("Wallet signing was cancelled.");
+    }
+    throw e;
+  }
 
   if (!/^0x[a-fA-F0-9]+$/.test(signature)) {
     throw new Error("Unexpected signature format from wallet.");
@@ -105,7 +131,6 @@ export async function connectMetaMaskFlow(
 
   await connectApi({
     challenge_id: noncePayload.challenge_id,
-    nonce: noncePayload.nonce,
     provider: "metamask",
     chain: "ethereum",
     message,

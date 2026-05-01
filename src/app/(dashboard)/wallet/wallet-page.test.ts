@@ -1,10 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiClientError } from "@/lib/api/errors";
 import WalletPage from "./page";
 
 const createMock = vi.fn();
+
+const { challengeMutate, connectMutate } = vi.hoisted(() => ({
+  challengeMutate: vi.fn(),
+  connectMutate: vi.fn(),
+}));
 
 vi.mock("next/link", () => ({
   default: ({ children }: { children: ReactNode }) => children,
@@ -22,8 +28,8 @@ vi.mock("@/features/wallets/use-wallet-mutations", () => ({
     },
     refetch: vi.fn(),
   }),
-  useAppWalletChallengeMutation: () => ({ mutateAsync: vi.fn() }),
-  useAppWalletConnectMutation: () => ({ mutateAsync: vi.fn() }),
+  useAppWalletChallengeMutation: () => ({ mutateAsync: challengeMutate, isPending: false }),
+  useAppWalletConnectMutation: () => ({ mutateAsync: connectMutate, isPending: false }),
   useCreateWflWalletMutation: () => ({ mutateAsync: createMock }),
 }));
 
@@ -32,6 +38,11 @@ vi.mock("@/components/system/toast-context", () => ({
 }));
 
 describe("wallet dashboard", () => {
+  beforeEach(() => {
+    challengeMutate.mockReset();
+    connectMutate.mockReset();
+  });
+
   it("wallet dashboard renders", () => {
     render(createElement(WalletPage));
     expect(screen.getByText("Wallet")).toBeInTheDocument();
@@ -51,6 +62,32 @@ describe("wallet dashboard", () => {
     fireEvent.click(screen.getAllByText("Create WFL Wallet")[0]);
     expect(
       await screen.findByText("We could not process your request. Please try again."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows friendly copy when connect returns WALLET_CHALLENGE_INVALID", async () => {
+    challengeMutate.mockResolvedValue({ challenge_id: 1, message: "Sign this message" });
+    connectMutate.mockRejectedValue(
+      new ApiClientError("ignored", {
+        status: 422,
+        code: "WALLET_CHALLENGE_INVALID",
+        retryable: false,
+      }),
+    );
+    (globalThis as { window: unknown }).window = {
+      solana: {
+        signMessage: vi.fn().mockResolvedValue({ signature: new Uint8Array(64) }),
+        publicKey: { toString: () => "So11111111111111111111111111111111111111111" },
+        connect: vi.fn(),
+      },
+    };
+
+    render(createElement(WalletPage));
+    fireEvent.click(screen.getAllByText("Connect Phantom")[0]);
+    expect(
+      await screen.findByText(
+        "This wallet connection expired. Please reconnect your wallet and try again.",
+      ),
     ).toBeInTheDocument();
   });
 });

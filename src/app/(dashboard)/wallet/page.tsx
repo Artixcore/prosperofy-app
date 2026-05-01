@@ -17,6 +17,14 @@ import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { formatChainName, formatWalletProvider, shortenAddress } from "@/lib/formatters";
 import { useToast } from "@/components/system/toast-context";
 
+function requireChallengeId(id: unknown): number {
+  const n = typeof id === "number" ? id : Number(id);
+  if (!Number.isFinite(n) || n < 1) {
+    throw new Error("Invalid challenge from server.");
+  }
+  return n;
+}
+
 export default function WalletPage() {
   const { pushToast } = useToast();
   const overview = useAppWalletOverviewQuery();
@@ -39,7 +47,7 @@ export default function WalletPage() {
             signature: body.signature,
             message: body.message,
             publicKey: body.publicKey,
-            challenge_id: Number(body.challenge_id),
+            challenge_id: requireChallengeId(body.challenge_id),
           }),
       );
       setMessage("Phantom wallet connected successfully.");
@@ -62,7 +70,7 @@ export default function WalletPage() {
             signature: body.signature,
             message: body.message,
             address: body.address,
-            challenge_id: Number(body.challenge_id),
+            challenge_id: requireChallengeId(body.challenge_id),
           }),
       );
       setMessage("MetaMask wallet connected successfully.");
