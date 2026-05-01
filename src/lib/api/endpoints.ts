@@ -41,6 +41,15 @@ export const API = {
       txBroadcast: (id: string) =>
         `/api/app/wallets/${id}/transactions/broadcast` as const,
     },
+    wallet: {
+      overview: "/api/app/wallet",
+      challenge: "/api/app/wallet/challenge",
+      connect: "/api/app/wallet/connect",
+      create: "/api/app/wallet/create",
+      assets: "/api/app/wallet/assets",
+      activity: "/api/app/wallet/activity",
+      disconnect: (id: string) => `/api/app/wallet/connected/${id}` as const,
+    },
     ai: {
       analysisMarket: "/api/app/analysis/market",
       strategyGenerate: "/api/app/strategy/generate",

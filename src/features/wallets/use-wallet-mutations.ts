@@ -4,7 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
-import type { ConnectedWallet, WalletNonceData } from "@/lib/api/types";
+import type {
+  ConnectedWallet,
+  WalletAssetItem,
+  WalletChallengeData,
+  WalletNonceData,
+  WalletOverview,
+} from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
 
 function assertAuthenticatedToken(token: string | null): string {
@@ -158,5 +164,88 @@ export function useBroadcastTxMutation(walletId: string) {
         body,
         token: assertAuthenticatedToken(token),
       }),
+  });
+}
+
+export function useAppWalletOverviewQuery() {
+  const { token, authReady, isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["app-wallet-overview", token],
+    queryFn: () => laravelFetch<WalletOverview>(API.app.wallet.overview, { token }),
+    enabled: Boolean(authReady && isAuthenticated && token),
+    retry: false,
+  });
+}
+
+export function useAppWalletAssetsQuery() {
+  const { token, authReady, isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["app-wallet-assets", token],
+    queryFn: () => laravelFetch<WalletAssetItem[]>(API.app.wallet.assets, { token }),
+    enabled: Boolean(authReady && isAuthenticated && token),
+    retry: false,
+  });
+}
+
+export function useAppWalletActivityQuery() {
+  const { token, authReady, isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["app-wallet-activity", token],
+    queryFn: () => laravelFetch<Array<Record<string, unknown>>>(API.app.wallet.activity, { token }),
+    enabled: Boolean(authReady && isAuthenticated && token),
+    retry: false,
+  });
+}
+
+export function useAppWalletChallengeMutation() {
+  const { token } = useAuth();
+  return useMutation({
+    mutationFn: (body: { provider: "phantom" | "metamask"; chain: "solana" | "ethereum"; address?: string; publicKey?: string }) =>
+      laravelFetch<WalletChallengeData>(API.app.wallet.challenge, {
+        method: "POST",
+        body,
+        token: assertAuthenticatedToken(token),
+      }),
+  });
+}
+
+export function useAppWalletConnectMutation() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      provider: "phantom" | "metamask";
+      chain: "solana" | "ethereum";
+      signature: string;
+      message: string;
+      challenge_id: number;
+      publicKey?: string;
+      address?: string;
+    }) =>
+      laravelFetch<Record<string, unknown>>(API.app.wallet.connect, {
+        method: "POST",
+        body,
+        token: assertAuthenticatedToken(token),
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+    },
+  });
+}
+
+export function useCreateWflWalletMutation() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      laravelFetch<Record<string, unknown>>(API.app.wallet.create, {
+        method: "POST",
+        body: { wallet_type: "wfl_internal" },
+        token: assertAuthenticatedToken(token),
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+      void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
+    },
   });
 }

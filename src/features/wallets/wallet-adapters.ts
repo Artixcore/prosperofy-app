@@ -13,12 +13,16 @@ function signingMessageFromNonce(data: {
 
 export async function connectPhantomFlow(
   getNonce: (provider: "phantom") => Promise<{
-    nonce: string;
+    challenge_id?: number;
+    nonce?: string;
     message?: string;
     signMessage?: string;
   }>,
   connectApi: (body: {
-    nonce: string;
+    challenge_id?: number;
+    nonce?: string;
+    provider?: "phantom";
+    chain?: "solana";
     message: string;
     signature: string;
     publicKey: string;
@@ -33,7 +37,6 @@ export async function connectPhantomFlow(
 
   const noncePayload = await getNonce("phantom");
   const message = signingMessageFromNonce(noncePayload);
-  const nonce = noncePayload.nonce;
 
   if (!sol.publicKey) {
     await sol.connect?.({ onlyIfTrusted: false });
@@ -46,7 +49,10 @@ export async function connectPhantomFlow(
   const signature = bs58.encode(signed.signature);
 
   await connectApi({
-    nonce,
+    challenge_id: noncePayload.challenge_id,
+    nonce: noncePayload.nonce,
+    provider: "phantom",
+    chain: "solana",
     message,
     signature,
     publicKey: pk,
@@ -55,12 +61,16 @@ export async function connectPhantomFlow(
 
 export async function connectMetaMaskFlow(
   getNonce: (provider: "metamask") => Promise<{
-    nonce: string;
+    challenge_id?: number;
+    nonce?: string;
     message?: string;
     signMessage?: string;
   }>,
   connectApi: (body: {
-    nonce: string;
+    challenge_id?: number;
+    nonce?: string;
+    provider?: "metamask";
+    chain?: "ethereum";
     message: string;
     signature: string;
     address: string;
@@ -75,7 +85,6 @@ export async function connectMetaMaskFlow(
 
   const noncePayload = await getNonce("metamask");
   const message = signingMessageFromNonce(noncePayload);
-  const nonce = noncePayload.nonce;
 
   const accounts = (await eth.request({
     method: "eth_requestAccounts",
@@ -95,7 +104,10 @@ export async function connectMetaMaskFlow(
   }
 
   await connectApi({
-    nonce,
+    challenge_id: noncePayload.challenge_id,
+    nonce: noncePayload.nonce,
+    provider: "metamask",
+    chain: "ethereum",
     message,
     signature,
     address,

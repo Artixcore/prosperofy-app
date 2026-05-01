@@ -51,7 +51,15 @@ export default function WalletsPage() {
       const { connectPhantomFlow } = await import("@/features/wallets/wallet-adapters");
       await connectPhantomFlow(
         async (provider) => nonceMutation.mutateAsync(provider),
-        async (body) => connectPhantom.mutateAsync(body),
+        async (body) =>
+          connectPhantom.mutateAsync({
+            nonce: body.nonce ?? "",
+            message: body.message,
+            signature: body.signature,
+            publicKey: body.publicKey,
+            network: body.network,
+            label: body.label,
+          }),
       );
     } catch (e) {
       setConnectError(resolveWalletConnectError(e));
@@ -67,7 +75,15 @@ export default function WalletsPage() {
       const { connectMetaMaskFlow } = await import("@/features/wallets/wallet-adapters");
       await connectMetaMaskFlow(
         async (provider) => nonceMutation.mutateAsync(provider),
-        async (body) => connectMetaMask.mutateAsync(body),
+        async (body) =>
+          connectMetaMask.mutateAsync({
+            nonce: body.nonce ?? "",
+            message: body.message,
+            signature: body.signature,
+            address: body.address,
+            network: body.network,
+            label: body.label,
+          }),
       );
     } catch (e) {
       setConnectError(resolveWalletConnectError(e));

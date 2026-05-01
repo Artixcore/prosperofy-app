@@ -47,6 +47,37 @@ export type WalletNonceData = {
   id?: string;
 };
 
+export type WalletChallengeData = {
+  challenge_id: number;
+  message: string;
+  expires_at: string;
+};
+
+export type WalletOverview = {
+  wfl_wallet: {
+    id: number;
+    wallet_type: string;
+    status: string;
+    public_solana_address: string | null;
+    public_ethereum_address: string | null;
+    public_bitcoin_address: string | null;
+  } | null;
+  connected_wallets: ConnectedWallet[];
+  supported_chains: string[];
+  recent_activity: Array<{ id: number; action: string; chain: string | null; created_at: string }>;
+};
+
+export type WalletAssetItem = {
+  id: number;
+  chain: string;
+  token_standard: string | null;
+  token_address: string | null;
+  symbol: string;
+  name: string | null;
+  decimals: number | null;
+  balance_cache: string | null;
+};
+
 export type PaginationMeta = {
   current_page?: number;
   per_page?: number;

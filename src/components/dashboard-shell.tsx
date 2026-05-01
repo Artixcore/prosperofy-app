@@ -10,7 +10,7 @@ import { useNotificationsQuery } from "@/features/app/use-notifications";
 
 const nav = [
   { href: "/dashboard", label: "Overview", icon: Home },
-  { href: "/wallets", label: "Wallets", icon: CreditCard },
+  { href: "/wallet", label: "Wallet", icon: CreditCard },
   { href: "/analysis", label: "Analysis", icon: ChartColumn },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/profile", label: "Profile", icon: User },

@@ -7,6 +7,7 @@ const PROTECTED_PREFIXES = [
   "/dashboard",
   "/profile",
   "/settings",
+  "/wallet",
   "/wallets",
   "/analysis",
   "/strategy",
