@@ -49,6 +49,8 @@ describe("wallet dashboard", () => {
     createMock.mockRejectedValueOnce(new Error("create failed"));
     render(createElement(WalletPage));
     fireEvent.click(screen.getAllByText("Create WFL Wallet")[0]);
-    expect(await screen.findByText("create failed")).toBeInTheDocument();
+    expect(
+      await screen.findByText("We could not process your request. Please try again."),
+    ).toBeInTheDocument();
   });
 });
