@@ -54,6 +54,9 @@ export function normalizeApiError(error: unknown): string {
   if (error.status === 401) {
     return "Your session expired. Please log in again.";
   }
+  if (error.status === 419 || error.code === "HTTP_SESSION_EXPIRED") {
+    return "Your session expired. Please refresh and try again.";
+  }
   if (error.status === 403) {
     return "You do not have permission to perform this action.";
   }
@@ -103,7 +106,7 @@ export function normalizeApiError(error: unknown): string {
     error.status >= 500 &&
     (error.code === "WALLET_UNAVAILABLE" || error.code === "wallet_error")
   ) {
-    return "Wallet verification service is temporarily unavailable. Please try again shortly.";
+    return "Wallet service is temporarily unavailable. Please try again shortly.";
   }
 
   if (error.status >= 500) {

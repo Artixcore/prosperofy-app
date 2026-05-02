@@ -4,12 +4,17 @@ import { ApiClientError } from "./errors";
 export const AUTH_UNAUTHORIZED_EVENT = "prosperofy:auth-unauthorized";
 
 function getBaseUrl(): string {
-  const base =
+  const raw =
     typeof process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL === "string"
       ? process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL.trim()
-      : "";
+      : typeof process.env.NEXT_PUBLIC_API_BASE_URL === "string"
+        ? process.env.NEXT_PUBLIC_API_BASE_URL.trim()
+        : "";
+  const base = raw;
   if (!base) {
-    throw new Error("NEXT_PUBLIC_LARAVEL_API_BASE_URL is not configured.");
+    throw new Error(
+      "NEXT_PUBLIC_LARAVEL_API_BASE_URL (or NEXT_PUBLIC_API_BASE_URL) is not configured.",
+    );
   }
   const normalized = base.replace(/\/+$/, "");
   if (/\/api$/i.test(normalized)) {

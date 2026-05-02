@@ -64,10 +64,18 @@ describe("normalizeApiError", () => {
   it("maps wallet load failures to a friendly message", () => {
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 503, code: "WALLET_UNAVAILABLE", retryable: true })),
-    ).toBe("Wallet verification service is temporarily unavailable. Please try again shortly.");
+    ).toBe("Wallet service is temporarily unavailable. Please try again shortly.");
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 500, code: "wallet_error", retryable: false })),
-    ).toBe("Wallet verification service is temporarily unavailable. Please try again shortly.");
+    ).toBe("Wallet service is temporarily unavailable. Please try again shortly.");
+  });
+
+  it("maps session expired http codes", () => {
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", { status: 419, code: "HTTP_SESSION_EXPIRED", retryable: false }),
+      ),
+    ).toContain("session expired");
   });
 
   it("maps granular wallet challenge codes", () => {
