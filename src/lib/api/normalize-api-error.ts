@@ -38,6 +38,9 @@ export function normalizeApiError(error: unknown): string {
       if (m.includes("Wallet connection challenge expired")) {
         return "Wallet connection challenge expired. Please try again.";
       }
+      if (m.includes("Wallet account changed during connection")) {
+        return "Wallet account changed during connection. Please try again.";
+      }
     }
     return "We could not process your request. Please try again.";
   }
@@ -64,17 +67,32 @@ export function normalizeApiError(error: unknown): string {
     switch (error.code) {
       case "WALLET_CHALLENGE_INVALID":
         return "This wallet connection expired. Please reconnect your wallet and try again.";
+      case "WALLET_CHALLENGE_NOT_FOUND":
+        return "This wallet connection request was not found. Please reconnect your wallet.";
+      case "WALLET_CHALLENGE_EXPIRED":
+        return "This wallet connection request expired. Please reconnect your wallet.";
+      case "WALLET_CHALLENGE_USED":
+        return "This wallet connection request was already used. Please start again.";
+      case "WALLET_CHALLENGE_MESSAGE_MISMATCH":
+        return "This wallet connection request could not be validated. Please reconnect your wallet.";
+      case "WALLET_PROVIDER_MISMATCH":
+      case "WALLET_CHAIN_MISMATCH":
+        return "Wallet provider mismatch. Please reconnect your wallet.";
+      case "WALLET_ADDRESS_MISMATCH":
+        return "Wallet address changed during connection. Please reconnect your wallet.";
+      case "WALLET_CHALLENGE_RACE":
+        return "This wallet connection request could not be completed. Please try again.";
       case "WALLET_VERIFY_FAILED":
         return "Wallet signature verification failed. Please try again.";
       case "VALIDATION_ERROR":
         return (
           firstFieldError(error.fieldErrors) ??
-          "Wallet connection details were incomplete. Please reconnect your wallet and try again."
+          "Wallet connection details are incomplete. Please reconnect your wallet."
         );
       default:
         return (
           error.message ||
-          "Wallet connection details were incomplete. Please reconnect your wallet and try again."
+          "Wallet connection details are incomplete. Please reconnect your wallet."
         );
     }
   }
@@ -85,7 +103,7 @@ export function normalizeApiError(error: unknown): string {
     error.status >= 500 &&
     (error.code === "WALLET_UNAVAILABLE" || error.code === "wallet_error")
   ) {
-    return "We could not load your wallet data. Please try again shortly.";
+    return "Wallet verification service is temporarily unavailable. Please try again shortly.";
   }
 
   if (error.status >= 500) {

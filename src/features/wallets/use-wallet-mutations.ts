@@ -132,7 +132,12 @@ export function useAppWalletActivityQuery() {
 export function useAppWalletChallengeMutation() {
   const { token } = useAuth();
   return useMutation({
-    mutationFn: (body: { provider: "phantom" | "metamask"; chain: "solana" | "ethereum"; address?: string; publicKey?: string }) =>
+    mutationFn: (body: {
+      provider: "phantom" | "metamask";
+      chain: "solana" | "ethereum";
+      address?: string;
+      publicKey?: string;
+    }) =>
       laravelFetch<WalletChallengeResponse>(API.app.wallet.challenge, {
         method: "POST",
         body,

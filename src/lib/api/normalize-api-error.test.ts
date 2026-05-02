@@ -64,10 +64,21 @@ describe("normalizeApiError", () => {
   it("maps wallet load failures to a friendly message", () => {
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 503, code: "WALLET_UNAVAILABLE", retryable: true })),
-    ).toBe("We could not load your wallet data. Please try again shortly.");
+    ).toBe("Wallet verification service is temporarily unavailable. Please try again shortly.");
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 500, code: "wallet_error", retryable: false })),
-    ).toBe("We could not load your wallet data. Please try again shortly.");
+    ).toBe("Wallet verification service is temporarily unavailable. Please try again shortly.");
+  });
+
+  it("maps granular wallet challenge codes", () => {
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", { status: 422, code: "WALLET_CHALLENGE_EXPIRED", retryable: false }),
+      ),
+    ).toContain("expired");
+    expect(
+      normalizeApiError(new ApiClientError("ignored", { status: 422, code: "WALLET_CHALLENGE_USED", retryable: false })),
+    ).toContain("already used");
   });
 
   it("maps network and timeout", () => {

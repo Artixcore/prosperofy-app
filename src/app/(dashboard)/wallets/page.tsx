@@ -29,7 +29,7 @@ export default function WalletsPage() {
     try {
       const { connectPhantomFlow } = await import("@/features/wallets/wallet-adapters");
       await connectPhantomFlow(
-        () => challenge.mutateAsync({ provider: "phantom", chain: "solana" }),
+        (challengeBody) => challenge.mutateAsync(challengeBody),
         (body) =>
           connect.mutateAsync({
             provider: "phantom",
@@ -53,7 +53,7 @@ export default function WalletsPage() {
     try {
       const { connectMetaMaskFlow } = await import("@/features/wallets/wallet-adapters");
       await connectMetaMaskFlow(
-        () => challenge.mutateAsync({ provider: "metamask", chain: "ethereum" }),
+        (challengeBody) => challenge.mutateAsync(challengeBody),
         (body) =>
           connect.mutateAsync({
             provider: "metamask",
