@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
 import { ErrorState } from "@/components/system/error-state";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import {
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
@@ -29,7 +29,7 @@ export default function NotificationsPage() {
     try {
       await markOne.mutateAsync(id);
     } catch (error) {
-      setBanner(isApiClientError(error) ? error.message : "Failed to mark as read.");
+      setBanner(normalizeApiError(error));
     }
   }
 
@@ -39,7 +39,7 @@ export default function NotificationsPage() {
       const result = await markAll.mutateAsync();
       setBanner(result.marked > 0 ? `Marked ${result.marked} notification(s) as read.` : "Nothing to mark.");
     } catch (error) {
-      setBanner(isApiClientError(error) ? error.message : "Failed to mark all as read.");
+      setBanner(normalizeApiError(error));
     }
   }
 
@@ -61,14 +61,14 @@ export default function NotificationsPage() {
             type="button"
             onClick={() => void onMarkAllRead()}
             disabled={markAll.isPending || items.length === 0 || unreadCount === 0}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {markAll.isPending ? "Please wait…" : "Mark all read"}
           </button>
         }
       />
       {banner ? (
-        <InlineAlert tone={banner.includes("Failed") ? "error" : "success"}>{banner}</InlineAlert>
+        <InlineAlert tone={/^(Marked|Nothing to mark)/.test(banner) ? "success" : "error"}>{banner}</InlineAlert>
       ) : null}
       {items.length === 0 ? (
         <EmptyState
@@ -77,33 +77,35 @@ export default function NotificationsPage() {
         />
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-zinc-400">Unread in this page: {unreadCount}</p>
+          <p className="text-sm text-muted-foreground">Unread in this page: {unreadCount}</p>
           <ul className="space-y-3">
             {items.map((notification) => (
               <li
                 key={notification.id}
-                className="rounded-lg border border-surface-border bg-surface-raised/40 p-4"
+                className="rounded-lg border border-border bg-card p-4 text-card-foreground"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {notification.title ?? notification.type ?? "Notification"}
                     </p>
                     {notification.body ? (
-                      <p className="mt-1 text-sm text-zinc-400">{notification.body}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{notification.body}</p>
                     ) : null}
-                    <p className="mt-2 text-xs text-zinc-500">
+                    <p className="mt-2 text-xs text-muted-foreground">
                       {notification.created_at ?? "Unknown time"}
                     </p>
                   </div>
                   {notification.read ? (
-                    <span className="rounded bg-zinc-800 px-2 py-1 text-xs text-zinc-300">Read</span>
+                    <span className="rounded bg-muted px-2 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
+                      Read
+                    </span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => void onMarkRead(notification.id)}
                       disabled={markOne.isPending}
-                      className="rounded border border-surface-border px-2 py-1 text-xs text-zinc-300 hover:bg-surface-raised disabled:opacity-60"
+                      className="rounded border border-border px-2 py-1 text-xs text-secondary-foreground hover:bg-secondary disabled:opacity-60"
                     >
                       Mark read
                     </button>
@@ -116,18 +118,18 @@ export default function NotificationsPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded border border-surface-border px-3 py-1 text-sm text-zinc-300 disabled:opacity-50"
+                className="rounded border border-border px-3 py-1 text-sm text-secondary-foreground hover:bg-secondary disabled:opacity-50"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
               >
                 Previous
               </button>
-              <span className="text-sm text-zinc-400">
+              <span className="text-sm text-muted-foreground">
                 Page {page} / {pagination.last_page}
               </span>
               <button
                 type="button"
-                className="rounded border border-surface-border px-3 py-1 text-sm text-zinc-300 disabled:opacity-50"
+                className="rounded border border-border px-3 py-1 text-sm text-secondary-foreground hover:bg-secondary disabled:opacity-50"
                 disabled={page >= pagination.last_page}
                 onClick={() =>
                   setPage((current) =>

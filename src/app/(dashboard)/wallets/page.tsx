@@ -82,7 +82,7 @@ export default function WalletsPage() {
               type="button"
               disabled={busy !== null || connect.isPending || challenge.isPending}
               onClick={() => void handlePhantom()}
-              className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:opacity-50"
             >
               {busy === "phantom" ? "Connecting…" : "Connect Phantom"}
             </button>
@@ -90,7 +90,7 @@ export default function WalletsPage() {
               type="button"
               disabled={busy !== null || connect.isPending || challenge.isPending}
               onClick={() => void handleMetaMask()}
-              className="rounded-md border border-surface-border px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-surface-raised disabled:opacity-50"
+              className="rounded-md border border-border px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary disabled:opacity-50"
             >
               {busy === "metamask" ? "Connecting…" : "Connect MetaMask"}
             </button>
@@ -122,11 +122,11 @@ export default function WalletsPage() {
                 className="flex flex-col rounded-lg border border-surface-border bg-surface-raised/50 px-4 py-3 transition hover:border-zinc-600 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <p className="font-medium text-white">
+                  <p className="font-medium text-foreground">
                     {w.label ?? w.provider}{" "}
-                    <span className="text-zinc-500">({w.chain_type})</span>
+                    <span className="text-muted-foreground">({w.chain_type})</span>
                   </p>
-                  <p className="mt-1 font-mono text-xs text-zinc-400">{w.address}</p>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">{w.address}</p>
                 </div>
                 <span className="mt-2 text-sm text-accent-muted sm:mt-0">Details →</span>
               </Link>

@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useSignalDetailQuery, useTrackSignalMutation } from "@/features/agents/use-agents-api";
 
 const trackSchema = z.object({
@@ -38,51 +38,46 @@ export default function SignalDetailPage() {
       });
     } catch (e) {
       form.setError("root", {
-        message: isApiClientError(e) ? e.message : "Signal tracking could not be updated. Please try again.",
+        message: normalizeApiError(e),
       });
     }
   }
 
-  const err =
-    q.isError && isApiClientError(q.error)
-      ? q.error.message
-      : q.isError
-        ? "Signal could not be loaded."
-        : null;
+  const err = q.isError ? normalizeApiError(q.error) : null;
 
   return (
     <>
       <PageHeader title="Signal details" description="Review risk, disclaimer, and optional tracking state." />
       <div className="space-y-4">
         <AgentsDisclaimerBanner />
-        <Link href="/agents/signals" className="text-sm text-sky-400 hover:text-sky-300">
+        <Link href="/agents/signals" className="text-sm font-medium text-primary hover:underline">
           ← Signals
         </Link>
         {err ? <InlineAlert tone="error">{err}</InlineAlert> : null}
-        {q.isLoading ? <p className="text-sm text-zinc-500">Loading…</p> : null}
+        {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
         {q.data?.signal ? (
-          <div className="rounded-lg border border-surface-border bg-surface-raised/30 p-4 text-sm text-zinc-300">
+          <div className="rounded-lg border border-border bg-card p-4 text-sm text-card-foreground">
             <div className="grid gap-1 sm:grid-cols-2">
               <div>
-                <span className="text-zinc-500">Symbol</span>{" "}
-                <span className="text-white">{q.data.signal.symbol}</span>
+                <span className="text-muted-foreground">Symbol</span>{" "}
+                <span className="font-medium text-foreground">{q.data.signal.symbol}</span>
               </div>
               <div>
-                <span className="text-zinc-500">Direction</span>{" "}
+                <span className="text-muted-foreground">Direction</span>{" "}
                 <span className="capitalize">{q.data.signal.direction}</span>
               </div>
               <div>
-                <span className="text-zinc-500">Confidence</span> {q.data.signal.confidence_score}
+                <span className="text-muted-foreground">Confidence</span> {q.data.signal.confidence_score}
               </div>
               <div>
-                <span className="text-zinc-500">Risk</span> {q.data.signal.risk_score}
+                <span className="text-muted-foreground">Risk</span> {q.data.signal.risk_score}
               </div>
             </div>
             {q.data.signal.reasoning ? (
-              <p className="mt-3 text-zinc-400">{q.data.signal.reasoning}</p>
+              <p className="mt-3 text-muted-foreground">{q.data.signal.reasoning}</p>
             ) : null}
             {q.data.signal.disclaimer ? (
-              <p className="mt-3 text-xs text-amber-200/90">{q.data.signal.disclaimer}</p>
+              <p className="mt-3 text-xs text-amber-900 dark:text-amber-100/95">{q.data.signal.disclaimer}</p>
             ) : null}
           </div>
         ) : null}
@@ -90,16 +85,16 @@ export default function SignalDetailPage() {
         {id ? (
           <form
             onSubmit={form.handleSubmit(onTrack)}
-            className="max-w-md space-y-3 rounded-lg border border-surface-border bg-surface-raised/20 p-4"
+            className="max-w-md space-y-3 rounded-lg border border-border bg-muted/30 p-4"
           >
-            <h2 className="text-sm font-medium text-white">Track signal</h2>
+            <h2 className="text-sm font-medium text-foreground">Track signal</h2>
             {form.formState.errors.root ? (
               <InlineAlert tone="error">{form.formState.errors.root.message}</InlineAlert>
             ) : null}
             <FormField id="status" label="Status" error={form.formState.errors.status?.message}>
               <select
                 id="status"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...form.register("status")}
               >
                 <option value="watching">Watching</option>
@@ -112,7 +107,7 @@ export default function SignalDetailPage() {
               <textarea
                 id="notes"
                 rows={3}
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...form.register("notes")}
               />
             </FormField>

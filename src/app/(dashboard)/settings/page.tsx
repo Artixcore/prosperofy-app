@@ -335,8 +335,8 @@ export default function SettingsPage() {
 
       <section className="mt-8 space-y-6">
         <div>
-          <h2 className="text-base font-semibold text-white">Profile</h2>
-          <p className="mt-1 text-sm text-zinc-400">Your name and email (email changes require verification).</p>
+          <h2 className="text-base font-semibold text-foreground">Profile</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Your name and email (email changes require verification).</p>
           <form
             onSubmit={profileForm.handleSubmit(onProfileSave)}
             className="mt-4 max-w-xl space-y-3 rounded-lg border border-surface-border bg-surface-raised/40 p-6"
@@ -344,7 +344,7 @@ export default function SettingsPage() {
             <FormField id="p-name" label="Name" error={profileForm.formState.errors.name?.message}>
               <input
                 id="p-name"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...profileForm.register("name")}
               />
             </FormField>
@@ -352,33 +352,33 @@ export default function SettingsPage() {
               <input
                 id="p-email"
                 type="email"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...profileForm.register("email")}
               />
             </FormField>
             <div className="rounded-md border border-surface-border bg-surface/60 p-3">
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-muted-foreground">
                 If you change your email, verify with one of the following:
               </p>
               <input
                 type="password"
                 placeholder="Current password"
-                className="mt-2 w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="mt-2 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 autoComplete="current-password"
                 {...profileForm.register("verify_password")}
               />
               {profileForm.formState.errors.verify_password?.message ? (
-                <p className="mt-1 text-xs text-red-400">{profileForm.formState.errors.verify_password.message}</p>
+                <p className="mt-1 text-xs text-destructive">{profileForm.formState.errors.verify_password.message}</p>
               ) : null}
               <input
                 type="password"
                 placeholder="Security passphrase"
-                className="mt-2 w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="mt-2 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...profileForm.register("verify_passphrase")}
               />
               <input
                 placeholder="Authenticator code"
-                className="mt-2 w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="mt-2 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...profileForm.register("verify_otp")}
               />
             </div>
@@ -387,7 +387,7 @@ export default function SettingsPage() {
         </div>
 
         <div>
-          <h2 className="text-base font-semibold text-white">Change password</h2>
+          <h2 className="text-base font-semibold text-foreground">Change password</h2>
           <form
             onSubmit={passwordForm.handleSubmit(onPassword)}
             className="mt-4 max-w-xl space-y-3 rounded-lg border border-surface-border bg-surface-raised/40 p-6"
@@ -401,7 +401,7 @@ export default function SettingsPage() {
                 id="pw-c"
                 type="password"
                 autoComplete="current-password"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...passwordForm.register("current_password")}
               />
             </FormField>
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                 id="pw-n"
                 type="password"
                 autoComplete="new-password"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...passwordForm.register("password")}
               />
             </FormField>
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                 id="pw-nc"
                 type="password"
                 autoComplete="new-password"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...passwordForm.register("password_confirmation")}
               />
             </FormField>
@@ -432,20 +432,20 @@ export default function SettingsPage() {
         </div>
 
         <div>
-          <h2 className="text-base font-semibold text-white">Security</h2>
+          <h2 className="text-base font-semibold text-foreground">Security</h2>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-surface-border bg-surface-raised/40 p-5">
-              <h3 className="text-sm font-medium text-white">Two-factor authentication</h3>
-              <p className="mt-2 text-sm text-zinc-400">
+              <h3 className="text-sm font-medium text-foreground">Two-factor authentication</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Status:{" "}
-                <span className="text-zinc-200">{sec.two_factor.enabled ? "Enabled" : "Disabled"}</span>
+                <span className="text-foreground">{sec.two_factor.enabled ? "Enabled" : "Disabled"}</span>
               </p>
               {!sec.two_factor.enabled ? (
                 <div className="mt-3 space-y-2">
                   <button
                     type="button"
-                    className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                    className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-600"
                     onClick={async () => {
                       setTfCodes(null);
                       setBanner(null);
@@ -460,9 +460,9 @@ export default function SettingsPage() {
                     Set up authenticator
                   </button>
                   {tfUri ? (
-                    <div className="rounded-md border border-surface-border bg-surface p-3 text-xs text-zinc-300">
-                      <p className="font-medium text-zinc-200">Authenticator setup</p>
-                      <p className="mt-2 break-all text-[11px] leading-snug text-zinc-400">{tfUri}</p>
+                    <div className="rounded-md border border-surface-border bg-surface p-3 text-xs text-muted-foreground">
+                      <p className="font-medium text-foreground">Authenticator setup</p>
+                      <p className="mt-2 break-all text-[11px] leading-snug text-muted-foreground">{tfUri}</p>
                       <form
                         className="mt-3 flex flex-col gap-2"
                         onSubmit={tfOtpForm.handleSubmit(async (v) => {
@@ -481,17 +481,17 @@ export default function SettingsPage() {
                           }
                         })}
                       >
-                        <label className="text-xs text-zinc-400" htmlFor="tf-otp">
+                        <label className="text-xs text-muted-foreground" htmlFor="tf-otp">
                           Enter the 6-digit code
                         </label>
                         <input
                           id="tf-otp"
-                          className="rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                          className="rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                           inputMode="numeric"
                           {...tfOtpForm.register("otp")}
                         />
                         {tfOtpForm.formState.errors.otp?.message ? (
-                          <p className="text-xs text-red-400">{tfOtpForm.formState.errors.otp.message}</p>
+                          <p className="text-xs text-destructive">{tfOtpForm.formState.errors.otp.message}</p>
                         ) : null}
                         <SubmitButton pending={tfConfirm.isPending}>Confirm and enable</SubmitButton>
                       </form>
@@ -515,22 +515,22 @@ export default function SettingsPage() {
                     }
                   })}
                 >
-                  <p className="text-xs text-zinc-500">Disable requires password, passphrase, or authenticator code.</p>
+                  <p className="text-xs text-muted-foreground">Disable requires password, passphrase, or authenticator code.</p>
                   <input
                     type="password"
                     placeholder="Current password"
-                    className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                    className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                     {...tfDisableForm.register("verify_password")}
                   />
                   <input
                     type="password"
                     placeholder="Security passphrase"
-                    className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                    className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                     {...tfDisableForm.register("verify_passphrase")}
                   />
                   <input
                     placeholder="Authenticator code"
-                    className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                    className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                     {...tfDisableForm.register("verify_otp")}
                   />
                   <SubmitButton pending={tfDisable.isPending} className="bg-red-800 hover:bg-red-700">
@@ -551,12 +551,12 @@ export default function SettingsPage() {
             </div>
 
             <div className="rounded-lg border border-surface-border bg-surface-raised/40 p-5">
-              <h3 className="text-sm font-medium text-white">Security passphrase</h3>
-              <p className="mt-2 text-sm text-zinc-400">
+              <h3 className="text-sm font-medium text-foreground">Security passphrase</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Status:{" "}
-                <span className="text-zinc-200">{sec.passphrase_set ? "Set" : "Not set"}</span>
+                <span className="text-foreground">{sec.passphrase_set ? "Set" : "Not set"}</span>
               </p>
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Used to verify sensitive actions such as exchange API changes.
               </p>
               <form
@@ -566,29 +566,29 @@ export default function SettingsPage() {
                 <input
                   type="password"
                   placeholder="Current password"
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                   autoComplete="current-password"
                   {...passphraseForm.register("current_password")}
                 />
                 {passphraseForm.formState.errors.current_password?.message ? (
-                  <p className="text-xs text-red-400">{passphraseForm.formState.errors.current_password.message}</p>
+                  <p className="text-xs text-destructive">{passphraseForm.formState.errors.current_password.message}</p>
                 ) : null}
                 <input
                   type="password"
                   placeholder="New passphrase (min 12 chars)"
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                   {...passphraseForm.register("passphrase")}
                 />
                 <input
                   type="password"
                   placeholder="Confirm passphrase"
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                   {...passphraseForm.register("passphrase_confirmation")}
                 />
                 <input
                   type="text"
                   placeholder="Recovery hint (optional)"
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                   {...passphraseForm.register("recovery_hint")}
                 />
                 <SubmitButton pending={postPassphrase.isPending}>
@@ -598,13 +598,13 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <p className="mt-3 text-xs text-zinc-500">
+          <p className="mt-3 text-xs text-muted-foreground">
             Email verified: {sec.email_verified ? "Yes" : "No"} — use a verified inbox for security alerts.
           </p>
         </div>
 
         <div>
-          <h2 className="text-base font-semibold text-white">Exchange APIs</h2>
+          <h2 className="text-base font-semibold text-foreground">Exchange APIs</h2>
           <InlineAlert tone="warning">
             For your safety, use read-only API keys and never enable withdrawal permissions.
           </InlineAlert>
@@ -619,15 +619,15 @@ export default function SettingsPage() {
                   key={row.exchange}
                   className="rounded-lg border border-surface-border bg-surface-raised/40 p-4"
                 >
-                  <h3 className="text-sm font-semibold text-white">{exchangeLabel(row.exchange)}</h3>
-                  <p className="mt-1 text-xs text-zinc-400">Connection: {statusLabel(row)}</p>
+                  <h3 className="text-sm font-semibold text-foreground">{exchangeLabel(row.exchange)}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">Connection: {statusLabel(row)}</p>
                   {row.key_display_suffix ? (
-                    <p className="mt-1 text-xs text-zinc-500">Key ending ····{row.key_display_suffix}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Key ending ····{row.key_display_suffix}</p>
                   ) : null}
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Permissions: {permissionSummary(row)}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Last verified:{" "}
                     {row.last_verified_at
                       ? new Date(row.last_verified_at).toLocaleString()
@@ -648,7 +648,7 @@ export default function SettingsPage() {
                       <>
                         <button
                           type="button"
-                          className="rounded-md border border-surface-border px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+                          className="rounded-md border border-border px-2 py-1.5 text-xs text-foreground hover:bg-muted"
                           onClick={async () => {
                             setBanner(null);
                             try {
@@ -666,7 +666,7 @@ export default function SettingsPage() {
                         </button>
                         <button
                           type="button"
-                          className="rounded-md border border-surface-border px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+                          className="rounded-md border border-border px-2 py-1.5 text-xs text-foreground hover:bg-muted"
                           onClick={() =>
                             setExchangeModal({ exchange: ex, mode: "update", connectionId: cid })
                           }
@@ -675,7 +675,7 @@ export default function SettingsPage() {
                         </button>
                         <button
                           type="button"
-                          className="rounded-md border border-red-900/40 px-2 py-1.5 text-xs text-red-300 hover:bg-red-950/40"
+                          className="rounded-md border border-red-300 px-2 py-1.5 text-xs font-medium text-red-800 hover:bg-red-50 dark:border-red-900/50 dark:text-red-200 dark:hover:bg-red-950/40"
                           onClick={() => setDisconnect({ id: cid, exchange: ex })}
                         >
                           Disconnect
@@ -690,7 +690,7 @@ export default function SettingsPage() {
         </div>
 
         <div>
-          <h2 className="text-base font-semibold text-white">Preferences</h2>
+          <h2 className="text-base font-semibold text-foreground">Preferences</h2>
           <form
             onSubmit={prefsForm.handleSubmit(onPreferences)}
             className="mt-4 max-w-xl space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6"
@@ -698,7 +698,7 @@ export default function SettingsPage() {
             <FormField id="theme" label="Theme" error={prefsForm.formState.errors.theme?.message}>
               <select
                 id="theme"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...prefsForm.register("theme")}
               >
                 <option value="system">System</option>
@@ -709,7 +709,7 @@ export default function SettingsPage() {
             <FormField id="timezone" label="Timezone" error={prefsForm.formState.errors.timezone?.message}>
               <input
                 id="timezone"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...prefsForm.register("timezone")}
               />
             </FormField>
@@ -721,7 +721,7 @@ export default function SettingsPage() {
               <input
                 id="default_currency"
                 maxLength={3}
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm uppercase text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm uppercase text-foreground placeholder:text-muted-foreground"
                 {...prefsForm.register("default_currency")}
               />
             </FormField>
@@ -732,7 +732,7 @@ export default function SettingsPage() {
             >
               <select
                 id="risk_preference"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...prefsForm.register("risk_preference")}
               >
                 <option value="low">Low</option>
@@ -741,8 +741,8 @@ export default function SettingsPage() {
               </select>
             </FormField>
             <div className="space-y-2">
-              <p className="text-sm font-medium text-zinc-300">Notifications</p>
-              <label className="flex items-center gap-2 text-sm text-zinc-300">
+              <p className="text-sm font-medium text-muted-foreground">Notifications</p>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input
                   type="checkbox"
                   className="rounded border-surface-border"
@@ -750,7 +750,7 @@ export default function SettingsPage() {
                 />
                 Email
               </label>
-              <label className="flex items-center gap-2 text-sm text-zinc-300">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input
                   type="checkbox"
                   className="rounded border-surface-border"
@@ -758,7 +758,7 @@ export default function SettingsPage() {
                 />
                 Push
               </label>
-              <label className="flex items-center gap-2 text-sm text-zinc-300">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input
                   type="checkbox"
                   className="rounded border-surface-border"
@@ -783,10 +783,10 @@ export default function SettingsPage() {
       ) : null}
 
       {disconnect ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-xl border border-surface-border bg-surface p-6">
-            <h3 className="text-lg font-semibold text-white">Disconnect {exchangeLabel(disconnect.exchange)}?</h3>
-            <p className="mt-2 text-sm text-zinc-400">Verify your identity to remove this connection.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-card-foreground">
+            <h3 className="text-lg font-semibold text-card-foreground">Disconnect {exchangeLabel(disconnect.exchange)}?</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Verify your identity to remove this connection.</p>
             <form
               className="mt-4 space-y-2"
               onSubmit={disconnectForm.handleSubmit(async (v) => {
@@ -811,24 +811,24 @@ export default function SettingsPage() {
               <input
                 type="password"
                 placeholder="Current password"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...disconnectForm.register("verify_password")}
               />
               <input
                 type="password"
                 placeholder="Security passphrase"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...disconnectForm.register("verify_passphrase")}
               />
               <input
                 placeholder="Authenticator code"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...disconnectForm.register("verify_otp")}
               />
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  className="rounded-md border border-surface-border px-3 py-2 text-sm text-zinc-200"
+                  className="rounded-md border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-secondary"
                   onClick={() => setDisconnect(null)}
                 >
                   Cancel

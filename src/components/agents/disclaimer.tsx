@@ -7,7 +7,7 @@ export function AgentsDisclaimerBanner() {
   return (
     <div
       role="note"
-      className="rounded-md border border-amber-800/50 bg-amber-950/25 p-4 text-sm text-amber-100"
+      className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800/50 dark:bg-amber-950/25 dark:text-amber-50"
     >
       {AGENTS_DISCLAIMER}
     </div>

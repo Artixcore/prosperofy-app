@@ -1,10 +1,13 @@
 type Tone = "info" | "error" | "success" | "warning";
 
 const tones: Record<Tone, string> = {
-  info: "border-surface-border bg-surface-raised text-content-primary",
-  error: "border-red-300/70 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-100",
-  success: "border-emerald-300/70 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100",
-  warning: "border-amber-300/70 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100",
+  info: "border-border bg-muted text-foreground",
+  error:
+    "border-red-300 bg-red-50 text-red-950 dark:border-red-900/55 dark:bg-red-950/35 dark:text-red-50",
+  success:
+    "border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-900/55 dark:bg-emerald-950/35 dark:text-emerald-50",
+  warning:
+    "border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-900/55 dark:bg-amber-950/35 dark:text-amber-50",
 };
 
 export function InlineAlert({

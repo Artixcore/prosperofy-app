@@ -39,27 +39,27 @@ export function ConfirmDialog({
       {children(() => setOpen(true))}
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-[2px]"
           role="presentation"
           onClick={() => !pending && setOpen(false)}
         >
           <div
-            className="max-w-md rounded-lg border border-surface-border bg-surface p-6 shadow-xl"
+            className="max-w-md rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="confirm-title" className="text-lg font-semibold text-white">
+            <h2 id="confirm-title" className="text-lg font-semibold text-card-foreground">
               {title}
             </h2>
-            <p className="mt-2 text-sm text-zinc-400">{description}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
             <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
                 disabled={pending}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-1.5 text-sm text-zinc-300 hover:bg-surface-raised"
+                className="rounded-md px-3 py-1.5 text-sm text-secondary-foreground hover:bg-secondary"
               >
                 {cancelLabel}
               </button>
@@ -67,10 +67,10 @@ export function ConfirmDialog({
                 type="button"
                 disabled={pending}
                 onClick={() => void handleConfirm()}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium text-white ${
+                className={`rounded-md px-3 py-1.5 text-sm font-medium motion-safe:transition-[filter] hover:brightness-110 ${
                   tone === "danger"
-                    ? "bg-red-700 hover:bg-red-600"
-                    : "bg-accent hover:bg-indigo-500"
+                    ? "bg-destructive text-destructive-foreground"
+                    : "bg-primary text-primary-foreground"
                 }`}
               >
                 {pending ? "…" : confirmLabel}

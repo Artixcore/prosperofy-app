@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useGenerateSignalMutation } from "@/features/agents/use-agents-api";
 import { AGENT_KEYS, MARKET_OPTIONS, type AgentKey } from "@/types/agents";
 
@@ -82,7 +82,7 @@ export default function GenerateSignalPage() {
         include_historical: values.include_historical,
       });
     } catch (e) {
-      setBanner(isApiClientError(e) ? e.message : "AI signal could not be generated. Please try again shortly.");
+      setBanner(normalizeApiError(e));
     }
   }
 
@@ -95,17 +95,17 @@ export default function GenerateSignalPage() {
       <div className="space-y-4">
         <AgentsDisclaimerBanner />
         {banner ? <InlineAlert tone="error">{banner}</InlineAlert> : null}
-        <Link href="/agents/signals" className="text-sm text-sky-400 hover:text-sky-300">
+        <Link href="/agents/signals" className="text-sm font-medium text-primary hover:underline">
           ← Back to signals
         </Link>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="max-w-xl space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6"
+          className="max-w-xl space-y-4 rounded-lg border border-border bg-muted/30 p-6"
         >
           <FormField id="agent_key" label="Agent" error={form.formState.errors.agent_key?.message}>
             <select
               id="agent_key"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("agent_key")}
             >
               {AGENT_KEYS.map((k) => (
@@ -118,7 +118,7 @@ export default function GenerateSignalPage() {
           <FormField id="market" label="Market" error={form.formState.errors.market?.message}>
             <select
               id="market"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("market")}
             >
               {MARKET_OPTIONS.map((m) => (
@@ -131,14 +131,14 @@ export default function GenerateSignalPage() {
           <FormField id="symbols" label="Symbols" error={form.formState.errors.symbols?.message}>
             <input
               id="symbols"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("symbols")}
             />
           </FormField>
           <FormField id="timeframe" label="Timeframe" error={form.formState.errors.timeframe?.message}>
             <select
               id="timeframe"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("timeframe")}
             >
               {TIMEFRAMES.map((tf) => (
@@ -151,7 +151,7 @@ export default function GenerateSignalPage() {
           <FormField id="risk_profile" label="Risk profile" error={form.formState.errors.risk_profile?.message}>
             <select
               id="risk_profile"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("risk_profile")}
             >
               <option value="conservative">Conservative</option>
@@ -159,7 +159,7 @@ export default function GenerateSignalPage() {
               <option value="aggressive">Aggressive</option>
             </select>
           </FormField>
-          <div className="grid gap-2 text-sm text-zinc-300">
+          <div className="grid gap-2 text-sm text-foreground">
             <label className="flex items-center gap-2">
               <input type="checkbox" {...form.register("include_news")} /> Include news
             </label>
@@ -174,7 +174,7 @@ export default function GenerateSignalPage() {
         </form>
 
         {mut.isSuccess && mut.data ? (
-          <pre className="max-h-[480px] overflow-auto rounded-md bg-black/40 p-4 font-mono text-xs text-zinc-400">
+          <pre className="max-h-[480px] overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
             {JSON.stringify(mut.data, null, 2)}
           </pre>
         ) : null}

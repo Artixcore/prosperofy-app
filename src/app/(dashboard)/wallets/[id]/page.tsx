@@ -13,7 +13,7 @@ import { LoadingState } from "@/components/system/loading-state";
 import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import {
   useBalanceRefreshMutation,
   useBroadcastTxMutation,
@@ -65,7 +65,7 @@ function WalletDetailContent({ id }: { id: string }) {
       const res = await prepareMut.mutateAsync(body);
       setPrepareResult(res);
     } catch (e) {
-      setTxError(isApiClientError(e) ? e.message : "Prepare failed.");
+      setTxError(normalizeApiError(e));
     }
   }
 
@@ -78,7 +78,7 @@ function WalletDetailContent({ id }: { id: string }) {
       setSimulateResult(res);
     } catch (e) {
       setSimulateResult(null);
-      setTxError(isApiClientError(e) ? e.message : "Simulate failed.");
+      setTxError(normalizeApiError(e));
     }
   }
 
@@ -96,7 +96,7 @@ function WalletDetailContent({ id }: { id: string }) {
       setTxB64("");
       setSimulateResult(null);
     } catch (e) {
-      setTxError(isApiClientError(e) ? e.message : "Broadcast failed.");
+      setTxError(normalizeApiError(e));
     }
   }
 
@@ -121,7 +121,7 @@ function WalletDetailContent({ id }: { id: string }) {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/wallets"
-              className="rounded-md border border-surface-border px-3 py-2 text-sm text-zinc-300 hover:bg-surface-raised"
+              className="rounded-md border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-secondary"
             >
               All wallets
             </Link>
@@ -129,7 +129,7 @@ function WalletDetailContent({ id }: { id: string }) {
               type="button"
               onClick={() => void refreshMut.mutateAsync({})}
               disabled={refreshMut.isPending}
-              className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:opacity-50"
             >
               {refreshMut.isPending ? "Refreshing…" : "Refresh balance"}
             </button>
@@ -138,16 +138,14 @@ function WalletDetailContent({ id }: { id: string }) {
       />
       {refreshMut.isError ? (
         <InlineAlert tone="error">
-          {isApiClientError(refreshMut.error)
-            ? refreshMut.error.message
-            : "Balance refresh failed."}
+          {normalizeApiError(refreshMut.error)}
         </InlineAlert>
       ) : null}
       {txError ? <InlineAlert tone="error">{txError}</InlineAlert> : null}
 
       <section className="mt-8 space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6">
-        <h2 className="text-lg font-medium text-white">Prepare transfer</h2>
-        <p className="text-sm text-zinc-500">
+        <h2 className="text-lg font-medium text-foreground">Prepare transfer</h2>
+        <p className="text-sm text-muted-foreground">
           Build an unsigned transaction via Laravel. Sign in your wallet, then paste the serialized
           transaction for simulate/broadcast (Solana only).
         </p>
@@ -155,7 +153,7 @@ function WalletDetailContent({ id }: { id: string }) {
           <FormField id="to" label="To address" error={form.formState.errors.to?.message}>
             <input
               id="to"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("to")}
             />
           </FormField>
@@ -163,7 +161,7 @@ function WalletDetailContent({ id }: { id: string }) {
             <FormField id="asset_type" label="Asset type" error={form.formState.errors.asset_type?.message}>
               <select
                 id="asset_type"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 {...form.register("asset_type")}
               >
                 <option value="native">Native SOL</option>
@@ -174,7 +172,7 @@ function WalletDetailContent({ id }: { id: string }) {
           <FormField id="amount" label="Amount" error={form.formState.errors.amount?.message}>
             <input
               id="amount"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               placeholder={isSolana ? "SOL amount (native)" : "EVM amount"}
               {...form.register("amount")}
             />
@@ -184,7 +182,7 @@ function WalletDetailContent({ id }: { id: string }) {
               <FormField id="mint" label="Mint" error={form.formState.errors.mint?.message}>
                 <input
                   id="mint"
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                   {...form.register("mint")}
                 />
               </FormField>
@@ -195,7 +193,7 @@ function WalletDetailContent({ id }: { id: string }) {
               >
                 <input
                   id="amount_atomic"
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                   {...form.register("amount_atomic")}
                 />
               </FormField>
@@ -204,7 +202,7 @@ function WalletDetailContent({ id }: { id: string }) {
           <FormField id="network" label="Network (optional)" error={form.formState.errors.network?.message}>
             <input
               id="network"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("network")}
             />
           </FormField>
@@ -212,8 +210,8 @@ function WalletDetailContent({ id }: { id: string }) {
         </form>
         {prepareResult ? (
           <div className="mt-4">
-            <p className="text-sm font-medium text-zinc-300">Prepare response (sanitized display)</p>
-            <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-black/40 p-3 font-mono text-xs text-zinc-400">
+            <p className="text-sm font-medium text-foreground">Prepare response (sanitized display)</p>
+            <pre className="mt-2 max-h-48 overflow-auto rounded-md border border-border bg-muted p-3 font-mono text-xs text-muted-foreground">
               {JSON.stringify(prepareResult, null, 2)}
             </pre>
           </div>
@@ -221,13 +219,13 @@ function WalletDetailContent({ id }: { id: string }) {
       </section>
 
       {isSolana ? (
-        <section className="mt-8 space-y-4 rounded-lg border border-amber-900/40 bg-amber-950/20 p-6">
-          <h2 className="text-lg font-medium text-amber-100">Solana simulate / broadcast</h2>
-          <p className="text-sm text-amber-200/80">
+        <section className="mt-8 space-y-4 rounded-lg border border-amber-300 bg-amber-50 p-6 dark:border-amber-900/45 dark:bg-amber-950/30">
+          <h2 className="text-lg font-medium text-amber-950 dark:text-amber-100">Solana simulate / broadcast</h2>
+          <p className="text-sm text-amber-900 dark:text-amber-200/90">
             Sign the prepared transaction in Phantom, then paste base64 here. Broadcasting submits on-chain
             — confirm only if you intend to send.
           </p>
-          <label className="block text-sm text-zinc-300" htmlFor="txb64">
+          <label className="block text-sm text-foreground" htmlFor="txb64">
             Serialized transaction (base64)
           </label>
           <textarea
@@ -235,14 +233,14 @@ function WalletDetailContent({ id }: { id: string }) {
             value={txB64}
             onChange={(e) => setTxB64(e.target.value)}
             rows={4}
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 font-mono text-xs text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 font-mono text-xs text-foreground placeholder:text-muted-foreground"
           />
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => void runSimulate()}
               disabled={simulateMut.isPending || !txB64.trim()}
-              className="rounded-md border border-surface-border px-3 py-2 text-sm text-zinc-200 hover:bg-surface-raised disabled:opacity-50"
+              className="rounded-md border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-secondary disabled:opacity-50"
             >
               {simulateMut.isPending ? "Simulating…" : "Simulate"}
             </button>
@@ -266,13 +264,13 @@ function WalletDetailContent({ id }: { id: string }) {
             </ConfirmDialog>
           </div>
           {simulateResult ? (
-            <pre className="max-h-48 overflow-auto rounded-md bg-black/40 p-3 font-mono text-xs text-zinc-400">
+            <pre className="max-h-48 overflow-auto rounded-md border border-border bg-muted p-3 font-mono text-xs text-muted-foreground">
               {JSON.stringify(simulateResult, null, 2)}
             </pre>
           ) : null}
         </section>
       ) : (
-        <p className="mt-8 text-sm text-zinc-500">
+        <p className="mt-8 text-sm text-muted-foreground">
           On-chain simulate/broadcast in this UI is limited to Solana wallets. For EVM, use your wallet
           after prepare or extend the app when Laravel adds EVM broadcast support.
         </p>

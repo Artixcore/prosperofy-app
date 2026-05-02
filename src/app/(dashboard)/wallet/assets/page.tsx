@@ -12,7 +12,7 @@ export default function WalletAssetsPage() {
 
   return (
     <div className="space-y-3">
-      <h1 className="text-xl font-semibold text-white">Wallet Assets</h1>
+      <h1 className="text-xl font-semibold text-foreground">Wallet Assets</h1>
       {assets.data && assets.data.length > 0 ? (
         <ul className="space-y-2">
           {assets.data.map((asset) => (
@@ -22,7 +22,7 @@ export default function WalletAssetsPage() {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-zinc-400">No assets yet. Balance providers can be connected later.</p>
+        <p className="text-sm text-muted-foreground">No assets yet. Balance providers can be connected later.</p>
       )}
     </div>
   );

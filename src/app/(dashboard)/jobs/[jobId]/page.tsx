@@ -30,9 +30,11 @@ function JobContent({ jobId }: { jobId: string }) {
     <>
       <PageHeader
         title={`Job ${data.id.slice(0, 8)}…`}
-        description={polling ? "Polling Laravel for status every few seconds until the job finishes." : "Terminal state reached."}
+        description={
+          polling ? "Polling Laravel for status every few seconds until the job finishes." : "Terminal state reached."
+        }
         action={
-          <Link href="/strategy/evaluate" className="text-sm text-accent-muted hover:underline">
+          <Link href="/strategy/evaluate" className="text-sm font-medium text-primary hover:underline">
             New evaluation
           </Link>
         }
@@ -44,41 +46,41 @@ function JobContent({ jobId }: { jobId: string }) {
       ) : (
         <InlineAlert tone="error">Finished as: {data.status}</InlineAlert>
       )}
-      <dl className="mt-6 grid max-w-2xl gap-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6 sm:grid-cols-2">
+      <dl className="mt-6 grid max-w-2xl gap-4 rounded-lg border border-border bg-card p-6 text-card-foreground sm:grid-cols-2">
         <div>
-          <dt className="text-xs uppercase text-zinc-500">Type</dt>
-          <dd className="font-mono text-sm text-white">{data.type}</dd>
+          <dt className="text-xs uppercase text-muted-foreground">Type</dt>
+          <dd className="font-mono text-sm text-foreground">{data.type}</dd>
         </div>
         <div>
-          <dt className="text-xs uppercase text-zinc-500">Status</dt>
-          <dd className="text-sm text-white">{data.status}</dd>
+          <dt className="text-xs uppercase text-muted-foreground">Status</dt>
+          <dd className="text-sm text-foreground">{data.status}</dd>
         </div>
         <div>
-          <dt className="text-xs uppercase text-zinc-500">Attempts</dt>
-          <dd className="text-sm text-white">{data.attempts}</dd>
+          <dt className="text-xs uppercase text-muted-foreground">Attempts</dt>
+          <dd className="text-sm text-foreground">{data.attempts}</dd>
         </div>
         <div>
-          <dt className="text-xs uppercase text-zinc-500">Symbol</dt>
-          <dd className="text-sm text-white">{data.payload_summary?.symbol ?? "—"}</dd>
+          <dt className="text-xs uppercase text-muted-foreground">Symbol</dt>
+          <dd className="text-sm text-foreground">{data.payload_summary?.symbol ?? "—"}</dd>
         </div>
         {data.last_error ? (
           <div className="sm:col-span-2">
-            <dt className="text-xs uppercase text-zinc-500">Last error</dt>
-            <dd className="mt-1 text-sm text-red-300">{data.last_error}</dd>
+            <dt className="text-xs uppercase text-muted-foreground">Last error</dt>
+            <dd className="mt-1 text-sm font-medium text-destructive">{data.last_error}</dd>
           </div>
         ) : null}
         {data.result_summary ? (
           <div className="sm:col-span-2">
-            <dt className="text-xs uppercase text-zinc-500">Result summary</dt>
-            <dd className="mt-1 text-sm text-zinc-300">
+            <dt className="text-xs uppercase text-muted-foreground">Result summary</dt>
+            <dd className="mt-1 text-sm text-muted-foreground">
               success: {String(data.result_summary.success)} — {data.result_summary.message ?? "—"}
             </dd>
           </div>
         ) : null}
       </dl>
       <div className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-400">Raw job payload (gateway-safe)</h2>
-        <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-black/40 p-4 font-mono text-xs text-zinc-500">
+        <h2 className="text-sm font-medium text-foreground">Raw job payload (gateway-safe)</h2>
+        <pre className="mt-2 max-h-96 overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
           {JSON.stringify(data, null, 2)}
         </pre>
       </div>

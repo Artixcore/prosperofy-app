@@ -86,7 +86,7 @@ export default function DashboardHomePage() {
               View Wallets
             </Link>
             <button
-              className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               type="button"
               onClick={() => void handleCreateWallet()}
               disabled={createWflWallet.isPending}

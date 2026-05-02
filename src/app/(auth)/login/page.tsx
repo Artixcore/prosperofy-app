@@ -62,8 +62,8 @@ function LoginForm() {
 
   return (
     <div className="rounded-xl border border-surface-border bg-surface-raised p-8 shadow-lg">
-      <h1 className="text-xl font-semibold text-white">Sign in</h1>
-      <p className="mt-1 text-sm text-zinc-500">
+      <h1 className="text-xl font-semibold text-foreground">Sign in</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
         Use your Prosperofy account. API: Laravel core only.
       </p>
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -75,7 +75,7 @@ function LoginForm() {
             id="email"
             type="email"
             autoComplete="email"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white outline-none ring-accent focus:border-accent focus:ring-1"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
             {...register("email")}
           />
         </FormField>
@@ -84,7 +84,7 @@ function LoginForm() {
             id="password"
             type="password"
             autoComplete="current-password"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white outline-none ring-accent focus:border-accent focus:ring-1"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
             {...register("password")}
           />
         </FormField>
@@ -96,7 +96,7 @@ function LoginForm() {
           </Link>
         </p>
       </form>
-      <p className="mt-6 text-center text-sm text-zinc-500">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         No account?{" "}
         <Link href="/register" className="text-accent-muted hover:underline">
           Register

@@ -20,10 +20,13 @@ type ToastContextValue = {
 };
 
 const toneClasses: Record<ToastTone, string> = {
-  success: "border-emerald-300/60 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100",
-  error: "border-red-300/60 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100",
-  warning: "border-amber-300/60 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100",
-  info: "border-surface-border bg-surface-raised text-content-primary",
+  success:
+    "border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-900/55 dark:bg-emerald-950/40 dark:text-emerald-50",
+  error:
+    "border-red-300 bg-red-50 text-red-950 dark:border-red-900/55 dark:bg-red-950/40 dark:text-red-50",
+  warning:
+    "border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-900/55 dark:bg-amber-950/40 dark:text-amber-50",
+  info: "border-border bg-muted text-foreground",
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -65,12 +68,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">{item.title}</p>
-                {item.description ? <p className="mt-1 text-sm opacity-90">{item.description}</p> : null}
+                {item.description ? (
+                  <p className="mt-1 text-sm font-normal leading-snug text-current">{item.description}</p>
+                ) : null}
               </div>
               <button
                 type="button"
                 onClick={() => dismissToast(item.id)}
-                className="rounded-md px-2 py-1 text-xs hover:bg-black/5 dark:hover:bg-white/10"
+                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-current underline-offset-2 hover:bg-foreground/10 hover:underline dark:hover:bg-foreground/15"
                 aria-label="Dismiss alert"
               >
                 Dismiss

@@ -89,7 +89,7 @@ export function AgentRunForm({
           <FormField id="country" label="Country (ISO)" error={form.formState.errors.country?.message}>
             <input
               id="country"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               placeholder="US"
               {...form.register("country")}
             />
@@ -98,7 +98,7 @@ export function AgentRunForm({
         <FormField id="market" label="Market" error={form.formState.errors.market?.message}>
           <select
             id="market"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("market")}
           >
             {MARKET_OPTIONS.map((m) => (
@@ -111,14 +111,14 @@ export function AgentRunForm({
         <FormField id="symbols" label="Symbols (comma or space separated)" error={form.formState.errors.symbols?.message}>
           <input
             id="symbols"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("symbols")}
           />
         </FormField>
         <FormField id="timeframe" label="Timeframe" error={form.formState.errors.timeframe?.message}>
           <select
             id="timeframe"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("timeframe")}
           >
             {(["1m", "5m", "15m", "1h", "4h", "1d", "1w"] as const).map((tf) => (
@@ -131,7 +131,7 @@ export function AgentRunForm({
         <FormField id="risk_profile" label="Risk profile" error={form.formState.errors.risk_profile?.message}>
           <select
             id="risk_profile"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("risk_profile")}
           >
             <option value="conservative">Conservative</option>
@@ -139,7 +139,7 @@ export function AgentRunForm({
             <option value="aggressive">Aggressive</option>
           </select>
         </FormField>
-        <div className="grid gap-2 text-sm text-zinc-300">
+        <div className="grid gap-2 text-sm text-foreground">
           <label className="flex items-center gap-2">
             <input type="checkbox" {...form.register("include_news")} /> Include news
           </label>

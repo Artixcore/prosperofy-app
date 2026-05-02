@@ -12,7 +12,7 @@ export default function WalletActivityPage() {
 
   return (
     <div className="space-y-3">
-      <h1 className="text-xl font-semibold text-white">Wallet Activity</h1>
+      <h1 className="text-xl font-semibold text-foreground">Wallet Activity</h1>
       {activity.data && activity.data.length > 0 ? (
         <ul className="space-y-2 text-sm">
           {activity.data.map((item, index) => (
@@ -22,7 +22,7 @@ export default function WalletActivityPage() {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-zinc-400">No wallet activity yet.</p>
+        <p className="text-sm text-muted-foreground">No wallet activity yet.</p>
       )}
     </div>
   );

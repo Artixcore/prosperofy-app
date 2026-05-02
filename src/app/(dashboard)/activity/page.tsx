@@ -38,26 +38,26 @@ export default function ActivityPage() {
           {items.map((item) => (
             <article
               key={item.id}
-              className="rounded-lg border border-surface-border bg-surface-raised/40 p-4"
+              className="rounded-lg border border-border bg-card p-4 text-card-foreground"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-foreground">
                     {item.kind ?? "activity"}: {item.action ?? "event"}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Subject: {item.subject_type ?? "—"} {item.subject_id ?? ""}
                   </p>
                   {item.correlation_id ? (
-                    <p className="mt-1 font-mono text-xs text-zinc-500">
+                    <p className="mt-1 font-mono text-xs text-muted-foreground">
                       Correlation: {item.correlation_id}
                     </p>
                   ) : null}
                 </div>
-                <p className="text-xs text-zinc-500">{item.created_at ?? "Unknown time"}</p>
+                <p className="text-xs text-muted-foreground">{item.created_at ?? "Unknown time"}</p>
               </div>
               {item.payload ? (
-                <pre className="mt-3 max-h-48 overflow-auto rounded bg-black/40 p-2 font-mono text-xs text-zinc-400">
+                <pre className="mt-3 max-h-48 overflow-auto rounded-md border border-border bg-muted p-2 font-mono text-xs text-muted-foreground">
                   {JSON.stringify(item.payload, null, 2)}
                 </pre>
               ) : null}
@@ -67,18 +67,18 @@ export default function ActivityPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded border border-surface-border px-3 py-1 text-sm text-zinc-300 disabled:opacity-50"
+                className="rounded border border-border px-3 py-1 text-sm text-secondary-foreground hover:bg-secondary disabled:opacity-50"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
               >
                 Previous
               </button>
-              <span className="text-sm text-zinc-400">
+              <span className="text-sm text-muted-foreground">
                 Page {page} / {pagination.last_page}
               </span>
               <button
                 type="button"
-                className="rounded border border-surface-border px-3 py-1 text-sm text-zinc-300 disabled:opacity-50"
+                className="rounded border border-border px-3 py-1 text-sm text-secondary-foreground hover:bg-secondary disabled:opacity-50"
                 disabled={page >= pagination.last_page}
                 onClick={() =>
                   setPage((current) =>

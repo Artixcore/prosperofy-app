@@ -3,26 +3,60 @@
 @tailwind utilities;
 
 :root {
+  --background: 245 247 252;
   --surface: 245 247 252;
   --surface-elevated: 255 255 255;
   --surface-raised: 248 250 255;
   --surface-border: 225 230 243;
+  --foreground: 20 24 37;
   --content-primary: 20 24 37;
-  --content-muted: 98 107 129;
-  --accent: 114 95 255;
-  --accent-muted: 138 124 255;
+  --content-muted: 91 103 122;
+  --muted: 241 245 249;
+  --muted-foreground: 91 103 122;
+  --card: 255 255 255;
+  --card-foreground: 20 24 37;
+  --popover: 255 255 255;
+  --popover-foreground: 20 24 37;
+  --border: 225 230 243;
+  --input: 218 224 238;
+  --ring: 59 91 219;
+  --primary: 59 91 219;
+  --primary-foreground: 255 255 255;
+  --secondary: 238 242 247;
+  --secondary-foreground: 20 24 37;
+  --destructive: 190 48 48;
+  --destructive-foreground: 255 255 255;
+  --accent: 59 91 219;
+  --accent-muted: 96 126 234;
   color-scheme: light;
 }
 
 html[data-theme="dark"] {
+  --background: 14 18 28;
   --surface: 14 18 28;
   --surface-elevated: 20 26 38;
   --surface-raised: 30 36 50;
   --surface-border: 56 64 82;
+  --foreground: 242 246 255;
   --content-primary: 242 246 255;
   --content-muted: 159 172 195;
-  --accent: 147 132 255;
-  --accent-muted: 181 170 255;
+  --muted: 30 36 50;
+  --muted-foreground: 159 172 195;
+  --card: 20 26 38;
+  --card-foreground: 242 246 255;
+  --popover: 26 32 46;
+  --popover-foreground: 242 246 255;
+  --border: 56 64 82;
+  --input: 56 64 82;
+  --ring: 129 140 248;
+  --primary: 112 129 255;
+  --primary-foreground: 14 18 28;
+  --secondary: 30 36 50;
+  --secondary-foreground: 242 246 255;
+  --destructive: 220 95 95;
+  --destructive-foreground: 14 18 28;
+  --accent: 112 129 255;
+  --accent-muted: 156 167 252;
   color-scheme: dark;
 }
 
@@ -30,6 +64,18 @@ html[data-theme="dark"] {
   box-shadow: 0 8px 30px rgba(20, 23, 38, 0.08);
 }
 
-body {
-  @apply bg-surface text-content-primary antialiased transition-colors duration-200;
+html[data-theme="dark"] .shadow-soft {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    @apply border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
 }

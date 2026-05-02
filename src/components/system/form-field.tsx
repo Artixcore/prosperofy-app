@@ -11,17 +11,17 @@ type Props = {
 export function FormField({ id, label, error, children, hint }: Props) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-zinc-300">
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
       {children}
       {hint && !error ? (
-        <p className="text-xs text-zinc-500" id={`${id}-hint`}>
+        <p className="text-xs text-muted-foreground" id={`${id}-hint`}>
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p className="text-sm text-red-400" id={`${id}-error`} role="alert">
+        <p className="text-sm font-medium text-destructive" id={`${id}-error`} role="alert">
           {error}
         </p>
       ) : null}

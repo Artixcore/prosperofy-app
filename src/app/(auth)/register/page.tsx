@@ -58,8 +58,8 @@ export default function RegisterPage() {
 
   return (
     <div className="rounded-xl border border-surface-border bg-surface-raised p-8 shadow-lg">
-      <h1 className="text-xl font-semibold text-white">Create account</h1>
-      <p className="mt-1 text-sm text-zinc-500">Register through Laravel core.</p>
+      <h1 className="text-xl font-semibold text-foreground">Create account</h1>
+      <p className="mt-1 text-sm text-muted-foreground">Register through Laravel core.</p>
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         {formError ? (
           <InlineAlert tone="error">{formError}</InlineAlert>
@@ -69,7 +69,7 @@ export default function RegisterPage() {
             id="name"
             type="text"
             autoComplete="name"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white outline-none ring-accent focus:border-accent focus:ring-1"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
             {...register("name")}
           />
         </FormField>
@@ -78,7 +78,7 @@ export default function RegisterPage() {
             id="email"
             type="email"
             autoComplete="email"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white outline-none ring-accent focus:border-accent focus:ring-1"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
             {...register("email")}
           />
         </FormField>
@@ -87,7 +87,7 @@ export default function RegisterPage() {
             id="password"
             type="password"
             autoComplete="new-password"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white outline-none ring-accent focus:border-accent focus:ring-1"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
             {...register("password")}
           />
         </FormField>
@@ -100,14 +100,14 @@ export default function RegisterPage() {
             id="password_confirmation"
             type="password"
             autoComplete="new-password"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white outline-none ring-accent focus:border-accent focus:ring-1"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
             {...register("password_confirmation")}
           />
         </FormField>
         <input type="hidden" {...register("device_name")} />
         <SubmitButton pending={isSubmitting}>Create account</SubmitButton>
       </form>
-      <p className="mt-6 text-center text-sm text-zinc-500">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link href="/login" className="text-accent-muted hover:underline">
           Sign in

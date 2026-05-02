@@ -146,7 +146,7 @@ export default function StrategyEvaluatePage() {
         <FormField id="symbol" label="Symbol" error={form.formState.errors.symbol?.message}>
           <input
             id="symbol"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("symbol")}
           />
         </FormField>
@@ -154,7 +154,7 @@ export default function StrategyEvaluatePage() {
           <textarea
             id="open"
             rows={3}
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("open")}
           />
         </FormField>
@@ -162,7 +162,7 @@ export default function StrategyEvaluatePage() {
           <textarea
             id="high"
             rows={3}
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("high")}
           />
         </FormField>
@@ -170,7 +170,7 @@ export default function StrategyEvaluatePage() {
           <textarea
             id="low"
             rows={3}
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("low")}
           />
         </FormField>
@@ -178,7 +178,7 @@ export default function StrategyEvaluatePage() {
           <textarea
             id="close"
             rows={3}
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("close")}
           />
         </FormField>
@@ -186,7 +186,7 @@ export default function StrategyEvaluatePage() {
           <textarea
             id="volume"
             rows={3}
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("volume")}
           />
         </FormField>
@@ -195,17 +195,17 @@ export default function StrategyEvaluatePage() {
             id="sent"
             type="number"
             step="0.01"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("sentiment_score")}
           />
         </FormField>
-        <p className="text-xs font-medium uppercase text-zinc-500">Risk</p>
+        <p className="text-xs font-medium uppercase text-muted-foreground">Risk</p>
         <FormField id="pe" label="Portfolio exposure (0–3)" error={form.formState.errors.portfolio_exposure?.message}>
           <input
             id="pe"
             type="number"
             step="0.01"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("portfolio_exposure")}
           />
         </FormField>
@@ -214,7 +214,7 @@ export default function StrategyEvaluatePage() {
             id="dd"
             type="number"
             step="0.01"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("current_drawdown")}
           />
         </FormField>
@@ -222,11 +222,11 @@ export default function StrategyEvaluatePage() {
           <input
             id="cl"
             type="number"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("consecutive_losses")}
           />
         </FormField>
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <label className="flex items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"
             className="rounded border-surface-border"
@@ -242,7 +242,7 @@ export default function StrategyEvaluatePage() {
           >
             <input
               id="strategy_name"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...form.register("strategy_name")}
             />
           </FormField>

@@ -5,8 +5,8 @@ import { SignalRiskBadge } from "@/components/agents/signal-risk-badge";
 
 export function SignalRow({ signal }: { signal: MarketSignal }) {
   return (
-    <tr className="border-b border-surface-border text-sm text-zinc-300">
-      <td className="py-2 pr-4 font-medium text-white">{signal.symbol}</td>
+    <tr className="border-b border-border text-sm text-muted-foreground">
+      <td className="py-2 pr-4 font-medium text-foreground">{signal.symbol}</td>
       <td className="py-2 pr-4">{signal.market_type}</td>
       <td className="py-2 pr-4 capitalize">{signal.direction}</td>
       <td className="py-2 pr-4">
@@ -18,7 +18,7 @@ export function SignalRow({ signal }: { signal: MarketSignal }) {
       <td className="py-2 pr-4">{signal.timeframe}</td>
       <td className="py-2 pr-4">{signal.status}</td>
       <td className="py-2 text-right">
-        <Link href={`/agents/signals/${signal.id}`} className="text-sky-400 hover:text-sky-300">
+        <Link href={`/agents/signals/${signal.id}`} className="font-medium text-primary hover:underline">
           Details
         </Link>
       </td>

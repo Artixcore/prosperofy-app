@@ -93,7 +93,7 @@ export default function WalletPage() {
         Prosperofy encrypts wallet secrets. Keep your recovery backup safe.
       </p>
       <div className="mb-6 grid gap-2 sm:flex sm:flex-wrap">
-        <button type="button" className="rounded-md bg-accent px-3 py-2 text-sm text-white disabled:opacity-60" onClick={() => void handleConnectPhantom()} disabled={connect.isPending || challenge.isPending}>Connect Phantom</button>
+        <button type="button" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:opacity-60" onClick={() => void handleConnectPhantom()} disabled={connect.isPending || challenge.isPending}>Connect Phantom</button>
         <button type="button" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised disabled:opacity-60" onClick={() => void handleConnectMetaMask()} disabled={connect.isPending || challenge.isPending}>Connect MetaMask</button>
         <button type="button" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised disabled:opacity-60" onClick={() => void handleCreateWallet()} disabled={createWflWallet.isPending}>{createWflWallet.isPending ? "Creating..." : "Create WFL Wallet"}</button>
         <Link href="/wallet/assets" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">View Assets</Link>

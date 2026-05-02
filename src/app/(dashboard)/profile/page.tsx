@@ -10,7 +10,7 @@ import { InlineAlert } from "@/components/system/inline-alert";
 import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
 import { PageHeader } from "@/components/page-header";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { mergeServerFieldErrors } from "@/lib/validation/merge-server-errors";
 import { useProfileQuery, useUpdateProfileMutation } from "@/features/app/use-profile";
 
@@ -60,7 +60,7 @@ export default function ProfilePage() {
       if (mergeServerFieldErrors(error, form.setError)) return;
       setBanner({
         tone: "error",
-        message: isApiClientError(error) ? error.message : "Failed to update profile.",
+        message: normalizeApiError(error),
       });
     }
   }
@@ -82,13 +82,13 @@ export default function ProfilePage() {
       {banner ? <InlineAlert tone={banner.tone}>{banner.message}</InlineAlert> : null}
 
       <form
-        className="mt-6 max-w-xl space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6"
+        className="mt-6 max-w-xl space-y-4 rounded-lg border border-border bg-muted/30 p-6"
         onSubmit={form.handleSubmit(onSubmit)}
       >
         <FormField id="name" label="Name" error={form.formState.errors.name?.message}>
           <input
             id="name"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("name")}
           />
         </FormField>
@@ -99,18 +99,18 @@ export default function ProfilePage() {
         >
           <input
             id="avatar_url"
-            className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             {...form.register("avatar_url")}
           />
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-md border border-surface-border bg-surface p-3">
-            <p className="text-xs uppercase text-zinc-500">Email</p>
-            <p className="mt-1 text-sm text-white">{profile.data.email}</p>
+            <p className="text-xs uppercase text-muted-foreground">Email</p>
+            <p className="mt-1 text-sm text-foreground">{profile.data.email}</p>
           </div>
           <div className="rounded-md border border-surface-border bg-surface p-3">
-            <p className="text-xs uppercase text-zinc-500">Role</p>
-            <p className="mt-1 text-sm text-white">{profile.data.role}</p>
+            <p className="text-xs uppercase text-muted-foreground">Role</p>
+            <p className="mt-1 text-sm text-foreground">{profile.data.role}</p>
           </div>
         </div>
         <SubmitButton pending={updateProfile.isPending}>Save profile</SubmitButton>

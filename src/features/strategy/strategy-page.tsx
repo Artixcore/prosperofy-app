@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import {
   useQuantBacktestMutation,
   useRiskScoreMutation,
@@ -136,7 +136,7 @@ export default function StrategyPage() {
       setSaveBanner("Generated strategy saved.");
       await strategies.refetch();
     } catch (error) {
-      setSaveBanner(isApiClientError(error) ? error.message : "Failed to save generated strategy.");
+      setSaveBanner(normalizeApiError(error));
     }
   }
 
@@ -158,7 +158,7 @@ export default function StrategyPage() {
       setSaveBanner("Strategy draft saved.");
       await strategies.refetch();
     } catch (error) {
-      setSaveBanner(isApiClientError(error) ? error.message : "Failed to save strategy.");
+      setSaveBanner(normalizeApiError(error));
     }
   }
 
@@ -173,7 +173,13 @@ export default function StrategyPage() {
       </InlineAlert>
       {err ? <InlineAlert tone="error">{err}</InlineAlert> : null}
       {saveBanner ? (
-        <InlineAlert tone={saveBanner.toLowerCase().includes("failed") ? "error" : "success"}>
+        <InlineAlert
+          tone={
+            ["Generated strategy saved.", "Strategy draft saved.", "Strategy updated."].includes(saveBanner)
+              ? "success"
+              : "error"
+          }
+        >
           {saveBanner}
         </InlineAlert>
       ) : null}
@@ -193,7 +199,7 @@ export default function StrategyPage() {
               setErr(null);
             }}
             className={`rounded-md px-3 py-1.5 text-sm ${
-              tab === k ? "bg-surface-raised text-white" : "text-zinc-500 hover:text-zinc-300"
+              tab === k ? "bg-surface-raised text-foreground ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {label}
@@ -211,14 +217,14 @@ export default function StrategyPage() {
               if (v.capital) body.capital = Number(v.capital);
               await genMut.mutateAsync(body);
             } catch (e) {
-              setErr(isApiClientError(e) ? e.message : "Generation failed.");
+              setErr(normalizeApiError(e));
             }
           })}
         >
           <FormField id="g_market" label="Market type" error={genForm.formState.errors.marketType?.message}>
             <select
               id="g_market"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...genForm.register("marketType")}
             >
               <option value="crypto">Crypto</option>
@@ -231,14 +237,14 @@ export default function StrategyPage() {
             <textarea
               id="g_goal"
               rows={4}
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...genForm.register("goal")}
             />
           </FormField>
           <FormField id="g_risk" label="Risk tolerance" error={genForm.formState.errors.riskTolerance?.message}>
             <select
               id="g_risk"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...genForm.register("riskTolerance")}
             >
               <option value="low">Low</option>
@@ -249,7 +255,7 @@ export default function StrategyPage() {
           <FormField id="g_tf" label="Timeframe" error={genForm.formState.errors.timeframe?.message}>
             <select
               id="g_tf"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...genForm.register("timeframe")}
             >
               {TF.map((tf) => (
@@ -264,14 +270,14 @@ export default function StrategyPage() {
               id="g_cap"
               type="number"
               step="any"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...genForm.register("capital")}
             />
           </FormField>
           <SubmitButton pending={genMut.isPending}>Generate strategy</SubmitButton>
           {genMut.isSuccess && genMut.data ? (
             <div className="space-y-4">
-              <pre className="max-h-96 overflow-auto rounded-md bg-black/40 p-4 font-mono text-xs text-zinc-400">
+              <pre className="max-h-96 overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
                 {JSON.stringify(genMut.data, null, 2)}
               </pre>
               <FormField id="save_name" label="Save as strategy name">
@@ -279,7 +285,7 @@ export default function StrategyPage() {
                   id="save_name"
                   value={saveName}
                   onChange={(event) => setSaveName(event.target.value)}
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 />
               </FormField>
               <FormField id="save_description" label="Description (optional)">
@@ -288,7 +294,7 @@ export default function StrategyPage() {
                   rows={2}
                   value={saveDescription}
                   onChange={(event) => setSaveDescription(event.target.value)}
-                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 />
               </FormField>
               <div className="flex flex-wrap gap-2">
@@ -296,14 +302,14 @@ export default function StrategyPage() {
                   type="button"
                   disabled={saveMut.isPending || !saveName.trim()}
                   onClick={() => void saveGeneratedStrategy()}
-                  className="inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saveMut.isPending ? "Please wait…" : "Save generated strategy"}
                 </button>
                 <button
                   type="button"
                   onClick={() => void saveManualStrategy()}
-                  className="rounded-md border border-surface-border px-3 py-2 text-sm text-zinc-300 hover:bg-surface-raised"
+                  className="rounded-md border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-secondary"
                 >
                   Save form as draft
                 </button>
@@ -327,14 +333,14 @@ export default function StrategyPage() {
                 exposure: v.exposure,
               });
             } catch (e) {
-              setErr(isApiClientError(e) ? e.message : "Risk scoring failed.");
+              setErr(normalizeApiError(e));
             }
           })}
         >
           <FormField id="r_market" label="Market type" error={riskForm.formState.errors.marketType?.message}>
             <select
               id="r_market"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...riskForm.register("marketType")}
             >
               <option value="crypto">Crypto</option>
@@ -346,7 +352,7 @@ export default function StrategyPage() {
           <FormField id="r_sym" label="Symbol" error={riskForm.formState.errors.symbol?.message}>
             <input
               id="r_sym"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...riskForm.register("symbol")}
             />
           </FormField>
@@ -355,13 +361,13 @@ export default function StrategyPage() {
               id="r_conf"
               type="number"
               step="0.01"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...riskForm.register("confidence")}
             />
           </FormField>
           <SubmitButton pending={riskMut.isPending}>Score risk</SubmitButton>
           {riskMut.isSuccess && riskMut.data ? (
-            <pre className="max-h-96 overflow-auto rounded-md bg-black/40 p-4 font-mono text-xs text-zinc-400">
+            <pre className="max-h-96 overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
               {JSON.stringify(riskMut.data, null, 2)}
             </pre>
           ) : null}
@@ -395,7 +401,7 @@ export default function StrategyPage() {
               if (v.window != null) body.window = v.window;
               await btMut.mutateAsync(body);
             } catch (e) {
-              setErr(isApiClientError(e) ? e.message : "Backtest failed.");
+              setErr(normalizeApiError(e));
             }
           })}
         >
@@ -403,7 +409,7 @@ export default function StrategyPage() {
             <textarea
               id="bt_open"
               rows={3}
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...btForm.register("open")}
             />
           </FormField>
@@ -411,7 +417,7 @@ export default function StrategyPage() {
             <textarea
               id="bt_high"
               rows={3}
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...btForm.register("high")}
             />
           </FormField>
@@ -419,7 +425,7 @@ export default function StrategyPage() {
             <textarea
               id="bt_low"
               rows={3}
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...btForm.register("low")}
             />
           </FormField>
@@ -427,7 +433,7 @@ export default function StrategyPage() {
             <textarea
               id="bt_close"
               rows={3}
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...btForm.register("close")}
             />
           </FormField>
@@ -435,7 +441,7 @@ export default function StrategyPage() {
             <textarea
               id="bt_volume"
               rows={3}
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...btForm.register("volume")}
             />
           </FormField>
@@ -443,13 +449,13 @@ export default function StrategyPage() {
             <input
               id="bt_win"
               type="number"
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               {...btForm.register("window")}
             />
           </FormField>
           <SubmitButton pending={btMut.isPending}>Run backtest</SubmitButton>
           {btMut.isSuccess && btMut.data ? (
-            <pre className="max-h-96 overflow-auto rounded-md bg-black/40 p-4 font-mono text-xs text-zinc-400">
+            <pre className="max-h-96 overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
               {JSON.stringify(btMut.data, null, 2)}
             </pre>
           ) : null}
@@ -458,11 +464,11 @@ export default function StrategyPage() {
 
       <section className="mt-10 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Saved strategies</h2>
+          <h2 className="text-base font-semibold text-foreground">Saved strategies</h2>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded border border-surface-border px-3 py-1 text-sm text-zinc-300 disabled:opacity-50"
+              className="rounded border border-border px-3 py-1 text-sm text-secondary-foreground disabled:opacity-50"
               disabled={listPage <= 1}
               onClick={() => setListPage((current) => Math.max(1, current - 1))}
             >
@@ -470,7 +476,7 @@ export default function StrategyPage() {
             </button>
             <button
               type="button"
-              className="rounded border border-surface-border px-3 py-1 text-sm text-zinc-300"
+              className="rounded border border-border px-3 py-1 text-sm text-secondary-foreground"
               onClick={() => setListPage((current) => current + 1)}
             >
               Next
@@ -478,15 +484,11 @@ export default function StrategyPage() {
           </div>
         </div>
         {strategies.isPending && strategies.fetchStatus === "fetching" ? (
-          <p className="text-sm text-zinc-500">Loading saved strategies…</p>
+          <p className="text-sm text-muted-foreground">Loading saved strategies…</p>
         ) : strategies.isError ? (
-          <InlineAlert tone="error">
-            {isApiClientError(strategies.error)
-              ? strategies.error.message
-              : "Failed to load saved strategies."}
-          </InlineAlert>
+          <InlineAlert tone="error">{normalizeApiError(strategies.error)}</InlineAlert>
         ) : (strategies.data?.items?.length ?? 0) === 0 ? (
-          <p className="text-sm text-zinc-500">No saved strategies yet.</p>
+          <p className="text-sm text-muted-foreground">No saved strategies yet.</p>
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {strategies.data?.items.map((strategy) => (
@@ -500,12 +502,12 @@ export default function StrategyPage() {
                 }`}
                 onClick={() => setSelectedStrategy(strategy)}
               >
-                <p className="text-sm font-medium text-white">{strategy.name}</p>
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="text-sm font-medium text-foreground">{strategy.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
                   {strategy.market_type} • {strategy.timeframe} • {strategy.source}
                 </p>
                 {strategy.description ? (
-                  <p className="mt-1 text-sm text-zinc-400">{strategy.description}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{strategy.description}</p>
                 ) : null}
               </button>
             ))}
@@ -515,7 +517,7 @@ export default function StrategyPage() {
 
       {selectedStrategy ? (
         <section className="mt-8 space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-5">
-          <h3 className="text-sm font-semibold text-white">Selected strategy</h3>
+          <h3 className="text-sm font-semibold text-foreground">Selected strategy</h3>
           <FormField id="selected_name" label="Name">
             <input
               id="selected_name"
@@ -530,7 +532,7 @@ export default function StrategyPage() {
                     : current,
                 )
               }
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             />
           </FormField>
           <FormField id="selected_description" label="Description">
@@ -548,7 +550,7 @@ export default function StrategyPage() {
                     : current,
                 )
               }
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
             />
           </FormField>
           <button
@@ -567,30 +569,30 @@ export default function StrategyPage() {
                 setSaveBanner("Strategy updated.");
                 await strategies.refetch();
               } catch (error) {
-                setSaveBanner(isApiClientError(error) ? error.message : "Failed to update strategy.");
+                setSaveBanner(normalizeApiError(error));
               }
             }}
-            className="inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {strategyUpdateMut.isPending ? "Please wait…" : "Update strategy"}
           </button>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Evaluation history
             </p>
             {(evaluations.data?.items?.length ?? 0) === 0 ? (
-              <p className="mt-2 text-sm text-zinc-500">No evaluations linked to this strategy yet.</p>
+              <p className="mt-2 text-sm text-muted-foreground">No evaluations linked to this strategy yet.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {evaluations.data?.items.map((job) => (
                   <li
                     key={job.id}
-                    className="rounded border border-surface-border bg-surface p-3 text-sm text-zinc-300"
+                    className="rounded border border-border bg-surface p-3 text-sm text-muted-foreground"
                   >
-                    <p className="font-medium text-white">
+                    <p className="font-medium text-foreground">
                       {job.type} - {job.status}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       Attempts: {job.attempts} | Updated: {job.updated_at ?? "—"}
                     </p>
                     {job.last_error ? (

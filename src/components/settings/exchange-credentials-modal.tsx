@@ -197,18 +197,18 @@ export function ExchangeCredentialsModal({
   const pending = createMut.isPending || updateMut.isPending;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-[2px]">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="exchange-modal-title"
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-surface-border bg-surface p-6 shadow-xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xl"
       >
-        <h2 id="exchange-modal-title" className="text-lg font-semibold text-white">
+        <h2 id="exchange-modal-title" className="text-lg font-semibold text-card-foreground">
           {mode === "create" ? "Connect" : "Update"} {exchangeTitle}
         </h2>
-        <p className="mt-2 text-sm text-amber-100/90">{SECURITY_WARNING}</p>
-        <p className="mt-2 text-xs text-zinc-400">
+        <p className="mt-2 text-sm font-medium text-amber-900 dark:text-amber-100/95">{SECURITY_WARNING}</p>
+        <p className="mt-2 text-xs text-muted-foreground">
           Strongly recommended: create read-only keys and never enable withdrawal permissions.
         </p>
 
@@ -220,7 +220,7 @@ export function ExchangeCredentialsModal({
           <FormField id="ex-label" label="Label (optional)" error={form.formState.errors.label?.message}>
             <input
               id="ex-label"
-              className="w-full rounded-md border border-surface-border bg-surface-raised px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface-raised px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               type="text"
               autoComplete="off"
               {...form.register("label")}
@@ -230,7 +230,7 @@ export function ExchangeCredentialsModal({
           <FormField id="ex-key" label="API key" error={form.formState.errors.api_key?.message}>
             <input
               id="ex-key"
-              className="w-full rounded-md border border-surface-border bg-surface-raised px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface-raised px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               type="password"
               autoComplete="off"
               {...form.register("api_key")}
@@ -240,7 +240,7 @@ export function ExchangeCredentialsModal({
           <FormField id="ex-secret" label="API secret" error={form.formState.errors.api_secret?.message}>
             <input
               id="ex-secret"
-              className="w-full rounded-md border border-surface-border bg-surface-raised px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface-raised px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               type="password"
               autoComplete="off"
               {...form.register("api_secret")}
@@ -258,7 +258,7 @@ export function ExchangeCredentialsModal({
           >
             <input
               id="ex-pass"
-              className="w-full rounded-md border border-surface-border bg-surface-raised px-3 py-2 text-sm text-white"
+              className="w-full rounded-md border border-input bg-surface-raised px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
               type="password"
               autoComplete="off"
               {...form.register("credential_passphrase")}
@@ -266,7 +266,7 @@ export function ExchangeCredentialsModal({
           </FormField>
 
           <div className="rounded-md border border-surface-border bg-surface-raised/50 p-3">
-            <p className="text-xs font-medium text-zinc-300">Verify your identity (required when saving credentials)</p>
+            <p className="text-xs font-medium text-foreground">Verify your identity (required when saving credentials)</p>
             <FormField
               id="ex-vp"
               label="Current password"
@@ -274,7 +274,7 @@ export function ExchangeCredentialsModal({
             >
               <input
                 id="ex-vp"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 type="password"
                 autoComplete="current-password"
                 {...form.register("verify_password")}
@@ -287,7 +287,7 @@ export function ExchangeCredentialsModal({
             >
               <input
                 id="ex-vph"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 type="password"
                 autoComplete="off"
                 {...form.register("verify_passphrase")}
@@ -296,7 +296,7 @@ export function ExchangeCredentialsModal({
             <FormField id="ex-vo" label="Authenticator code" error={form.formState.errors.verify_otp?.message}>
               <input
                 id="ex-vo"
-                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+                className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 {...form.register("verify_otp")}
@@ -304,7 +304,7 @@ export function ExchangeCredentialsModal({
             </FormField>
           </div>
 
-          <label className="flex items-start gap-2 text-sm text-zinc-300">
+          <label className="flex items-start gap-2 text-sm text-foreground">
             <input
               type="checkbox"
               className="mt-1 rounded border-surface-border"
@@ -313,13 +313,13 @@ export function ExchangeCredentialsModal({
             <span>I understand that withdrawal permissions should not be enabled.</span>
           </label>
           {form.formState.errors.withdrawal_permission_ack?.message ? (
-            <p className="text-sm text-red-400">{form.formState.errors.withdrawal_permission_ack.message}</p>
+            <p className="text-sm font-medium text-destructive">{form.formState.errors.withdrawal_permission_ack.message}</p>
           ) : null}
 
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
-              className="rounded-md border border-surface-border px-3 py-2 text-sm text-zinc-200 hover:bg-white/5"
+              className="rounded-md border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-secondary"
               onClick={onClose}
             >
               Cancel

@@ -7,18 +7,13 @@ import { InlineAlert } from "@/components/system/inline-alert";
 import { EmptyState } from "@/components/empty-state";
 import { SubmitButton } from "@/components/system/submit-button";
 import { RewardStatusBadge } from "@/components/agents/reward-status-badge";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useClaimRewardMutation, useRewardsQuery } from "@/features/agents/use-agents-api";
 
 export default function AgentsRewardsPage() {
   const q = useRewardsQuery(1);
   const claim = useClaimRewardMutation();
-  const err =
-    q.isError && isApiClientError(q.error)
-      ? q.error.message
-      : q.isError
-        ? "Rewards could not be loaded. Please try again shortly."
-        : null;
+  const err = q.isError ? normalizeApiError(q.error) : null;
   const rows = q.data?.rewards.data ?? [];
 
   return (
@@ -29,21 +24,21 @@ export default function AgentsRewardsPage() {
       />
       <div className="space-y-4">
         <AgentsDisclaimerBanner />
-        <div className="rounded-md border border-zinc-700 bg-zinc-900/40 p-3 text-xs text-zinc-400">
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-900/45 dark:bg-amber-950/30 dark:text-amber-100">
           Claims execute via configured payout drivers. Simulated payouts record a reference hash only — not on-chain
           transfers unless Solana SPL is configured server-side.
         </div>
         {err ? <InlineAlert tone="error">{err}</InlineAlert> : null}
-        <Link href="/agents" className="text-sm text-sky-400 hover:text-sky-300">
+        <Link href="/agents" className="text-sm font-medium text-primary hover:underline">
           ← Agents overview
         </Link>
-        {q.isLoading ? <p className="text-sm text-zinc-500">Loading…</p> : null}
+        {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
         {!q.isLoading && !rows.length ? (
           <EmptyState title="No rewards" description="Verified gains may create reward events pending staff review." />
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-surface-border">
+          <div className="overflow-x-auto rounded-lg border border-border">
             <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-surface-raised/40 text-left text-xs uppercase text-zinc-500">
+              <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="py-2 pl-3 pr-4">Type</th>
                   <th className="py-2 pr-4">Status</th>
@@ -52,10 +47,10 @@ export default function AgentsRewardsPage() {
                   <th className="py-2 pr-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="text-zinc-300">
+              <tbody className="text-muted-foreground">
                 {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-surface-border">
-                    <td className="py-2 pl-3 pr-4">{r.reward_type}</td>
+                  <tr key={r.id} className="border-b border-border">
+                    <td className="py-2 pl-3 pr-4 text-foreground">{r.reward_type}</td>
                     <td className="py-2 pr-4">
                       <RewardStatusBadge status={r.status} />
                     </td>
@@ -72,7 +67,7 @@ export default function AgentsRewardsPage() {
                           <SubmitButton pending={claim.isPending}>Claim</SubmitButton>
                         </form>
                       ) : (
-                        <span className="text-xs text-zinc-600">—</span>
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
                   </tr>

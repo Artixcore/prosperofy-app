@@ -88,10 +88,6 @@ export function normalizeApiError(error: unknown): string {
     return "We could not load your wallet data. Please try again shortly.";
   }
 
-  if (error.status >= 500 && error.message.trim()) {
-    return error.message;
-  }
-
   if (error.status >= 500) {
     return "The server could not complete your request. Please try again shortly.";
   }
