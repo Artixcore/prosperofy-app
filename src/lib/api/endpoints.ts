@@ -63,6 +63,25 @@ export const API = {
       activity: "/api/app/wallet/activity",
       disconnect: (id: string) => `/api/app/wallet/connected/${id}` as const,
     },
+    agents: {
+      list: "/api/app/agents",
+      dashboard: "/api/app/agents/dashboard",
+      run: "/api/app/agents/run",
+      runs: "/api/app/agents/runs",
+      runDetail: (id: string | number) =>
+        `/api/app/agents/runs/${encodeURIComponent(String(id))}` as const,
+      signalsGenerate: "/api/app/agents/signals/generate",
+      signals: "/api/app/agents/signals",
+      signalDetail: (id: string | number) =>
+        `/api/app/agents/signals/${encodeURIComponent(String(id))}` as const,
+      signalTrack: (id: string | number) =>
+        `/api/app/agents/signals/${encodeURIComponent(String(id))}/track` as const,
+      signalOutcome: (id: string | number) =>
+        `/api/app/agents/signals/${encodeURIComponent(String(id))}/outcome` as const,
+      rewards: "/api/app/agents/rewards",
+      rewardClaim: (id: string | number) =>
+        `/api/app/agents/rewards/${encodeURIComponent(String(id))}/claim` as const,
+    },
     ai: {
       analysisMarket: "/api/app/analysis/market",
       strategyGenerate: "/api/app/strategy/generate",
