@@ -22,10 +22,14 @@ export type AgentDashboardPayload = {
   latest_signal?: MarketSignal | null;
   latest_signals: MarketSignal[];
   latest_run?: unknown;
+  recent_runs?: AiAgentRunRow[];
+  sentiment?: unknown | null;
+  trending_assets?: unknown[];
   reward_summary: {
     pending: number;
     claimable: number;
     claimed: number;
+    total_earned?: number;
   };
 };
 

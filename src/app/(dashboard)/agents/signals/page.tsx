@@ -15,7 +15,7 @@ export default function AgentsSignalsPage() {
     q.isError && isApiClientError(q.error)
       ? q.error.message
       : q.isError
-        ? "Signals could not be loaded. Please try again shortly."
+        ? "AI signals could not be loaded. Please try again shortly."
         : null;
   const rows = q.data?.signals.data ?? [];
 

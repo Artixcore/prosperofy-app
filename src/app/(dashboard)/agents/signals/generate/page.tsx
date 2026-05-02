@@ -12,12 +12,31 @@ import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { isApiClientError } from "@/lib/api/errors";
 import { useGenerateSignalMutation } from "@/features/agents/use-agents-api";
-import { MARKET_OPTIONS } from "@/types/agents";
+import { AGENT_KEYS, MARKET_OPTIONS, type AgentKey } from "@/types/agents";
+
+const TIMEFRAMES = [
+  "scalp",
+  "intraday",
+  "swing",
+  "position",
+  "1m",
+  "5m",
+  "15m",
+  "1h",
+  "4h",
+  "1d",
+  "1w",
+] as const;
 
 const schema = z.object({
+  agent_key: z
+    .string()
+    .refine((k): k is AgentKey => (AGENT_KEYS as readonly string[]).includes(k), {
+      message: "Choose a valid agent.",
+    }),
   market: z.enum(MARKET_OPTIONS),
   symbols: z.string().min(1).max(512),
-  timeframe: z.enum(["1m", "5m", "15m", "1h", "4h", "1d", "1w"]),
+  timeframe: z.enum(TIMEFRAMES),
   risk_profile: z.enum(["conservative", "balanced", "aggressive"]),
   include_news: z.boolean(),
   include_sentiment: z.boolean(),
@@ -33,6 +52,7 @@ export default function GenerateSignalPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
+      agent_key: "signal",
       market: "crypto",
       symbols: "BTC",
       timeframe: "1h",
@@ -49,9 +69,10 @@ export default function GenerateSignalPage() {
       .split(/[\s,]+/)
       .map((s) => s.trim())
       .filter(Boolean)
-      .slice(0, 24);
+      .slice(0, 20);
     try {
       await mut.mutateAsync({
+        agent_key: values.agent_key,
         market: values.market,
         symbols,
         timeframe: values.timeframe,
@@ -61,7 +82,7 @@ export default function GenerateSignalPage() {
         include_historical: values.include_historical,
       });
     } catch (e) {
-      setBanner(isApiClientError(e) ? e.message : "Signal generation failed. Please try again.");
+      setBanner(isApiClientError(e) ? e.message : "AI signal could not be generated. Please try again shortly.");
     }
   }
 
@@ -81,6 +102,19 @@ export default function GenerateSignalPage() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="max-w-xl space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6"
         >
+          <FormField id="agent_key" label="Agent" error={form.formState.errors.agent_key?.message}>
+            <select
+              id="agent_key"
+              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
+              {...form.register("agent_key")}
+            >
+              {AGENT_KEYS.map((k) => (
+                <option key={k} value={k}>
+                  {k.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          </FormField>
           <FormField id="market" label="Market" error={form.formState.errors.market?.message}>
             <select
               id="market"
@@ -107,7 +141,7 @@ export default function GenerateSignalPage() {
               className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm text-white"
               {...form.register("timeframe")}
             >
-              {["1m", "5m", "15m", "1h", "4h", "1d", "1w"].map((tf) => (
+              {TIMEFRAMES.map((tf) => (
                 <option key={tf} value={tf}>
                   {tf}
                 </option>

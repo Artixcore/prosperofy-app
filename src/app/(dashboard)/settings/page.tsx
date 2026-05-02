@@ -313,7 +313,7 @@ export default function SettingsPage() {
     return (
       <ErrorState
         error={settings.error}
-        title="Settings could not be loaded."
+        title="Settings could not be loaded. Please try again shortly."
         onRetry={() => void settings.refetch()}
       />
     );

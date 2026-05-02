@@ -18,13 +18,13 @@ export default function AgentsOverviewPage() {
     dash.isError && isApiClientError(dash.error)
       ? dash.error.message
       : dash.isError
-        ? "Agents dashboard could not be loaded. Please try again shortly."
+        ? "AI dashboard could not be loaded. Please try again shortly."
         : null;
   const catErr =
     catalog.isError && isApiClientError(catalog.error)
       ? catalog.error.message
       : catalog.isError
-        ? "Agents catalog could not be loaded. Please try again shortly."
+        ? "AI agents could not be loaded. Please try again shortly."
         : null;
 
   const rewards = dash.data?.reward_summary;
