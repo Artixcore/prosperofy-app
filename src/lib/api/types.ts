@@ -108,6 +108,57 @@ export type WalletAssetItem = {
   balance_cache: string | null;
 };
 
+/** GET /api/app/wallet/receive-addresses `data.addresses[]` */
+export type WalletReceiveAddressRow = {
+  network: string;
+  asset_type: string;
+  symbol: string;
+  address: string;
+  status: string;
+};
+
+export type WalletSendPreviewPayload = {
+  preview_id: string;
+  estimated_fee_amount: string;
+  fee_symbol: string;
+  total_amount: string | null;
+  warnings: string[];
+  expires_at: string;
+};
+
+export type WalletSendConfirmPayload = {
+  wallet_transaction_id: number;
+  tx_hash: string | null;
+  status: string;
+  network: string;
+  explorer_url: string | null;
+  duplicate?: boolean;
+};
+
+export type WalletOnChainTransactionRow = {
+  id: number;
+  transaction_type: string;
+  network: string;
+  asset_type: string;
+  symbol: string;
+  token_address: string | null;
+  from_address: string | null;
+  to_address: string;
+  amount: string;
+  fee_amount: string | null;
+  fee_symbol: string | null;
+  total_amount: string | null;
+  tx_hash: string | null;
+  status: string;
+  failure_reason_code: string | null;
+  failure_message: string | null;
+  explorer_url: string | null;
+  broadcasted_at: string | null;
+  confirmed_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 export type PaginationMeta = {
   current_page?: number;
   per_page?: number;

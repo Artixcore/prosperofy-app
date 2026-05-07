@@ -62,6 +62,14 @@ export const API = {
       assets: "/api/app/wallet/assets",
       activity: "/api/app/wallet/activity",
       disconnect: (id: string) => `/api/app/wallet/connected/${id}` as const,
+      receiveAddresses: "/api/app/wallet/receive-addresses",
+      sendPreview: "/api/app/wallet/send/preview",
+      sendConfirm: "/api/app/wallet/send/confirm",
+      transactions: "/api/app/wallet/transactions",
+      transaction: (id: string | number) =>
+        `/api/app/wallet/transactions/${encodeURIComponent(String(id))}` as const,
+      transactionCancel: (id: string | number) =>
+        `/api/app/wallet/transactions/${encodeURIComponent(String(id))}/cancel` as const,
     },
     agents: {
       list: "/api/app/agents",

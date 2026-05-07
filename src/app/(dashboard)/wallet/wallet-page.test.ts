@@ -28,6 +28,11 @@ vi.mock("@/features/wallets/use-wallet-mutations", () => ({
     },
     refetch: vi.fn(),
   }),
+  useAppWalletAssetsQuery: () => ({
+    isPending: false,
+    data: [],
+    refetch: vi.fn(),
+  }),
   useAppWalletChallengeMutation: () => ({ mutateAsync: challengeMutate, isPending: false }),
   useAppWalletConnectMutation: () => ({ mutateAsync: connectMutate, isPending: false }),
   useCreateWflWalletMutation: () => ({ mutateAsync: createMock }),

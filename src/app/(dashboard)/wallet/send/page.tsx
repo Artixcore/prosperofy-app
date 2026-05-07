@@ -1,0 +1,342 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { PageHeader } from "@/components/page-header";
+import { InlineAlert } from "@/components/system/inline-alert";
+import { useToast } from "@/components/system/toast-context";
+import { useAppWalletAssetsQuery } from "@/features/wallets/use-wallet-mutations";
+import { useSendConfirmMutation, useSendPreviewMutation } from "@/features/wallets/use-wallet-send";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import type { WalletSendPreviewPayload } from "@/lib/api/types";
+import {
+  walletSendBitcoinEnabled,
+  walletSendEthereumEnabled,
+  walletSendSolanaEnabled,
+  walletSendSplEnabled,
+} from "@/lib/config/wallet-features";
+
+export default function WalletSendPage() {
+  const { pushToast } = useToast();
+  const assets = useAppWalletAssetsQuery();
+  const previewMu = useSendPreviewMutation();
+  const confirmMu = useSendConfirmMutation();
+
+  const [network, setNetwork] = useState("solana");
+  const [assetType, setAssetType] = useState("native");
+  const [symbol, setSymbol] = useState("SOL");
+  const [tokenMint, setTokenMint] = useState("");
+  const [toAddress, setToAddress] = useState("");
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [preview, setPreview] = useState<WalletSendPreviewPayload | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [acceptedRisk, setAcceptedRisk] = useState(false);
+  const [armSeconds, setArmSeconds] = useState(0);
+  const idempotencyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!confirmOpen) return;
+    setAcceptedRisk(false);
+    setArmSeconds(5);
+    const started = Date.now();
+    const id = window.setInterval(() => {
+      const elapsed = Math.floor((Date.now() - started) / 1000);
+      const left = Math.max(0, 5 - elapsed);
+      setArmSeconds(left);
+      if (left <= 0) window.clearInterval(id);
+    }, 300);
+    return () => window.clearInterval(id);
+  }, [confirmOpen]);
+
+  const balanceHint =
+    assets.data?.find(
+      (a) =>
+        a.chain?.toLowerCase() === network &&
+        a.symbol?.toUpperCase() === symbol.toUpperCase(),
+    )?.balance_cache ?? null;
+
+  async function runPreview() {
+    setPreview(null);
+    try {
+      const body = {
+        network,
+        asset_type: assetType as "native" | "spl" | "erc20" | "btc",
+        symbol,
+        token_address:
+          assetType === "spl" || assetType === "erc20"
+            ? tokenMint.trim() || null
+            : null,
+        to_address: toAddress.trim(),
+        amount: amount.trim(),
+      };
+      const data = await previewMu.mutateAsync(body);
+      setPreview(data);
+      pushToast({ tone: "success", title: "Preview ready", description: "Review fees and confirm." });
+    } catch (e) {
+      pushToast({
+        tone: "error",
+        title: "Preview failed",
+        description: normalizeApiError(e) || "Network fee could not be estimated. Please try again.",
+      });
+    }
+  }
+
+  async function runConfirm() {
+    if (!preview) return;
+    if (!acceptedRisk) return;
+    if (!idempotencyRef.current) {
+      idempotencyRef.current = crypto.randomUUID();
+    }
+    try {
+      const data = await confirmMu.mutateAsync({
+        preview_id: preview.preview_id,
+        idempotency_key: idempotencyRef.current,
+      });
+      pushToast({
+        tone: "success",
+        title: data.duplicate ? "Already sent" : "Sent",
+        description: data.tx_hash ? `Tx ${data.tx_hash.slice(0, 8)}…` : "Broadcast submitted.",
+      });
+      setConfirmOpen(false);
+      setPreview(null);
+      setAcceptedRisk(false);
+      idempotencyRef.current = null;
+    } catch (e) {
+      pushToast({
+        tone: "error",
+        title: "Send failed",
+        description: normalizeApiError(e) || "Transaction could not be sent. Please try again shortly.",
+      });
+    }
+  }
+
+  const sendAllowed =
+    (network === "solana" && assetType === "native" && walletSendSolanaEnabled()) ||
+    (network === "solana" && assetType === "spl" && walletSendSplEnabled()) ||
+    (network === "ethereum" && walletSendEthereumEnabled()) ||
+    (network === "bitcoin" && walletSendBitcoinEnabled());
+
+  return (
+    <>
+      <PageHeader title="Send" description="Preview fees, then confirm an on-chain transfer from your WFL Wallet." />
+      <div className="mb-4 flex gap-3">
+        <Link href="/wallet" className="text-sm text-primary hover:underline">
+          ← Back to wallet
+        </Link>
+      </div>
+
+      {!sendAllowed ? (
+        <InlineAlert tone="warning">
+          This network is not supported for sending yet. Enable it in environment flags after the chain is live.
+        </InlineAlert>
+      ) : null}
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="space-y-3 rounded-xl border border-surface-border bg-surface-elevated p-4">
+          <div>
+            <label className="mb-1 block text-xs text-content-muted">Network</label>
+            <select
+              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm"
+              value={network}
+              onChange={(e) => {
+                const n = e.target.value;
+                setNetwork(n);
+                if (n === "solana") {
+                  setSymbol("SOL");
+                  setAssetType("native");
+                }
+                if (n === "ethereum") {
+                  setSymbol("ETH");
+                  setAssetType("native");
+                }
+                if (n === "bitcoin") {
+                  setSymbol("BTC");
+                  setAssetType("native");
+                }
+              }}
+            >
+              {walletSendSolanaEnabled() ? <option value="solana">Solana</option> : null}
+              {walletSendEthereumEnabled() ? <option value="ethereum">Ethereum</option> : null}
+              {walletSendBitcoinEnabled() ? <option value="bitcoin">Bitcoin</option> : null}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-content-muted">Asset</label>
+            <select
+              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm"
+              value={`${assetType}:${symbol}`}
+              onChange={(e) => {
+                const [at, sym] = e.target.value.split(":");
+                setAssetType(at ?? "native");
+                if (at === "spl") setSymbol("SPL");
+                else setSymbol(sym ?? "SOL");
+              }}
+            >
+              {network === "solana" ? (
+                <>
+                  <option value="native:SOL">SOL</option>
+                  {walletSendSplEnabled() ? <option value="spl:SPL">SPL token</option> : null}
+                </>
+              ) : null}
+              {network === "ethereum" ? <option value="native:ETH">ETH</option> : null}
+              {network === "bitcoin" ? <option value="native:BTC">BTC</option> : null}
+            </select>
+          </div>
+          {(assetType === "spl" || assetType === "erc20") && (
+            <div>
+              <label className="mb-1 block text-xs text-content-muted">Token mint / contract</label>
+              <input
+                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm font-mono"
+                value={tokenMint}
+                onChange={(e) => setTokenMint(e.target.value)}
+                placeholder="Token mint or contract address"
+              />
+            </div>
+          )}
+          <div>
+            <label className="mb-1 block text-xs text-content-muted">Recipient</label>
+            <input
+              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm font-mono"
+              value={toAddress}
+              onChange={(e) => setToAddress(e.target.value)}
+              placeholder="Destination address"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-content-muted">Amount</label>
+            <input
+              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.0"
+            />
+            {balanceHint ? (
+              <p className="mt-1 text-xs text-content-muted">Cached balance: {balanceHint}</p>
+            ) : null}
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-content-muted">Note (optional, local only)</label>
+            <input
+              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Not submitted on-chain in this version"
+            />
+          </div>
+          <button
+            type="button"
+            disabled={!sendAllowed || previewMu.isPending}
+            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:opacity-50"
+            onClick={() => void runPreview()}
+          >
+            {previewMu.isPending ? "Previewing…" : "Preview transaction"}
+          </button>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-surface-border bg-surface-elevated p-4">
+          <h3 className="text-sm font-semibold">Fee preview</h3>
+          {preview ? (
+            <>
+              <p className="text-sm text-content-muted">
+                Est. fee: {preview.estimated_fee_amount} {preview.fee_symbol}
+              </p>
+              {preview.total_amount ? (
+                <p className="text-sm text-content-muted">Total (incl. fee where applicable): {preview.total_amount}</p>
+              ) : null}
+              {preview.warnings?.length ? (
+                <ul className="list-disc pl-5 text-xs text-amber-600">
+                  {preview.warnings.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+              ) : null}
+              <button
+                type="button"
+                className="rounded-md border border-destructive/50 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  setAcceptedRisk(false);
+                  setConfirmOpen(true);
+                }}
+              >
+                Continue to confirmation
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-content-muted">Run preview to see estimated network fees.</p>
+          )}
+        </div>
+      </div>
+
+      {confirmOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4"
+          role="presentation"
+          onClick={() => !confirmMu.isPending && setConfirmOpen(false)}
+        >
+          <div
+            className="max-w-md rounded-lg border border-border bg-card p-6 shadow-xl"
+            role="dialog"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold">Confirm send</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Crypto transfers are irreversible. Confirm the address and network before sending.
+            </p>
+            <ul className="mt-3 space-y-1 text-sm">
+              <li>
+                <strong>Network:</strong> {network}
+              </li>
+              <li>
+                <strong>Asset:</strong> {symbol} ({assetType})
+              </li>
+              <li className="break-all font-mono text-xs">
+                <strong>To:</strong> {toAddress}
+              </li>
+              <li>
+                <strong>Amount:</strong> {amount}
+              </li>
+              {preview ? (
+                <li>
+                  <strong>Est. fee:</strong> {preview.estimated_fee_amount} {preview.fee_symbol}
+                </li>
+              ) : null}
+            </ul>
+            <label className="mt-4 flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={acceptedRisk}
+                onChange={(e) => setAcceptedRisk(e.target.checked)}
+                className="mt-1"
+              />
+              <span>I understand this transaction cannot be reversed.</span>
+            </label>
+            {armSeconds > 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">Send unlocks in {armSeconds}s…</p>
+            ) : null}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-md px-3 py-1.5 text-sm"
+                disabled={confirmMu.isPending}
+                onClick={() => setConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={
+                  !acceptedRisk || armSeconds > 0 || confirmMu.isPending || !preview
+                }
+                className="rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground hover:brightness-110 disabled:opacity-50"
+                onClick={() => void runConfirm()}
+              >
+                {confirmMu.isPending ? "Sending…" : "Send now"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}

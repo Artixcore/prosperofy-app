@@ -10,6 +10,7 @@ import {
   useAppWalletChallengeMutation,
   useAppWalletConnectMutation,
   useCreateWflWalletMutation,
+  useAppWalletAssetsQuery,
 } from "@/features/wallets/use-wallet-mutations";
 import { connectMetaMaskFlow, connectPhantomFlow } from "@/features/wallets/wallet-adapters";
 import { useState } from "react";
@@ -20,6 +21,7 @@ import { useToast } from "@/components/system/toast-context";
 export default function WalletPage() {
   const { pushToast } = useToast();
   const overview = useAppWalletOverviewQuery();
+  const assets = useAppWalletAssetsQuery();
   const challenge = useAppWalletChallengeMutation();
   const connect = useAppWalletConnectMutation();
   const createWflWallet = useCreateWflWalletMutation();
@@ -97,6 +99,9 @@ export default function WalletPage() {
         <button type="button" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised disabled:opacity-60" onClick={() => void handleConnectMetaMask()} disabled={connect.isPending || challenge.isPending}>Connect MetaMask</button>
         <button type="button" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised disabled:opacity-60" onClick={() => void handleCreateWallet()} disabled={createWflWallet.isPending}>{createWflWallet.isPending ? "Creating..." : "Create WFL Wallet"}</button>
         <Link href="/wallet/assets" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">View Assets</Link>
+        <Link href="/wallet/receive" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Receive</Link>
+        <Link href="/wallet/send" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Send</Link>
+        <Link href="/wallet/transactions" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Transactions</Link>
         <Link href="/wallet/settings" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Manage Wallets</Link>
       </div>
       {overview.isPending ? <LoadingState /> : null}
@@ -128,6 +133,25 @@ export default function WalletPage() {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+          <div className="rounded-xl border border-surface-border bg-surface-elevated p-4 md:col-span-2">
+            <h3 className="mb-2 text-sm font-semibold text-content-primary">Total balance summary</h3>
+            {assets.isPending ? (
+              <p className="text-xs text-content-muted">Loading balances…</p>
+            ) : assets.data && assets.data.length > 0 ? (
+              <ul className="space-y-1 text-sm">
+                {assets.data.map((a) => (
+                  <li key={a.id} className="flex justify-between gap-2">
+                    <span>
+                      {a.symbol} · {a.chain}
+                    </span>
+                    <span className="font-mono text-xs">{a.balance_cache ?? "—"}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-content-muted">No cached balances yet. Refresh from Assets.</p>
             )}
           </div>
           <div className="rounded-xl border border-surface-border bg-surface-elevated p-4 md:col-span-2">
