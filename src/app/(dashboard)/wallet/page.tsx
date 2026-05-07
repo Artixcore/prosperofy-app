@@ -1,176 +1,70 @@
 "use client";
 
-import Link from "next/link";
-import { InlineAlert } from "@/components/system/inline-alert";
-import { LoadingState } from "@/components/system/loading-state";
+import { RefreshCw } from "lucide-react";
 import { ErrorState } from "@/components/system/error-state";
+import { LoadingState } from "@/components/system/loading-state";
 import { PageHeader } from "@/components/page-header";
+import { AssetsSection } from "@/features/wallets/components/assets-section";
+import { ConnectedWalletsSection } from "@/features/wallets/components/connected-wallets-section";
+import { RecentTransactionsSection } from "@/features/wallets/components/recent-transactions-section";
+import { WalletBalanceCard } from "@/features/wallets/components/wallet-balance-card";
+import { WflWalletStatusBanner } from "@/features/wallets/components/wfl-wallet-status-banner";
 import {
-  useAppWalletOverviewQuery,
-  useAppWalletChallengeMutation,
-  useAppWalletConnectMutation,
-  useCreateWflWalletMutation,
   useAppWalletAssetsQuery,
+  useAppWalletOverviewQuery,
 } from "@/features/wallets/use-wallet-mutations";
-import { connectMetaMaskFlow, connectPhantomFlow } from "@/features/wallets/wallet-adapters";
-import { useState } from "react";
-import { normalizeApiError } from "@/lib/api/normalize-api-error";
-import { formatChainName, formatWalletProvider, shortenAddress } from "@/lib/formatters";
-import { useToast } from "@/components/system/toast-context";
 
 export default function WalletPage() {
-  const { pushToast } = useToast();
   const overview = useAppWalletOverviewQuery();
   const assets = useAppWalletAssetsQuery();
-  const challenge = useAppWalletChallengeMutation();
-  const connect = useAppWalletConnectMutation();
-  const createWflWallet = useCreateWflWalletMutation();
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
-  async function handleConnectPhantom() {
-    setError(null);
-    setMessage(null);
-    try {
-      await connectPhantomFlow(
-        (challengeBody) => challenge.mutateAsync(challengeBody),
-        (body) =>
-          connect.mutateAsync({
-            provider: "phantom",
-            chain: "solana",
-            signature: body.signature,
-            message: body.message,
-            publicKey: body.publicKey,
-            challenge_id: body.challenge_id,
-          }),
-      );
-      setMessage("Phantom wallet connected successfully.");
-      pushToast({ tone: "success", title: "Wallet connected", description: "Phantom wallet connected successfully." });
-    } catch (e) {
-      setError(normalizeApiError(e));
-    }
-  }
-
-  async function handleConnectMetaMask() {
-    setError(null);
-    setMessage(null);
-    try {
-      await connectMetaMaskFlow(
-        (challengeBody) => challenge.mutateAsync(challengeBody),
-        (body) =>
-          connect.mutateAsync({
-            provider: "metamask",
-            chain: "ethereum",
-            signature: body.signature,
-            message: body.message,
-            address: body.address,
-            challenge_id: body.challenge_id,
-          }),
-      );
-      setMessage("MetaMask wallet connected successfully.");
-      pushToast({ tone: "success", title: "Wallet connected", description: "MetaMask wallet connected successfully." });
-    } catch (e) {
-      setError(normalizeApiError(e));
-    }
-  }
-
-  async function handleCreateWallet() {
-    setError(null);
-    setMessage(null);
-    try {
-      await createWflWallet.mutateAsync();
-      setMessage("WFL Wallet is ready.");
-      pushToast({ tone: "success", title: "WFL Wallet created", description: "Your wallet is now ready to use." });
-    } catch (e) {
-      setError(normalizeApiError(e));
-    }
-  }
+  const refreshing = overview.isFetching || assets.isFetching;
+  const handleRefresh = () => {
+    void overview.refetch();
+    void assets.refetch();
+  };
 
   return (
     <>
-      <PageHeader title="Wallet" description="Manage connected wallets and your internal WFL Wallet." />
-      {error ? <InlineAlert tone="error">{error}</InlineAlert> : null}
-      {message ? <InlineAlert tone="success">{message}</InlineAlert> : null}
-      <p className="mb-4 text-sm text-content-muted">
-        Prosperofy encrypts wallet secrets. Keep your recovery backup safe.
-      </p>
-      <div className="mb-6 grid gap-2 sm:flex sm:flex-wrap">
-        <button type="button" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:opacity-60" onClick={() => void handleConnectPhantom()} disabled={connect.isPending || challenge.isPending}>Connect Phantom</button>
-        <button type="button" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised disabled:opacity-60" onClick={() => void handleConnectMetaMask()} disabled={connect.isPending || challenge.isPending}>Connect MetaMask</button>
-        <button type="button" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised disabled:opacity-60" onClick={() => void handleCreateWallet()} disabled={createWflWallet.isPending}>{createWflWallet.isPending ? "Creating..." : "Create WFL Wallet"}</button>
-        <Link href="/wallet/assets" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">View Assets</Link>
-        <Link href="/wallet/receive" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Receive</Link>
-        <Link href="/wallet/send" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Send</Link>
-        <Link href="/wallet/transactions" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Transactions</Link>
-        <Link href="/wallet/settings" className="rounded-md border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">Manage Wallets</Link>
-      </div>
-      {overview.isPending ? <LoadingState /> : null}
-      {overview.isError ? <ErrorState error={overview.error} onRetry={() => void overview.refetch()} /> : null}
-      {overview.data ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-surface-border bg-surface-elevated p-4">
-            <h3 className="mb-2 text-sm font-semibold text-content-primary">WFL Wallet</h3>
-            <p className="text-sm text-content-muted">{overview.data.wfl_wallet?.status ?? "No WFL Wallet yet"}</p>
-            <div className="mt-3 space-y-1 text-xs text-content-muted">
-              <p>Solana: {overview.data.wfl_wallet?.public_solana_address ? shortenAddress(overview.data.wfl_wallet.public_solana_address) : "Not available"}</p>
-              <p>Ethereum: {overview.data.wfl_wallet?.public_ethereum_address ? shortenAddress(overview.data.wfl_wallet.public_ethereum_address) : "Not available"}</p>
-              <p>Bitcoin: {overview.data.wfl_wallet?.public_bitcoin_address ? shortenAddress(overview.data.wfl_wallet.public_bitcoin_address) : "Not available"}</p>
+      <PageHeader
+        title="Wallet"
+        description="Manage your WFL Wallet, connected wallets, assets, and transactions."
+        action={
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-content-primary shadow-sm hover:bg-muted disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} aria-hidden />
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </button>
+        }
+      />
+
+      {overview.isPending && !overview.data ? (
+        <LoadingState label="Loading wallet…" />
+      ) : overview.isError ? (
+        <ErrorState
+          error={overview.error}
+          title="Wallet data could not be loaded"
+          onRetry={() => void overview.refetch()}
+        />
+      ) : (
+        <div className="space-y-6">
+          <WflWalletStatusBanner overview={overview.data} />
+          <WalletBalanceCard overview={overview.data} />
+          <ConnectedWalletsSection overview={overview.data} />
+          <div className="grid gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-7">
+              <AssetsSection assets={assets.data} isLoading={assets.isPending} />
             </div>
-          </div>
-          <div className="rounded-xl border border-surface-border bg-surface-elevated p-4">
-            <h3 className="mb-2 text-sm font-semibold text-content-primary">Connected Wallets</h3>
-            {overview.data.connected_wallets.length === 0 ? (
-              <p className="text-sm text-content-muted">No external wallets connected.</p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {overview.data.connected_wallets.map((wallet) => (
-                  <li key={wallet.id} className="rounded-lg border border-surface-border bg-surface px-3 py-2">
-                    <p className="font-medium text-content-primary">{formatWalletProvider(wallet.provider)}</p>
-                    <p className="text-xs text-content-muted">{formatChainName(wallet.chain_type)} • {shortenAddress(wallet.address, 6)}</p>
-                    <p className="mt-1 text-xs text-content-muted">
-                      {wallet.last_verified_at ? `Verified ${new Date(wallet.last_verified_at).toLocaleString()}` : "Verification pending"}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="rounded-xl border border-surface-border bg-surface-elevated p-4 md:col-span-2">
-            <h3 className="mb-2 text-sm font-semibold text-content-primary">Total balance summary</h3>
-            {assets.isPending ? (
-              <p className="text-xs text-content-muted">Loading balances…</p>
-            ) : assets.data && assets.data.length > 0 ? (
-              <ul className="space-y-1 text-sm">
-                {assets.data.map((a) => (
-                  <li key={a.id} className="flex justify-between gap-2">
-                    <span>
-                      {a.symbol} · {a.chain}
-                    </span>
-                    <span className="font-mono text-xs">{a.balance_cache ?? "—"}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-xs text-content-muted">No cached balances yet. Refresh from Assets.</p>
-            )}
-          </div>
-          <div className="rounded-xl border border-surface-border bg-surface-elevated p-4 md:col-span-2">
-            <h3 className="mb-2 text-sm font-semibold text-content-primary">Supported Networks</h3>
-            <div className="flex flex-wrap gap-2 text-xs">
-              {(overview.data.supported_chains ?? []).map((chain) => (
-                <span key={chain} className="rounded-full border border-surface-border px-2 py-1">
-                  {formatChainName(chain)}
-                </span>
-              ))}
-              <span className="rounded-full border border-surface-border px-2 py-1">SPL tokens</span>
-              <span className="rounded-full border border-surface-border px-2 py-1">ERC-20 tokens</span>
+            <div className="lg:col-span-5">
+              <RecentTransactionsSection />
             </div>
-            {overview.data.recent_activity.length === 0 ? (
-              <InlineAlert tone="info">No recent wallet activity found yet.</InlineAlert>
-            ) : null}
           </div>
         </div>
-      ) : null}
+      )}
     </>
   );
 }

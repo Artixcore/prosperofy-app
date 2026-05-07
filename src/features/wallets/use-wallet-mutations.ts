@@ -180,3 +180,26 @@ export function useCreateWflWalletMutation() {
     },
   });
 }
+
+/**
+ * Removes a connected external wallet (Phantom/MetaMask) from the user's
+ * Prosperofy account. Calls Laravel `DELETE /api/app/wallet/connected/{id}`.
+ * The backend route binding enforces that the wallet belongs to the
+ * authenticated user, and disconnecting never touches the WFL Wallet.
+ */
+export function useDisconnectConnectedWalletMutation() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) =>
+      laravelFetch<Record<string, unknown>>(API.app.wallet.disconnect(String(id)), {
+        method: "DELETE",
+        token: assertAuthenticatedToken(token),
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+      void qc.invalidateQueries({ queryKey: ["wallets"] });
+      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
+    },
+  });
+}

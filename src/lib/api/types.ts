@@ -79,15 +79,24 @@ export type AppWalletConnectBody = AppWalletConnectPhantomBody | AppWalletConnec
 export type PhantomConnectSignedBody = AppWalletConnectPhantomBody;
 export type MetaMaskConnectSignedBody = AppWalletConnectMetaMaskBody;
 
+/** Lifecycle of the WFL internal wallet on the user_wallets row. Backend may emit additional values, so consumers should treat the type as "string" for unknown values. */
+export type WflWalletStatus = "active" | "pending" | "failed" | (string & {});
+
 export type WalletOverview = {
   wfl_wallet: {
     id: number;
     wallet_type: string;
-    status: string;
+    status: WflWalletStatus;
     public_solana_address: string | null;
     public_ethereum_address: string | null;
     public_bitcoin_address: string | null;
   } | null;
+  /**
+   * True when the user must take action to activate or repair the WFL wallet
+   * (no row exists, or the latest provisioning attempt failed). False when
+   * the wallet is active or being prepared (`pending`).
+   */
+  wfl_wallet_required?: boolean;
   connected_wallets: ConnectedWallet[];
   supported_chains: string[];
   recent_activity: Array<{ id: number; action: string; chain: string | null; created_at: string }>;
