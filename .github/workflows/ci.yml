@@ -1,0 +1,37 @@
+name: prosperofy-app CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Production build
+        env:
+          NEXT_PUBLIC_APP_URL: https://ci-build.example.test
+          NEXT_PUBLIC_LARAVEL_API_BASE_URL: https://ci-backend.example.test
+        run: npm run build

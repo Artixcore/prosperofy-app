@@ -6,3 +6,11 @@ npm-debug.log*
 .env.*
 *.md
 .do
+
+# Tests and Vitest — not needed for Next standalone image; shrinks build context.
+tests
+vitest.config.ts
+vitest.setup.ts
+**/*.test.ts
+**/*.test.tsx
+coverage

@@ -46,6 +46,7 @@ describe("wallet dashboard", () => {
   beforeEach(() => {
     challengeMutate.mockReset();
     connectMutate.mockReset();
+    delete (window as unknown as { solana?: unknown }).solana;
   });
 
   it("wallet dashboard renders", () => {
@@ -79,13 +80,14 @@ describe("wallet dashboard", () => {
         retryable: false,
       }),
     );
-    (globalThis as { window: unknown }).window = {
+    Object.assign(window, {
       solana: {
+        isPhantom: true,
         signMessage: vi.fn().mockResolvedValue({ signature: new Uint8Array(64) }),
         publicKey: { toString: () => "So11111111111111111111111111111111111111111" },
-        connect: vi.fn(),
+        connect: vi.fn().mockResolvedValue(undefined),
       },
-    };
+    });
 
     render(createElement(WalletPage));
     fireEvent.click(screen.getAllByText("Connect Phantom")[0]);
