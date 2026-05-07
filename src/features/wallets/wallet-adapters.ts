@@ -40,6 +40,28 @@ function devWalletDebug(label: string, info: Record<string, unknown>): void {
   console.debug(`[wallet] ${label}`, info);
 }
 
+type Eip1193Provider = {
+  isMetaMask?: boolean;
+  request?: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  providers?: Eip1193Provider[];
+};
+
+type Eip1193RequestProvider = Eip1193Provider & {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+};
+
+function resolveMetaMaskProvider(): Eip1193RequestProvider {
+  const injected = window.ethereum as Eip1193Provider | undefined;
+  const providers = [injected, ...(injected?.providers ?? [])].filter(
+    (provider): provider is Eip1193RequestProvider => Boolean(provider?.request),
+  );
+  const metamask = providers.find((provider) => provider.isMetaMask);
+  if (!metamask?.request) {
+    throw new Error("MetaMask not available. Install MetaMask and enable it in your browser.");
+  }
+  return metamask;
+}
+
 function isUserRejectedWalletError(e: unknown): boolean {
   if (!e || typeof e !== "object") return false;
   const o = e as { code?: number; message?: string };
@@ -78,12 +100,20 @@ export async function connectPhantomFlow(
   connectApi: (body: PhantomConnectSignedBody) => Promise<unknown>,
 ): Promise<void> {
   const sol = window.solana;
-  if (!sol?.signMessage) {
+  if (!sol?.isPhantom || !sol?.signMessage) {
     throw new Error("Phantom not available. Install the Phantom extension.");
   }
 
-  if (!sol.publicKey) {
-    await sol.connect?.({ onlyIfTrusted: false });
+  if (!sol.connect) throw new Error("Phantom is missing required connect permissions.");
+  try {
+    if (!sol.publicKey) {
+      await sol.connect({ onlyIfTrusted: false });
+    }
+  } catch (e: unknown) {
+    if (isUserRejectedWalletError(e)) {
+      throw new Error("Phantom connection was cancelled.");
+    }
+    throw new Error("Failed to connect to Phantom.");
   }
   const pkAtStart = sol.publicKey?.toString();
   if (!pkAtStart) throw new Error("Could not read Phantom public key.");
@@ -140,14 +170,19 @@ export async function connectMetaMaskFlow(
   fetchChallenge: (body: AppWalletChallengeMetaMaskBody) => Promise<WalletChallengeResponse>,
   connectApi: (body: MetaMaskConnectSignedBody) => Promise<unknown>,
 ): Promise<void> {
-  const eth = window.ethereum;
-  if (!eth?.request) {
-    throw new Error("MetaMask not available. Install MetaMask.");
-  }
+  const eth = resolveMetaMaskProvider();
 
-  const accounts = (await eth.request({
-    method: "eth_requestAccounts",
-  })) as string[];
+  let accounts: string[];
+  try {
+    accounts = (await eth.request({
+      method: "eth_requestAccounts",
+    })) as string[];
+  } catch (e: unknown) {
+    if (isUserRejectedWalletError(e)) {
+      throw new Error("MetaMask connection was cancelled.");
+    }
+    throw new Error("Failed to connect to MetaMask.");
+  }
   const rawAddress = accounts[0];
   if (!rawAddress || !/^0x[a-fA-F0-9]{40}$/.test(rawAddress)) {
     throw new Error("No Ethereum account available.");

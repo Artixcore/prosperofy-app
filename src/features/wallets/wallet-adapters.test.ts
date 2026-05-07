@@ -7,6 +7,7 @@ const phantomPk = "So11111111111111111111111111111111111111111";
 function phantomWindow(signMessageImpl?: () => Promise<{ signature: Uint8Array }>) {
   return {
     solana: {
+      isPhantom: true,
       signMessage: signMessageImpl ?? vi.fn().mockResolvedValue({ signature: new Uint8Array(64) }),
       publicKey: { toString: () => phantomPk },
       connect: vi.fn(),
@@ -48,7 +49,7 @@ describe("wallet adapters", () => {
   it("rejects MetaMask flow when challenge_id is missing", async () => {
     const requestMock = vi.fn().mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"]);
     (globalThis as { window: unknown }).window = {
-      ethereum: { request: requestMock },
+      ethereum: { isMetaMask: true, request: requestMock },
     };
     await expect(
       connectMetaMaskFlow(
@@ -66,7 +67,7 @@ describe("wallet adapters", () => {
       .mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"])
       .mockResolvedValueOnce("0xabcd");
     (globalThis as { window: unknown }).window = {
-      ethereum: { request: requestMock },
+      ethereum: { isMetaMask: true, request: requestMock },
     };
     const connectApi = vi.fn().mockResolvedValue({});
     await connectMetaMaskFlow(fetchChallenge, connectApi);
@@ -76,6 +77,27 @@ describe("wallet adapters", () => {
       address: "0x0000000000000000000000000000000000000001",
     });
     expect(connectApi).toHaveBeenCalledTimes(1);
+  });
+
+  it("selects MetaMask provider from injected providers list", async () => {
+    const phantomRequest = vi.fn().mockRejectedValue(new Error("should not be called"));
+    const metamaskRequest = vi
+      .fn()
+      .mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"])
+      .mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"])
+      .mockResolvedValueOnce("0xabcd");
+    (globalThis as { window: unknown }).window = {
+      ethereum: {
+        request: phantomRequest,
+        providers: [{ request: phantomRequest }, { isMetaMask: true, request: metamaskRequest }],
+      },
+    };
+    await connectMetaMaskFlow(
+      async () => ({ challenge_id: 10, message: "Sign me" }),
+      async () => ({}),
+    );
+    expect(metamaskRequest).toHaveBeenCalled();
+    expect(phantomRequest).not.toHaveBeenCalled();
   });
 
   it("connect flow success for Phantom calls challenge with publicKey", async () => {
@@ -98,7 +120,7 @@ describe("wallet adapters", () => {
       .mockResolvedValueOnce(["0x0000000000000000000000000000000000000001"])
       .mockResolvedValueOnce("invalid");
     (globalThis as { window: unknown }).window = {
-      ethereum: { request: requestMock },
+      ethereum: { isMetaMask: true, request: requestMock },
     };
     await expect(
       connectMetaMaskFlow(
@@ -118,7 +140,7 @@ describe("wallet adapters", () => {
         message: "User rejected the request.",
       });
     (globalThis as { window: unknown }).window = {
-      ethereum: { request: requestMock },
+      ethereum: { isMetaMask: true, request: requestMock },
     };
     await expect(
       connectMetaMaskFlow(
