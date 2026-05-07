@@ -31,7 +31,7 @@ export function useReceiveAddressesQuery() {
         { token },
       ),
     enabled: Boolean(authReady && isAuthenticated && token),
-    retry: false,
+    retry: 1,
   });
 }
 
@@ -54,6 +54,7 @@ export function useSendPreviewMutation() {
         body,
         token: assertToken(token),
       }),
+    retry: false,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
     },
@@ -78,6 +79,7 @@ export function useSendConfirmMutation() {
         body,
         token: assertToken(token),
       }),
+    retry: false,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
       void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
@@ -153,6 +155,7 @@ export function useCancelWalletTransactionMutation() {
         body: {},
         token: assertToken(token),
       }),
+    retry: false,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
       void qc.invalidateQueries({ queryKey: ["wallet-transaction"] });

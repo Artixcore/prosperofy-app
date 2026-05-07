@@ -9,7 +9,7 @@ export function walletSendSolanaEnabled(): boolean {
 export function walletSendSplEnabled(): boolean {
   return (
     walletSendSolanaEnabled() &&
-    process.env.NEXT_PUBLIC_WALLET_SEND_SPL_ENABLED !== "false"
+    process.env.NEXT_PUBLIC_WALLET_SEND_SPL_ENABLED === "true"
   );
 }
 

@@ -27,4 +27,16 @@ describe("wallet-features", () => {
     process.env.NEXT_PUBLIC_WALLET_SEND_SPL_ENABLED = "true";
     expect(walletSendSplEnabled()).toBe(false);
   });
+
+  it("SPL is off by default when unset", () => {
+    delete process.env.NEXT_PUBLIC_WALLET_SEND_SPL_ENABLED;
+    process.env.NEXT_PUBLIC_WALLET_SEND_SOLANA_ENABLED = "true";
+    expect(walletSendSplEnabled()).toBe(false);
+  });
+
+  it("enables SPL only when explicitly true", () => {
+    process.env.NEXT_PUBLIC_WALLET_SEND_SOLANA_ENABLED = "true";
+    process.env.NEXT_PUBLIC_WALLET_SEND_SPL_ENABLED = "true";
+    expect(walletSendSplEnabled()).toBe(true);
+  });
 });
