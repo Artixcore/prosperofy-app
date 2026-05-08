@@ -103,18 +103,40 @@ export type WalletOverview = {
   /** Alias of recent_activity for dashboard contracts */
   activity?: Array<{ id: number; action: string; chain: string | null; created_at: string }>;
   assets?: WalletAssetItem[];
-  summary?: { total_balance: string; currency: string };
+  /** ISO8601 timestamp of the most recent on-chain balance sync, if any. */
+  last_synced_at?: string | null;
+  summary?: { total_balance: string | null; currency: string };
 };
 
 export type WalletAssetItem = {
   id: number;
-  chain: string;
-  token_standard: string | null;
-  token_address: string | null;
+  /** Modern shape from the balance-sync flow. Always present for newly synced rows. */
+  network?: string | null;
+  asset_type?: "native" | "spl" | "erc20" | "btc" | (string & {}) | null;
   symbol: string;
-  name: string | null;
+  name?: string | null;
+  token_address: string | null;
   decimals: number | null;
-  balance_cache: string | null;
+  balance?: string | null;
+  raw_balance?: string | null;
+  usd_value?: string | null;
+  price_usd?: string | null;
+  last_synced_at?: string | null;
+  /** Legacy passthrough — kept while older rows roll over to the new shape. */
+  chain?: string | null;
+  token_standard?: string | null;
+  balance_cache?: string | null;
+};
+
+/** GET /api/app/wallet/assets `data` envelope */
+export type WalletAssetsListPayload = {
+  assets: WalletAssetItem[];
+  last_synced_at: string | null;
+};
+
+/** POST /api/app/wallet/assets/refresh `data` envelope */
+export type WalletAssetsRefreshPayload = WalletAssetsListPayload & {
+  from_cache?: boolean;
 };
 
 /** GET /api/app/wallet/receive-addresses `data.addresses[]` */

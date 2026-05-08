@@ -7,7 +7,8 @@ import { ApiClientError } from "@/lib/api/errors";
 import type {
   AppWalletConnectBody,
   ConnectedWallet,
-  WalletAssetItem,
+  WalletAssetsListPayload,
+  WalletAssetsRefreshPayload,
   WalletChallengeResponse,
   WalletOverview,
 } from "@/lib/api/types";
@@ -113,9 +114,33 @@ export function useAppWalletAssetsQuery() {
   const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["app-wallet-assets", token],
-    queryFn: () => laravelFetch<WalletAssetItem[]>(API.app.wallet.assets, { token }),
+    queryFn: () => laravelFetch<WalletAssetsListPayload>(API.app.wallet.assets, { token }),
     enabled: Boolean(authReady && isAuthenticated && token),
+    retry: 1,
+  });
+}
+
+/**
+ * POST /api/app/wallet/assets/refresh — force a fresh on-chain balance pull
+ * via wallet-service. Returns the updated assets list (or a `from_cache: true`
+ * marker if a recent sync was reused).
+ */
+export function useRefreshWalletAssetsMutation() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body?: { network?: string; force?: boolean }) =>
+      laravelFetch<WalletAssetsRefreshPayload>(API.app.wallet.assetsRefresh, {
+        method: "POST",
+        body: body ?? {},
+        token: assertAuthenticatedToken(token),
+      }),
     retry: false,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+      void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
+      void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
+    },
   });
 }
 

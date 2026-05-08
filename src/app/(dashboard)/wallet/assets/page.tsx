@@ -10,19 +10,22 @@ export default function WalletAssetsPage() {
   if (assets.isPending) return <LoadingState />;
   if (assets.isError) return <ErrorState error={assets.error} onRetry={() => void assets.refetch()} />;
 
+  const list = assets.data?.assets ?? [];
+
   return (
     <div className="space-y-3">
       <h1 className="text-xl font-semibold text-foreground">Wallet Assets</h1>
-      {assets.data && assets.data.length > 0 ? (
+      {list.length > 0 ? (
         <ul className="space-y-2">
-          {assets.data.map((asset) => (
+          {list.map((asset) => (
             <li key={asset.id} className="rounded border border-surface-border px-3 py-2 text-sm">
-              {asset.symbol} ({asset.chain}) - {asset.balance_cache ?? "0"}
+              {asset.symbol} ({asset.network ?? asset.chain ?? "—"}) -{" "}
+              {asset.balance ?? asset.balance_cache ?? "0"}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">No assets yet. Balance providers can be connected later.</p>
+        <p className="text-sm text-muted-foreground">No assets found yet.</p>
       )}
     </div>
   );

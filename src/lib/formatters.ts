@@ -33,3 +33,25 @@ export function formatWalletProvider(provider: string | null | undefined): strin
   if (normalized === "wfl_internal") return "WFL Wallet";
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
+
+/**
+ * "x seconds/minutes/hours ago" relative time, used for "Last synced" labels.
+ * Returns "—" for null/invalid input so the UI never shows raw timestamps.
+ */
+export function formatRelativeTime(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return "—";
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "—";
+  const diffMs = now.getTime() - then.getTime();
+  if (diffMs < 0) return "just now";
+  const sec = Math.floor(diffMs / 1000);
+  if (sec < 5) return "just now";
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day}d ago`;
+  return then.toLocaleDateString();
+}

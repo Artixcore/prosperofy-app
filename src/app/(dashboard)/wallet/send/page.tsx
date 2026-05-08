@@ -50,11 +50,15 @@ export default function WalletSendPage() {
   }, [confirmOpen]);
 
   const balanceHint =
-    assets.data?.find(
-      (a) =>
-        a.chain?.toLowerCase() === network &&
-        a.symbol?.toUpperCase() === symbol.toUpperCase(),
-    )?.balance_cache ?? null;
+    (() => {
+      const list = assets.data?.assets ?? [];
+      const match = list.find(
+        (a) =>
+          ((a.network ?? a.chain)?.toLowerCase() === network) &&
+          a.symbol?.toUpperCase() === symbol.toUpperCase(),
+      );
+      return match?.balance ?? match?.balance_cache ?? null;
+    })();
 
   async function runPreview() {
     setPreview(null);

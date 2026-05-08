@@ -11,6 +11,11 @@ const challengeMutate = vi.fn();
 const connectMutate = vi.fn();
 const disconnectMutate = vi.fn();
 const createMutate = vi.fn();
+const refreshAssetsMutate = vi.fn();
+const refreshAssetsState: { isPending: boolean; data: unknown } = {
+  isPending: false,
+  data: undefined,
+};
 const pushToast = vi.fn();
 
 vi.mock("next/link", () => ({
@@ -31,6 +36,11 @@ vi.mock("@/features/wallets/use-wallet-mutations", () => ({
   useCreateWflWalletMutation: () => ({
     mutateAsync: createMutate,
     isPending: false,
+  }),
+  useRefreshWalletAssetsMutation: () => ({
+    mutateAsync: refreshAssetsMutate,
+    isPending: refreshAssetsState.isPending,
+    data: refreshAssetsState.data,
   }),
 }));
 
@@ -75,12 +85,15 @@ beforeEach(() => {
   connectMutate.mockReset();
   disconnectMutate.mockReset();
   createMutate.mockReset();
+  refreshAssetsMutate.mockReset();
+  refreshAssetsState.isPending = false;
+  refreshAssetsState.data = undefined;
   pushToast.mockReset();
 
   assetsQuery.mockReturnValue({
     isPending: false,
     isFetching: false,
-    data: [],
+    data: { assets: [], last_synced_at: null },
     refetch: vi.fn(),
   });
   transactionsQuery.mockReturnValue({
@@ -95,11 +108,13 @@ afterEach(() => {
 });
 
 describe("WalletPage", () => {
-  it("renders the dashboard skeleton with header and refresh", () => {
+  it("renders the dashboard skeleton with header and Refresh Balance button", () => {
     setOverview(makeOverview());
     render(<WalletPage />);
     expect(screen.getByRole("heading", { name: "Wallet" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Refresh Balance/i }),
+    ).toBeInTheDocument();
   });
 
   it("when WFL wallet is active, hides Activate CTA and enables Receive/Send", () => {
@@ -174,7 +189,9 @@ describe("WalletPage", () => {
     expect(
       screen.getByRole("button", { name: /Activate WFL Wallet/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/setup failed/i)).toBeInTheDocument();
+    // Both the status banner and the balance-card badge surface a "setup failed"
+    // message; we only need to confirm at least one is present.
+    expect(screen.getAllByText(/setup failed/i).length).toBeGreaterThan(0);
   });
 
   it("Phantom not connected → shows Connect Phantom button", () => {
@@ -289,5 +306,145 @@ describe("WalletPage", () => {
     render(<WalletPage />);
     expect(screen.getByText(/No assets found yet/i)).toBeInTheDocument();
     expect(screen.getByText(/No transactions yet/i)).toBeInTheDocument();
+  });
+
+  it("clicking Refresh Balance triggers the refresh mutation with force=true", async () => {
+    refreshAssetsMutate.mockResolvedValueOnce({
+      assets: [],
+      last_synced_at: new Date().toISOString(),
+      from_cache: false,
+    });
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+      }),
+    );
+    render(<WalletPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Refresh Balance/i }));
+
+    await waitFor(() => {
+      expect(refreshAssetsMutate).toHaveBeenCalledWith({ force: true });
+    });
+    await waitFor(() => {
+      expect(pushToast).toHaveBeenCalledWith(
+        expect.objectContaining({ tone: "success", title: "Balances refreshed" }),
+      );
+    });
+  });
+
+  it("shows a friendly toast and never raw error text when refresh fails", async () => {
+    refreshAssetsMutate.mockRejectedValueOnce(
+      new ApiClientError(
+        "Solana network data is temporarily unavailable. Please try again shortly.",
+        {
+          status: 503,
+          code: "WALLET_UPSTREAM_UNAVAILABLE",
+          retryable: true,
+        },
+      ),
+    );
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+      }),
+    );
+    render(<WalletPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Refresh Balance/i }));
+
+    await waitFor(() => {
+      expect(pushToast).toHaveBeenCalledWith(
+        expect.objectContaining({ tone: "error", title: "Could not refresh balance" }),
+      );
+    });
+
+    expect(screen.queryByText(/\[object Object\]/)).not.toBeInTheDocument();
+    // We never want the raw upstream error code or any wallet-service URLs in the DOM.
+    expect(document.body.textContent ?? "").not.toMatch(/walletapi\.prosperofy\.com/);
+    expect(document.body.textContent ?? "").not.toMatch(/INTERNAL_RPC/);
+  });
+
+  it("renders the asset balance and last_synced_at relative time", () => {
+    assetsQuery.mockReturnValue({
+      isPending: false,
+      isFetching: false,
+      data: {
+        assets: [
+          {
+            id: 1,
+            network: "solana",
+            asset_type: "native",
+            symbol: "SOL",
+            name: "Solana",
+            token_address: null,
+            decimals: 9,
+            balance: "0.123456789",
+            raw_balance: "123456789",
+            last_synced_at: new Date().toISOString(),
+            chain: "solana",
+            balance_cache: "0.123456789",
+            token_standard: null,
+          },
+        ],
+        last_synced_at: new Date().toISOString(),
+      },
+      refetch: vi.fn(),
+    });
+
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+      }),
+    );
+
+    render(<WalletPage />);
+    expect(screen.getByText("0.123456789")).toBeInTheDocument();
+    expect(screen.getByText(/Last synced/i)).toBeInTheDocument();
+  });
+});
+
+describe("WalletPage bundle hygiene", () => {
+  it("never references wallet-service URLs or secret env vars in the source it renders from", async () => {
+    // Read the actual source files (not the mocked module graph) to assert that
+    // no wallet-service base URL or secret env name slips into the frontend.
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const root = path.resolve(__dirname, "../../../..");
+    const targets = [
+      path.join(root, "src/app/(dashboard)/wallet/page.tsx"),
+      path.join(root, "src/features/wallets/use-wallet-mutations.ts"),
+      path.join(root, "src/lib/api/endpoints.ts"),
+      path.join(root, "src/lib/api/types.ts"),
+    ];
+    const text = (await Promise.all(targets.map((p) => fs.readFile(p, "utf8")))).join("\n");
+
+    expect(text).not.toMatch(/walletapi\.prosperofy\.com/);
+    expect(text).not.toMatch(/NEXT_PUBLIC_WALLET_SERVICE/);
+    expect(text).not.toMatch(/SERVICE_AUTH_KEY/);
+    expect(text).not.toMatch(/WALLET_ENCRYPTION_KEY/);
+    expect(text).not.toMatch(/SOLANA_PRIVATE_KEY/);
+    expect(text).not.toMatch(/SEED_PHRASE/);
   });
 });

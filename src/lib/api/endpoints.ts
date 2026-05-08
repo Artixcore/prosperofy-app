@@ -60,6 +60,7 @@ export const API = {
       connect: "/api/app/wallet/connect",
       create: "/api/app/wallet/create",
       assets: "/api/app/wallet/assets",
+      assetsRefresh: "/api/app/wallet/assets/refresh",
       activity: "/api/app/wallet/activity",
       disconnect: (id: string) => `/api/app/wallet/connected/${id}` as const,
       receiveAddresses: "/api/app/wallet/receive-addresses",

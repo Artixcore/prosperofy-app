@@ -147,6 +147,16 @@ export default function WalletReceivePage() {
                 >
                   Copy address
                 </button>
+                <div className="mt-4">
+                  <InlineAlert tone="info">
+                    After sending {current.symbol} to this address, return to the Wallet page and click
+                    {" "}
+                    <Link href="/wallet" className="font-medium underline">
+                      Refresh Balance
+                    </Link>{" "}
+                    if it does not appear automatically.
+                  </InlineAlert>
+                </div>
               </>
             ) : (
               <p className="text-sm text-content-muted">No address available for this selection.</p>

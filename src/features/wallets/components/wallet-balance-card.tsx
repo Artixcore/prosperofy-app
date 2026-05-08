@@ -187,7 +187,7 @@ export function WalletBalanceCard({ overview }: Props) {
  * Pretty-prints a numeric string from the backend without trusting locale code
  * to format leading zeroes (so "0" → "0.00", "1234.5" → "1,234.50").
  */
-function formatBalanceDisplay(raw: string | undefined): string {
+function formatBalanceDisplay(raw: string | null | undefined): string {
   if (!raw) return "0.00";
   const n = Number(raw);
   if (!Number.isFinite(n)) return raw;
