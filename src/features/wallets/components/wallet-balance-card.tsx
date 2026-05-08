@@ -15,6 +15,7 @@ import {
   shouldEnableSend,
   wflWalletState,
 } from "@/features/wallets/wallet-derive";
+import { resolveSolBalance } from "@/features/wallets/sol-balance";
 import { formatChainName, shortenAddress } from "@/lib/formatters";
 import type { WalletAssetItem, WalletOverview } from "@/lib/api/types";
 
@@ -28,11 +29,6 @@ type Props = {
    */
   assets?: WalletAssetItem[] | null;
 };
-
-type HeadlineDisplay =
-  | { kind: "usd"; total: string; currency: string }
-  | { kind: "native"; balance: string; symbol: string }
-  | { kind: "empty" };
 
 const STATUS_BADGE: Record<
   ReturnType<typeof wflWalletState>["status"],
@@ -65,14 +61,8 @@ const STATUS_BADGE: Record<
  * primary actions (Receive, Send, View transactions).
  *
  * Headline policy:
- * - If the backend supplies a priced `summary.total_balance + currency`, show
- *   that as the headline (e.g. "1,234.56 USD").
- * - Else if the assets list contains a native row with a positive `balance`,
- *   show "<balance> <symbol>" (e.g. "0.011294989 SOL") with a
- *   "USD value unavailable" subtitle. This keeps a funded wallet from ever
- *   rendering as "0.00 USD" when pricing is missing.
- * - Else show "0.00" with the supplied currency (defaults to USD) — empty
- *   wallets remain visually neutral.
+ * - Always show native SOL balance from wallet overview/assets data.
+ * - Never show USD totals or conversion placeholders.
  *
  * Send is disabled unless the WFL wallet is active so users never get stuck
  * mid-flow.
@@ -81,7 +71,7 @@ export function WalletBalanceCard({ overview, assets }: Props) {
   const state = wflWalletState(overview);
   const primary = primaryWalletAddress(overview);
   const sendEnabled = shouldEnableSend(overview);
-  const headline = resolveHeadline(overview, assets);
+  const headline = resolveSolBalance(overview, assets);
   const badge = STATUS_BADGE[state.status];
   const [copied, setCopied] = useState(false);
 
@@ -117,23 +107,12 @@ export function WalletBalanceCard({ overview, assets }: Props) {
               className="text-3xl font-semibold tracking-tight text-content-primary sm:text-4xl"
               data-testid="wallet-balance-headline"
             >
-              {headline.kind === "usd"
-                ? formatUsdDisplay(headline.total)
-                : headline.kind === "native"
-                  ? headline.balance
-                  : "0.00"}
+              {headline.balance}
             </p>
             <span className="text-sm font-medium text-muted-foreground">
-              {headline.kind === "usd"
-                ? headline.currency
-                : headline.kind === "native"
-                  ? headline.symbol
-                  : "USD"}
+              {headline.symbol}
             </span>
           </div>
-          {headline.kind === "native" ? (
-            <p className="mt-1 text-xs text-muted-foreground">USD value unavailable</p>
-          ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span
               className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${badge.classes}`}
@@ -218,73 +197,4 @@ export function WalletBalanceCard({ overview, assets }: Props) {
       </div>
     </section>
   );
-}
-
-/**
- * Pretty-prints a USD numeric string from the backend without trusting locale
- * code to format leading zeroes (so "0" → "0.00", "1234.5" → "1,234.50").
- * Falls back to the raw string only if it is not a finite number, never to
- * a fabricated "0.00" — non-numeric strings are returned verbatim.
- */
-function formatUsdDisplay(raw: string): string {
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return raw;
-  return n.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function isPositiveBalance(value: string | null | undefined): boolean {
-  if (!value) return false;
-  const trimmed = value.trim();
-  if (trimmed === "" || trimmed === "0") return false;
-  const n = Number(trimmed);
-  if (!Number.isFinite(n)) return false;
-  return n > 0;
-}
-
-/**
- * Choose what the headline number should display.
- *
- * Priority:
- * 1. Backend-supplied USD summary when present and non-empty.
- * 2. Backend-supplied `native_breakdown` (first entry) so the API can pick
- *    the canonical asset for the user.
- * 3. The first asset in the cached list with a positive `balance`.
- * 4. `empty` (renders "0.00 USD").
- */
-function resolveHeadline(
-  overview: WalletOverview | null | undefined,
-  assets: WalletAssetItem[] | null | undefined,
-): HeadlineDisplay {
-  const summary = overview?.summary;
-
-  const summaryTotal = summary?.total_usd ?? summary?.total_balance ?? null;
-  if (summaryTotal && summaryTotal.trim() !== "") {
-    return {
-      kind: "usd",
-      total: summaryTotal,
-      currency: (summary.currency || "USD").toUpperCase(),
-    };
-  }
-
-  const breakdown = summary?.native_breakdown;
-  if (breakdown && breakdown.length > 0) {
-    for (const row of breakdown) {
-      if (row.symbol && isPositiveBalance(row.balance)) {
-        return { kind: "native", balance: row.balance, symbol: row.symbol };
-      }
-    }
-  }
-
-  const sourceAssets = assets ?? overview?.assets ?? [];
-  for (const asset of sourceAssets) {
-    const balance = asset.balance ?? asset.balance_cache ?? null;
-    if (asset.symbol && isPositiveBalance(balance)) {
-      return { kind: "native", balance: balance!, symbol: asset.symbol };
-    }
-  }
-
-  return { kind: "empty" };
 }

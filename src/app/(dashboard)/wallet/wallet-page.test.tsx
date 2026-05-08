@@ -457,7 +457,7 @@ describe("WalletPage", () => {
     });
   });
 
-  it("renders native SOL headline and 'USD value unavailable' when summary has no priced total but assets have a SOL balance", () => {
+  it("renders native SOL headline when summary has no priced total but assets have a SOL balance", () => {
     assetsQuery.mockReturnValue({
       isPending: false,
       isFetching: false,
@@ -508,7 +508,7 @@ describe("WalletPage", () => {
     const headline = screen.getByTestId("wallet-balance-headline");
     expect(headline).toHaveTextContent("0.011294989");
     expect(screen.getAllByText(/SOL/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/USD value unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/USD value unavailable/i)).not.toBeInTheDocument();
     // Critical regression guard: the headline must NOT be the placeholder "0.00".
     expect(headline.textContent ?? "").not.toBe("0.00");
   });
@@ -539,10 +539,10 @@ describe("WalletPage", () => {
 
     const headline = screen.getByTestId("wallet-balance-headline");
     expect(headline).toHaveTextContent("0.011294989");
-    expect(screen.getByText(/USD value unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/USD value unavailable/i)).not.toBeInTheDocument();
   });
 
-  it("renders the priced USD summary when backend supplies a numeric total_balance", () => {
+  it("renders SOL headline even when backend also supplies a priced USD summary", () => {
     setOverview(
       makeOverview({
         wfl_wallet: {
@@ -561,7 +561,8 @@ describe("WalletPage", () => {
     render(<WalletPage />);
 
     const headline = screen.getByTestId("wallet-balance-headline");
-    expect(headline).toHaveTextContent("1,234.50");
+    expect(headline).toHaveTextContent("0.000000000");
+    expect(screen.getAllByText(/SOL/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/USD value unavailable/i)).not.toBeInTheDocument();
   });
 

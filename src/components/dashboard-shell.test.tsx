@@ -45,6 +45,19 @@ vi.mock("@/components/system/toast-context", () => ({
   useToast: () => ({ pushToast: vi.fn() }),
 }));
 
+vi.mock("@/features/wallets/use-wallet-mutations", () => ({
+  useAppWalletOverviewQuery: () => ({
+    isPending: false,
+    isError: false,
+    data: {
+      summary: {
+        native_breakdown: [{ symbol: "SOL", balance: "0.011294989", network: "solana" }],
+      },
+      assets: [],
+    },
+  }),
+}));
+
 describe("DashboardShell", () => {
   it("renders search, compact theme, wallet balance, and single-row toolbar", () => {
     const { container } = render(
@@ -53,7 +66,7 @@ describe("DashboardShell", () => {
       </DashboardShell>,
     );
     expect(screen.getByPlaceholderText("Search wallets, assets, agents...")).toBeInTheDocument();
-    expect(screen.getByText("$0.00")).toBeInTheDocument();
+    expect(screen.getByText("0.011294989 SOL")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Theme" })).toHaveAttribute("data-theme-variant", "compact");
     const toolbar = container.querySelector("header .flex.flex-nowrap");
     expect(toolbar).toBeTruthy();

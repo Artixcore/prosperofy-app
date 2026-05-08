@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { Wallet } from "lucide-react";
-import { useAppWalletSummaryQuery } from "@/features/wallets/use-wallet-mutations";
+import { resolveSolBalance } from "@/features/wallets/sol-balance";
+import { useAppWalletOverviewQuery } from "@/features/wallets/use-wallet-mutations";
 
 export function WalletBalanceBadge() {
-  const summary = useAppWalletSummaryQuery();
+  const overview = useAppWalletOverviewQuery();
 
   let balanceDisplay: string;
-  if (summary.isPending) {
+  if (overview.isPending) {
     balanceDisplay = "Loading...";
-  } else if (summary.isError) {
+  } else if (overview.isError) {
     balanceDisplay = "Balance unavailable";
   } else {
-    const totalUsd = summary.data?.total_usd;
-    balanceDisplay = totalUsd ? `$${totalUsd}` : "$0.00";
+    const sol = resolveSolBalance(overview.data);
+    balanceDisplay = `${sol.balance} ${sol.symbol}`;
   }
 
   return (
