@@ -2,19 +2,19 @@
 
 import Link from "next/link";
 import { Wallet } from "lucide-react";
-import { useAppDashboardQuery } from "@/features/app/use-app-dashboard";
-import { formatCurrency } from "@/lib/formatters";
+import { useAppWalletSummaryQuery } from "@/features/wallets/use-wallet-mutations";
 
 export function WalletBalanceBadge() {
-  const dashboard = useAppDashboardQuery();
+  const summary = useAppWalletSummaryQuery();
 
   let balanceDisplay: string;
-  if (dashboard.isPending) {
-    balanceDisplay = "…";
-  } else if (dashboard.isError) {
-    balanceDisplay = "—";
+  if (summary.isPending) {
+    balanceDisplay = "Loading...";
+  } else if (summary.isError) {
+    balanceDisplay = "Balance unavailable";
   } else {
-    balanceDisplay = formatCurrency(dashboard.data?.overview.totalBalance ?? 0);
+    const totalUsd = summary.data?.total_usd;
+    balanceDisplay = totalUsd ? `$${totalUsd}` : "$0.00";
   }
 
   return (

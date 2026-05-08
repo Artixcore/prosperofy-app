@@ -9,6 +9,7 @@ import type {
   ConnectedWallet,
   WalletAssetsListPayload,
   WalletAssetsRefreshPayload,
+  WalletSummaryPayload,
   WalletChallengeResponse,
   WalletOverview,
 } from "@/lib/api/types";
@@ -110,6 +111,16 @@ export function useAppWalletOverviewQuery() {
   });
 }
 
+export function useAppWalletSummaryQuery() {
+  const { token, authReady, isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["app-wallet-summary", token],
+    queryFn: () => laravelFetch<WalletSummaryPayload>(API.app.wallet.summary, { token }),
+    enabled: Boolean(authReady && isAuthenticated && token),
+    retry: 1,
+  });
+}
+
 export function useAppWalletAssetsQuery() {
   const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
@@ -139,7 +150,9 @@ export function useRefreshWalletAssetsMutation() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
       void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
+      void qc.invalidateQueries({ queryKey: ["app-wallet-summary"] });
       void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
+      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
     },
   });
 }

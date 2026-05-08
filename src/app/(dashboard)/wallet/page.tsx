@@ -50,7 +50,7 @@ export default function WalletPage() {
         title: "Could not refresh balance",
         description:
           normalizeApiError(error) ||
-          "Solana network data is temporarily unavailable. Please try again shortly.",
+          "Balance refresh failed. Please try again shortly.",
       });
     }
   };

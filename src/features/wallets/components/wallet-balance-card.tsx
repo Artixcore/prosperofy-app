@@ -260,10 +260,11 @@ function resolveHeadline(
 ): HeadlineDisplay {
   const summary = overview?.summary;
 
-  if (summary && summary.total_balance && summary.total_balance.trim() !== "") {
+  const summaryTotal = summary?.total_usd ?? summary?.total_balance ?? null;
+  if (summaryTotal && summaryTotal.trim() !== "") {
     return {
       kind: "usd",
-      total: summary.total_balance,
+      total: summaryTotal,
       currency: (summary.currency || "USD").toUpperCase(),
     };
   }

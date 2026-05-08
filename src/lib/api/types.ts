@@ -114,8 +114,10 @@ export type WalletOverview = {
    * "USD value unavailable" subtitle. Never fabricated.
    */
   summary?: {
-    total_balance: string | null;
+    total_usd?: string | null;
+    total_balance?: string | null;
     currency: string | null;
+    price_status?: "live" | "cached" | "partial" | "unavailable" | (string & {});
     native_breakdown?: Array<{
       symbol: string;
       balance: string;
@@ -137,6 +139,9 @@ export type WalletAssetItem = {
   raw_balance?: string | null;
   usd_value?: string | null;
   price_usd?: string | null;
+  price_source?: "coingecko" | "cached" | "manual" | "unavailable" | (string & {}) | null;
+  price_last_updated_at?: string | null;
+  balance_last_synced_at?: string | null;
   last_synced_at?: string | null;
   /** Legacy passthrough — kept while older rows roll over to the new shape. */
   chain?: string | null;
@@ -148,11 +153,23 @@ export type WalletAssetItem = {
 export type WalletAssetsListPayload = {
   assets: WalletAssetItem[];
   last_synced_at: string | null;
+  summary?: {
+    total_usd: string;
+    currency: string;
+    price_status: "live" | "cached" | "partial" | "unavailable" | (string & {});
+  };
 };
 
 /** POST /api/app/wallet/assets/refresh `data` envelope */
 export type WalletAssetsRefreshPayload = WalletAssetsListPayload & {
   from_cache?: boolean;
+};
+
+export type WalletSummaryPayload = {
+  total_usd: string;
+  currency: string;
+  price_status: "live" | "cached" | "partial" | "unavailable" | (string & {});
+  last_updated_at: string | null;
 };
 
 /** GET /api/app/wallet/receive-addresses `data.addresses[]` */

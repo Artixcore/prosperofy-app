@@ -20,6 +20,8 @@ type Props = {
  * pricing is wired into the backend `summary.total_balance` aggregator.
  */
 export function AssetsSection({ assets, isLoading, lastSyncedAt }: Props) {
+  const nativeAssets = buildNativeAssetRows(assets);
+
   return (
     <section
       className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-soft"
@@ -60,7 +62,7 @@ export function AssetsSection({ assets, isLoading, lastSyncedAt }: Props) {
         </div>
       ) : (
         <ul className="divide-y divide-border">
-          {assets.map((asset) => {
+          {nativeAssets.map((asset) => {
             const networkLabel = asset.network ?? asset.chain ?? "—";
             const balance = asset.balance ?? asset.balance_cache ?? "—";
             const tooltip =
@@ -86,9 +88,7 @@ export function AssetsSection({ assets, isLoading, lastSyncedAt }: Props) {
                     {(asset.symbol ?? "—").slice(0, 3)}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-content-primary">
-                      {asset.name ?? asset.symbol}
-                    </p>
+                    <p className="truncate text-sm font-medium text-content-primary">{asset.symbol}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {asset.symbol} · {formatChainName(networkLabel)}
                     </p>
@@ -107,6 +107,26 @@ export function AssetsSection({ assets, isLoading, lastSyncedAt }: Props) {
       )}
     </section>
   );
+}
+
+function buildNativeAssetRows(assets: WalletAssetItem[] | undefined): WalletAssetItem[] {
+  const defaults: WalletAssetItem[] = [
+    { id: -1, symbol: "SOL", network: "solana", balance: "0.000000000", decimals: 9, token_address: null },
+    { id: -2, symbol: "BTC", network: "bitcoin", balance: "0.00000000", decimals: 8, token_address: null },
+    { id: -3, symbol: "ETH", network: "ethereum", balance: "0.000000", decimals: 18, token_address: null },
+  ];
+
+  if (!assets || assets.length === 0) return defaults;
+
+  return defaults.map((fallback) => {
+    const found = assets.find(
+      (asset) =>
+        (asset.symbol ?? "").toUpperCase() === fallback.symbol &&
+        (asset.asset_type === "native" || fallback.symbol === "BTC" || !asset.asset_type)
+    );
+    if (!found) return fallback;
+    return { ...fallback, ...found };
+  });
 }
 
 /**
