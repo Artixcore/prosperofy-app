@@ -25,7 +25,7 @@ export function WalletBalanceBadge() {
       title="View wallets"
     >
       <Wallet className="h-4 w-4 shrink-0 text-accent" aria-hidden />
-      <span className="hidden font-medium sm:inline">WFL Wallet</span>
+      {/* <span className="hidden font-medium sm:inline">WFL Wallet</span> */}
       {" "}
       <span className="truncate tabular-nums text-content-muted">{balanceDisplay}</span>
     </Link>
