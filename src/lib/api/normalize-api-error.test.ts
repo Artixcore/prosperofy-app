@@ -89,13 +89,79 @@ describe("normalizeApiError", () => {
     ).toContain("already used");
   });
 
-  it("maps network and timeout", () => {
-    expect(
-      normalizeApiError(new ApiClientError("raw", { status: 0, code: "NETWORK_ERROR", retryable: true })),
-    ).toContain("server could not be reached");
+  it("maps network and timeout to context-neutral copy (no wallet-connection wording)", () => {
+    const networkMessage = normalizeApiError(
+      new ApiClientError("raw", { status: 0, code: "NETWORK_ERROR", retryable: true }),
+    );
+    expect(networkMessage).toContain("Could not reach the server");
+    // Regression guard: the old wording incorrectly framed every network error as a
+    // wallet-connection failure, which is wrong for balance refresh, listing, etc.
+    expect(networkMessage).not.toMatch(/Wallet connection failed/i);
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 0, code: "TIMEOUT", retryable: true })),
     ).toContain("too long");
+  });
+
+  it("maps balance-refresh upstream errors to specific user-friendly copy", () => {
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", {
+          status: 503,
+          code: "WALLET_UPSTREAM_UNAVAILABLE",
+          retryable: true,
+        }),
+      ),
+    ).toContain("Solana network data is temporarily unavailable");
+
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", {
+          status: 502,
+          code: "WALLET_SYNC_FAILED",
+          retryable: true,
+        }),
+      ),
+    ).toContain("Wallet balance service is temporarily unavailable");
+
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", {
+          status: 422,
+          code: "WALLET_ADDRESS_MISSING",
+          retryable: false,
+        }),
+      ),
+    ).toContain("Solana receive address is not available");
+
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", {
+          status: 404,
+          code: "WALLET_NOT_FOUND",
+          retryable: false,
+        }),
+      ),
+    ).toContain("No WFL Wallet found");
+
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", {
+          status: 409,
+          code: "WALLET_NOT_ACTIVE",
+          retryable: true,
+        }),
+      ),
+    ).toContain("not active yet");
+
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", {
+          status: 429,
+          code: "WALLET_RATE_LIMIT",
+          retryable: true,
+        }),
+      ),
+    ).toContain("Too many balance refreshes");
   });
 
   it("maps wallet signing cancelled sentinel", () => {

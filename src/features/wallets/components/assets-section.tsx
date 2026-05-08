@@ -67,6 +67,15 @@ export function AssetsSection({ assets, isLoading, lastSyncedAt }: Props) {
               asset.raw_balance && asset.decimals !== null && asset.decimals !== undefined
                 ? `${asset.raw_balance} (10^${asset.decimals})`
                 : undefined;
+            // Distinguish "no balance" (show "—") from "have balance but no
+            // USD price yet" (show explicit copy). This keeps a funded wallet
+            // from misreading as "no value" while pricing is missing.
+            const hasNonZeroBalance = isPositiveBalanceString(balance);
+            const usdSecondary = asset.usd_value
+              ? `$${asset.usd_value}`
+              : hasNonZeroBalance
+                ? "USD value unavailable"
+                : "—";
             return (
               <li
                 key={asset.id}
@@ -89,9 +98,7 @@ export function AssetsSection({ assets, isLoading, lastSyncedAt }: Props) {
                   <p className="font-mono text-sm text-content-primary" title={tooltip}>
                     {balance}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {asset.usd_value ? `$${asset.usd_value}` : "—"}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{usdSecondary}</p>
                 </div>
               </li>
             );
@@ -100,4 +107,19 @@ export function AssetsSection({ assets, isLoading, lastSyncedAt }: Props) {
       )}
     </section>
   );
+}
+
+/**
+ * Returns true when the input string represents a finite, strictly positive
+ * numeric balance. Empty strings, "0", non-numeric tokens, and the dash
+ * placeholder all fall through as `false` so the UI can pick the right
+ * "missing price" vs "no balance" copy.
+ */
+function isPositiveBalanceString(value: string): boolean {
+  if (!value || value === "—") return false;
+  const trimmed = value.trim();
+  if (trimmed === "" || trimmed === "0") return false;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n)) return false;
+  return n > 0;
 }

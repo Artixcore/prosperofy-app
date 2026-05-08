@@ -46,7 +46,7 @@ export function normalizeApiError(error: unknown): string {
   }
 
   if (error.status === 0 && error.code === "NETWORK_ERROR") {
-    return "Wallet connection failed because the server could not be reached. Please try again shortly.";
+    return "Could not reach the server. Please try again shortly.";
   }
   if (error.status === 0 && error.code === "TIMEOUT") {
     return "The server took too long to respond. Please try again.";
@@ -59,6 +59,29 @@ export function normalizeApiError(error: unknown): string {
   }
   if (error.status === 403) {
     return "You do not have permission to perform this action.";
+  }
+  // Balance-refresh and wallet-sync upstream/state errors emitted by Laravel.
+  // Match by code first so the wording is precise regardless of HTTP status.
+  if (error.code === "WALLET_UPSTREAM_UNAVAILABLE") {
+    return "Solana network data is temporarily unavailable. Please try again shortly.";
+  }
+  if (error.code === "WALLET_SYNC_FAILED") {
+    return "Wallet balance service is temporarily unavailable. Please try again shortly.";
+  }
+  if (error.code === "WALLET_ADDRESS_MISSING") {
+    return "Solana receive address is not available for this wallet.";
+  }
+  if (error.code === "WALLET_INVALID_ADDRESS") {
+    return "The wallet address could not be validated.";
+  }
+  if (error.code === "WALLET_NOT_FOUND") {
+    return "No WFL Wallet found. Please activate your wallet first.";
+  }
+  if (error.code === "WALLET_NOT_ACTIVE") {
+    return "Your WFL Wallet is not active yet. Please try again shortly.";
+  }
+  if (error.code === "WALLET_RATE_LIMIT") {
+    return "Too many balance refreshes. Please try again in a moment.";
   }
   if (error.status === 404) {
     return "The requested item could not be found.";

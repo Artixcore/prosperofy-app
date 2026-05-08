@@ -369,7 +369,11 @@ describe("WalletPage", () => {
 
     await waitFor(() => {
       expect(pushToast).toHaveBeenCalledWith(
-        expect.objectContaining({ tone: "error", title: "Could not refresh balance" }),
+        expect.objectContaining({
+          tone: "error",
+          title: "Could not refresh balance",
+          description: expect.stringMatching(/Solana network data is temporarily unavailable/i),
+        }),
       );
     });
 
@@ -377,6 +381,188 @@ describe("WalletPage", () => {
     // We never want the raw upstream error code or any wallet-service URLs in the DOM.
     expect(document.body.textContent ?? "").not.toMatch(/walletapi\.prosperofy\.com/);
     expect(document.body.textContent ?? "").not.toMatch(/INTERNAL_RPC/);
+  });
+
+  it("shows a balance-context error description, not 'Wallet connection failed', when the network is unreachable", async () => {
+    refreshAssetsMutate.mockRejectedValueOnce(
+      new ApiClientError("Could not reach the server. Please try again shortly.", {
+        status: 0,
+        code: "NETWORK_ERROR",
+        retryable: true,
+      }),
+    );
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+      }),
+    );
+    render(<WalletPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Refresh Balance/i }));
+
+    await waitFor(() => {
+      expect(pushToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tone: "error",
+          title: "Could not refresh balance",
+          description: expect.stringMatching(/Could not reach the server/i),
+        }),
+      );
+    });
+
+    const lastCallDescription = (pushToast.mock.calls.at(-1)?.[0] as { description?: string })
+      ?.description;
+    expect(lastCallDescription ?? "").not.toMatch(/Wallet connection failed/i);
+  });
+
+  it("shows a wallet-balance-service description for WALLET_SYNC_FAILED", async () => {
+    refreshAssetsMutate.mockRejectedValueOnce(
+      new ApiClientError("Wallet balances could not be refreshed.", {
+        status: 502,
+        code: "WALLET_SYNC_FAILED",
+        retryable: true,
+      }),
+    );
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+      }),
+    );
+    render(<WalletPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Refresh Balance/i }));
+
+    await waitFor(() => {
+      expect(pushToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tone: "error",
+          title: "Could not refresh balance",
+          description: expect.stringMatching(/Wallet balance service is temporarily unavailable/i),
+        }),
+      );
+    });
+  });
+
+  it("renders native SOL headline and 'USD value unavailable' when summary has no priced total but assets have a SOL balance", () => {
+    assetsQuery.mockReturnValue({
+      isPending: false,
+      isFetching: false,
+      data: {
+        assets: [
+          {
+            id: 1,
+            network: "solana",
+            asset_type: "native",
+            symbol: "SOL",
+            name: "Solana",
+            token_address: null,
+            decimals: 9,
+            balance: "0.011294989",
+            raw_balance: "11294989",
+            usd_value: null,
+            price_usd: null,
+            last_synced_at: new Date().toISOString(),
+            chain: "solana",
+            balance_cache: "0.011294989",
+            token_standard: null,
+          },
+        ],
+        last_synced_at: new Date().toISOString(),
+      },
+      refetch: vi.fn(),
+    });
+
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+        // Backend has no USD price yet — frontend must fall back to native amount,
+        // never display "0.00 USD" against a funded wallet.
+        summary: { total_balance: null, currency: null },
+        assets: [],
+      }),
+    );
+
+    render(<WalletPage />);
+
+    const headline = screen.getByTestId("wallet-balance-headline");
+    expect(headline).toHaveTextContent("0.011294989");
+    expect(screen.getAllByText(/SOL/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/USD value unavailable/i)).toBeInTheDocument();
+    // Critical regression guard: the headline must NOT be the placeholder "0.00".
+    expect(headline.textContent ?? "").not.toBe("0.00");
+  });
+
+  it("renders native SOL headline from summary.native_breakdown when provided, even before assets load", () => {
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+        summary: {
+          total_balance: null,
+          currency: null,
+          native_breakdown: [
+            { symbol: "SOL", balance: "0.011294989", network: "solana" },
+          ],
+        },
+        assets: [],
+      }),
+    );
+
+    render(<WalletPage />);
+
+    const headline = screen.getByTestId("wallet-balance-headline");
+    expect(headline).toHaveTextContent("0.011294989");
+    expect(screen.getByText(/USD value unavailable/i)).toBeInTheDocument();
+  });
+
+  it("renders the priced USD summary when backend supplies a numeric total_balance", () => {
+    setOverview(
+      makeOverview({
+        wfl_wallet: {
+          id: 1,
+          wallet_type: "wfl_internal",
+          status: "active",
+          public_solana_address: "So11111111111111111111111111111111111111111",
+          public_ethereum_address: null,
+          public_bitcoin_address: null,
+        },
+        summary: { total_balance: "1234.5", currency: "USD" },
+        assets: [],
+      }),
+    );
+
+    render(<WalletPage />);
+
+    const headline = screen.getByTestId("wallet-balance-headline");
+    expect(headline).toHaveTextContent("1,234.50");
+    expect(screen.queryByText(/USD value unavailable/i)).not.toBeInTheDocument();
   });
 
   it("renders the asset balance and last_synced_at relative time", () => {

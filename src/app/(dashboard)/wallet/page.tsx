@@ -84,7 +84,7 @@ export default function WalletPage() {
       ) : (
         <div className="space-y-6">
           <WflWalletStatusBanner overview={overview.data} />
-          <WalletBalanceCard overview={overview.data} />
+          <WalletBalanceCard overview={overview.data} assets={assets.data?.assets} />
           <ConnectedWalletsSection overview={overview.data} />
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-7">

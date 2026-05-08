@@ -105,7 +105,23 @@ export type WalletOverview = {
   assets?: WalletAssetItem[];
   /** ISO8601 timestamp of the most recent on-chain balance sync, if any. */
   last_synced_at?: string | null;
-  summary?: { total_balance: string | null; currency: string };
+  /**
+   * Aggregated balance summary. When at least one asset has a numeric
+   * `usd_value`, `total_balance` is the summed USD string and `currency`
+   * is `"USD"`. When no asset carries a price, `total_balance` and
+   * `currency` are both `null` and `native_breakdown` lists each asset's
+   * native amount so the UI can render `<balance> <symbol>` with a
+   * "USD value unavailable" subtitle. Never fabricated.
+   */
+  summary?: {
+    total_balance: string | null;
+    currency: string | null;
+    native_breakdown?: Array<{
+      symbol: string;
+      balance: string;
+      network: string | null;
+    }>;
+  };
 };
 
 export type WalletAssetItem = {
