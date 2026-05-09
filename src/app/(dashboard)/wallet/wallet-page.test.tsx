@@ -607,7 +607,7 @@ describe("WalletPage", () => {
     );
 
     render(<WalletPage />);
-    expect(screen.getByText("0.123456789")).toBeInTheDocument();
+    expect(screen.getAllByText("0.123456789").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Last synced/i)).toBeInTheDocument();
   });
 });

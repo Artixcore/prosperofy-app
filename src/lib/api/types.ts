@@ -188,9 +188,32 @@ export type WalletSendPreviewPayload = {
   total_amount: string | null;
   warnings: string[];
   expires_at: string;
+  network?: string;
+  asset_type?: string;
+  symbol?: string;
+  from_address?: string | null;
+  to_address?: string | null;
+  amount?: string | null;
+};
+
+export type WalletSendBroadcastTransactionRow = {
+  id: number;
+  network: string;
+  asset_type?: string;
+  symbol: string;
+  amount: string;
+  fee_amount: string | null;
+  fee_symbol: string | null;
+  total_amount: string | null;
+  to_address: string;
+  from_address: string | null;
+  tx_hash: string | null;
+  status: string;
+  explorer_url?: string | null;
 };
 
 export type WalletSendConfirmPayload = {
+  transaction: WalletSendBroadcastTransactionRow;
   wallet_transaction_id: number;
   tx_hash: string | null;
   status: string;

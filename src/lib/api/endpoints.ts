@@ -69,6 +69,7 @@ export const API = {
       sendPreview: "/api/app/wallet/send/preview",
       sendConfirm: "/api/app/wallet/send/confirm",
       transactions: "/api/app/wallet/transactions",
+      transactionsSync: "/api/app/wallet/transactions/sync",
       transaction: (id: string | number) =>
         `/api/app/wallet/transactions/${encodeURIComponent(String(id))}` as const,
       transactionCancel: (id: string | number) =>

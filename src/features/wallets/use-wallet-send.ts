@@ -112,16 +112,37 @@ export function useWalletTransactionsQuery(filters: WalletTransactionsFilters = 
     queryKey: ["wallet-transactions", token, filters],
     queryFn: () =>
       laravelFetch<{
-        transactions: WalletOnChainTransactionRow[];
+        transactions?: WalletOnChainTransactionRow[];
+        items?: WalletOnChainTransactionRow[];
         pagination: {
           total: number;
           per_page: number;
           current_page: number;
           last_page: number;
         };
-      }>(path, { token }),
+      }>(path, { token }).then((data) => ({
+        transactions: data.transactions ?? data.items ?? [],
+        pagination: data.pagination,
+      })),
     enabled: Boolean(authReady && isAuthenticated && token),
     retry: false,
+  });
+}
+
+export function useWalletTransactionsSyncMutation() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      laravelFetch<{ synced_count: number; not_implemented: boolean }>(
+        API.app.wallet.transactionsSync,
+        { method: "POST", body: {}, token: assertToken(token) },
+      ),
+    retry: false,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
+      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+    },
   });
 }
 

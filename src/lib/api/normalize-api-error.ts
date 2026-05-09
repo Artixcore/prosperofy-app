@@ -89,6 +89,12 @@ export function normalizeApiError(error: unknown): string {
   if (error.status === 409 && error.code === "WALLET_ALREADY_LINKED") {
     return "This wallet is already linked to another account.";
   }
+  if (error.status === 409 && error.code === "PREVIEW_CONSUMED") {
+    return "This preview can no longer be used.";
+  }
+  if (error.status === 410 || error.code === "PREVIEW_EXPIRED") {
+    return "Transaction preview expired. Please create a new preview.";
+  }
   if (error.status === 422) {
     switch (error.code) {
       case "WALLET_CHALLENGE_INVALID":

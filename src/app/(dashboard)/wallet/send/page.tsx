@@ -61,6 +61,7 @@ export default function WalletSendPage() {
     })();
 
   async function runPreview() {
+    idempotencyRef.current = null;
     setPreview(null);
     try {
       const body = {
@@ -97,10 +98,11 @@ export default function WalletSendPage() {
         preview_id: preview.preview_id,
         idempotency_key: idempotencyRef.current,
       });
+      const txHash = data.transaction?.tx_hash ?? data.tx_hash;
       pushToast({
         tone: "success",
-        title: data.duplicate ? "Already sent" : "Sent",
-        description: data.tx_hash ? `Tx ${data.tx_hash.slice(0, 8)}…` : "Broadcast submitted.",
+        title: data.duplicate ? "Already sent" : "SOL sent successfully.",
+        description: txHash ? `Tx ${txHash.slice(0, 8)}…` : "Broadcast submitted.",
       });
       setConfirmOpen(false);
       setPreview(null);
