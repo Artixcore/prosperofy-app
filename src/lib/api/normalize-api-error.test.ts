@@ -64,10 +64,10 @@ describe("normalizeApiError", () => {
   it("maps wallet load failures to a friendly message", () => {
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 503, code: "WALLET_UNAVAILABLE", retryable: true })),
-    ).toBe("Wallet service is temporarily unavailable. Please try again shortly.");
+    ).toBe("Send preview is temporarily unavailable. Please try again shortly.");
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 500, code: "wallet_error", retryable: false })),
-    ).toBe("Wallet service is temporarily unavailable. Please try again shortly.");
+    ).toBe("Send preview is temporarily unavailable. Please try again shortly.");
   });
 
   it("maps session expired http codes", () => {
@@ -93,13 +93,22 @@ describe("normalizeApiError", () => {
     const networkMessage = normalizeApiError(
       new ApiClientError("raw", { status: 0, code: "NETWORK_ERROR", retryable: true }),
     );
-    expect(networkMessage).toContain("Could not reach the server");
+    expect(networkMessage).toContain("temporarily unavailable");
     // Regression guard: the old wording incorrectly framed every network error as a
     // wallet-connection failure, which is wrong for balance refresh, listing, etc.
     expect(networkMessage).not.toMatch(/Wallet connection failed/i);
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 0, code: "TIMEOUT", retryable: true })),
-    ).toContain("too long");
+    ).toContain("timed out");
+  });
+
+  it("maps send-preview specific errors", () => {
+    expect(
+      normalizeApiError(new ApiClientError("raw", { status: 409, code: "BALANCE_NOT_SYNCED", retryable: false })),
+    ).toContain("refresh your wallet balance");
+    expect(
+      normalizeApiError(new ApiClientError("raw", { status: 422, code: "INSUFFICIENT_BALANCE", retryable: false })),
+    ).toContain("Insufficient SOL balance");
   });
 
   it("maps balance-refresh upstream errors to specific user-friendly copy", () => {

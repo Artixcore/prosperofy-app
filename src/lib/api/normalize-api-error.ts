@@ -46,10 +46,10 @@ export function normalizeApiError(error: unknown): string {
   }
 
   if (error.status === 0 && error.code === "NETWORK_ERROR") {
-    return "Could not reach the server. Please try again shortly.";
+    return "Send preview is temporarily unavailable. Please try again shortly.";
   }
   if (error.status === 0 && error.code === "TIMEOUT") {
-    return "The server took too long to respond. Please try again.";
+    return "Send preview timed out. Please try again shortly.";
   }
   if (error.status === 401) {
     return "Your session expired. Please log in again.";
@@ -76,6 +76,12 @@ export function normalizeApiError(error: unknown): string {
   }
   if (error.code === "WALLET_NOT_FOUND") {
     return "No WFL Wallet found. Please activate your wallet first.";
+  }
+  if (error.code === "BALANCE_NOT_SYNCED") {
+    return "Please refresh your wallet balance before sending.";
+  }
+  if (error.code === "INSUFFICIENT_BALANCE") {
+    return "Insufficient SOL balance for this transaction.";
   }
   if (error.code === "WALLET_NOT_ACTIVE") {
     return "Your WFL Wallet is not active yet. Please try again shortly.";
@@ -139,7 +145,7 @@ export function normalizeApiError(error: unknown): string {
     error.code === "WALLET_UNAVAILABLE" ||
     error.code === "wallet_error"
   ) {
-    return "Wallet service is temporarily unavailable. Please try again shortly.";
+    return "Send preview is temporarily unavailable. Please try again shortly.";
   }
 
   if (error.status >= 500) {

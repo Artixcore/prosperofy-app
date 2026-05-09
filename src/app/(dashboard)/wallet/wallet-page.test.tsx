@@ -385,7 +385,7 @@ describe("WalletPage", () => {
 
   it("shows a balance-context error description, not 'Wallet connection failed', when the network is unreachable", async () => {
     refreshAssetsMutate.mockRejectedValueOnce(
-      new ApiClientError("Could not reach the server. Please try again shortly.", {
+      new ApiClientError("Send preview is temporarily unavailable. Please try again shortly.", {
         status: 0,
         code: "NETWORK_ERROR",
         retryable: true,
@@ -412,7 +412,7 @@ describe("WalletPage", () => {
         expect.objectContaining({
           tone: "error",
           title: "Could not refresh balance",
-          description: expect.stringMatching(/Could not reach the server/i),
+          description: expect.stringMatching(/temporarily unavailable/i),
         }),
       );
     });
