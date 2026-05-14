@@ -94,6 +94,30 @@ export const API = {
       rewardClaim: (id: string | number) =>
         `/api/app/agents/rewards/${encodeURIComponent(String(id))}/claim` as const,
     },
+    market: {
+      quote: "/api/app/market/quote",
+      quotes: "/api/app/market/quotes",
+      ohlc: "/api/app/market/ohlc",
+      candles: "/api/app/market/candles",
+      ticks: "/api/app/market/ticks",
+      symbols: "/api/app/market/symbols",
+      insights: "/api/app/market/insights",
+      status: "/api/app/market/status",
+      stream: "/api/app/market/stream",
+      wsSubscribe: "/api/app/market/ws/subscribe",
+      wsUnsubscribe: "/api/app/market/ws/unsubscribe",
+    },
+    watchlists: {
+      list: "/api/app/watchlists",
+      create: "/api/app/watchlists",
+      addItem: (id: string | number) =>
+        `/api/app/watchlists/${encodeURIComponent(String(id))}/items` as const,
+      removeItem: (watchlistId: string | number, itemId: string | number) =>
+        `/api/app/watchlists/${encodeURIComponent(String(watchlistId))}/items/${encodeURIComponent(String(itemId))}` as const,
+    },
+    portfolio: {
+      snapshots: "/api/app/portfolio/snapshots",
+    },
     ai: {
       analysisMarket: "/api/app/analysis/market",
       strategyGenerate: "/api/app/strategy/generate",

@@ -12,6 +12,18 @@ export function SignalCard({ signal }: { signal: MarketSignal }) {
           <p className="mt-1 text-xs capitalize text-muted-foreground">
             {signal.direction} · {signal.market_type} · {signal.timeframe}
           </p>
+          {signal.data_freshness ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Data freshness: <span className="font-medium text-foreground">{signal.data_freshness}</span>
+              {signal.market_data_provider ? (
+                <>
+                  {" "}
+                  · Provider:{" "}
+                  <span className="font-medium text-foreground">{signal.market_data_provider}</span>
+                </>
+              ) : null}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SignalRiskBadge riskScore={signal.risk_score} />

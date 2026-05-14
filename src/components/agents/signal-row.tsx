@@ -8,6 +8,9 @@ export function SignalRow({ signal }: { signal: MarketSignal }) {
     <tr className="border-b border-border text-sm text-muted-foreground">
       <td className="py-2 pr-4 font-medium text-foreground">{signal.symbol}</td>
       <td className="py-2 pr-4">{signal.market_type}</td>
+      <td className="py-2 pr-4 text-xs text-muted-foreground">
+        {signal.data_freshness ?? "—"}
+      </td>
       <td className="py-2 pr-4 capitalize">{signal.direction}</td>
       <td className="py-2 pr-4">
         <ConfidenceMeter value={signal.confidence_score} />

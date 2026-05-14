@@ -139,7 +139,14 @@ export type WalletAssetItem = {
   raw_balance?: string | null;
   usd_value?: string | null;
   price_usd?: string | null;
-  price_source?: "coingecko" | "cached" | "manual" | "unavailable" | (string & {}) | null;
+  price_source?:
+    | "coingecko"
+    | "tradewatch"
+    | "cached"
+    | "manual"
+    | "unavailable"
+    | (string & {})
+    | null;
   price_last_updated_at?: string | null;
   balance_last_synced_at?: string | null;
   last_synced_at?: string | null;

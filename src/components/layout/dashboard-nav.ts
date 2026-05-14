@@ -4,6 +4,7 @@ import {
   ChartColumn,
   CreditCard,
   Home,
+  LineChart,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -16,6 +17,7 @@ export type DashboardNavItem = {
 
 export const DASHBOARD_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/market", label: "Markets", icon: LineChart },
   { href: "/wallet", label: "Wallets", icon: CreditCard },
   { href: "/agents", label: "Agents", icon: Bot },
   { href: "/activity", label: "Activity", icon: ChartColumn },

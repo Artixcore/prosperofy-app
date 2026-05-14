@@ -12,6 +12,7 @@ import {
   useAppWalletOverviewQuery,
   useCreateWflWalletMutation,
 } from "@/features/wallets/use-wallet-mutations";
+import { useMarketQuote } from "@/features/market/use-market-quote";
 
 function Card({
   title,
@@ -34,6 +35,7 @@ function Card({
 export default function DashboardHomePage() {
   const walletOverview = useAppWalletOverviewQuery();
   const createWflWallet = useCreateWflWalletMutation();
+  const btcQuote = useMarketQuote("crypto", "BTCUSD");
   const { pushToast } = useToast();
 
   async function handleCreateWallet() {
@@ -117,6 +119,36 @@ export default function DashboardHomePage() {
           <p className="mt-2 text-sm text-content-muted">
             {connectedWallets.length === 0 ? "No external wallets connected." : "Connections are ready."}
           </p>
+        </Card>
+
+        <Card title="BTC snapshot" description="Spot quote via Laravel market API (TradeWatch-backed).">
+          {btcQuote.isPending ? (
+            <p className="text-sm text-content-muted">Loading market data…</p>
+          ) : btcQuote.isError ? (
+            <p className="text-sm text-content-muted">Market data unavailable.</p>
+          ) : btcQuote.data ? (
+            <div className="space-y-2">
+              <p className="text-2xl font-semibold tabular-nums text-content-primary">
+                {btcQuote.data.mid ?? btcQuote.data.last ?? "—"}{" "}
+                <span className="text-sm font-normal text-content-muted">USD (mid)</span>
+              </p>
+              <p className="text-xs text-content-muted">
+                <span className="rounded-md bg-surface px-2 py-0.5">
+                  {btcQuote.data.is_live ? "live" : "cached"}
+                </span>
+                <span className="mx-2">·</span>
+                <span>{btcQuote.data.provider ?? "tradewatch"}</span>
+                {btcQuote.data.timestamp ? (
+                  <>
+                    <span className="mx-2">·</span>
+                    <span>{btcQuote.data.timestamp}</span>
+                  </>
+                ) : null}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-content-muted">No quote returned.</p>
+          )}
         </Card>
 
         <Card title="Assets" description="Token list from /api/app/wallet/assets.">
