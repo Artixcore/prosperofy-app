@@ -5,6 +5,7 @@ import {
   CreditCard,
   Home,
   LineChart,
+  PieChart,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -19,6 +20,7 @@ export const DASHBOARD_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/market", label: "Markets", icon: LineChart },
   { href: "/wallet", label: "Wallets", icon: CreditCard },
+  { href: "/portfolio", label: "Portfolio", icon: PieChart },
   { href: "/agents", label: "Agents", icon: Bot },
   { href: "/activity", label: "Activity", icon: ChartColumn },
   { href: "/notifications", label: "Others", icon: Bell },

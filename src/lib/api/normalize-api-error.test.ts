@@ -183,4 +183,22 @@ describe("normalizeApiError", () => {
       "Phantom is not installed",
     );
   });
+
+  it("maps AI service error codes", () => {
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", { status: 503, code: "AI_UNAVAILABLE", retryable: true }),
+      ),
+    ).toContain("temporarily unavailable");
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", { status: 503, code: "AI_NOT_CONFIGURED", retryable: false }),
+      ),
+    ).toContain("not available");
+    expect(
+      normalizeApiError(
+        new ApiClientError("ignored", { status: 503, code: "AI_BUSINESS_ERROR", retryable: false }),
+      ),
+    ).toContain("could not complete");
+  });
 });

@@ -41,6 +41,8 @@ export type LaravelFetchOptions = {
   body?: unknown;
   token?: string | null;
   signal?: AbortSignal;
+  /** Override default client timeout (ms). Agent run/signal generate use ~150s. */
+  timeoutMs?: number;
   expectNoContent?: boolean;
   _csrfRetried?: boolean;
 };
@@ -73,12 +75,27 @@ function isMutatingMethod(method: LaravelFetchOptions["method"]): boolean {
   return method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
 }
 
-function getTimeoutMs(): number {
+function getTimeoutMs(overrideMs?: number): number {
+  if (overrideMs !== undefined && Number.isFinite(overrideMs) && overrideMs > 0) {
+    return Math.floor(overrideMs);
+  }
   const raw = process.env.NEXT_PUBLIC_API_TIMEOUT_MS;
   if (!raw) return 15_000;
   const parsed = Number(raw);
   if (!Number.isFinite(parsed) || parsed <= 0) return 15_000;
   return Math.floor(parsed);
+}
+
+/** Long-running agent/signal mutations align with Laravel→AI timeouts (~120s). */
+export function getAgentMutationTimeoutMs(): number {
+  const raw = process.env.NEXT_PUBLIC_AGENT_TIMEOUT_MS;
+  if (raw) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return Math.floor(parsed);
+    }
+  }
+  return 150_000;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -137,7 +154,15 @@ export async function laravelFetch<T>(
   path: string,
   options: LaravelFetchOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, token, signal, expectNoContent = false, _csrfRetried = false } = options;
+  const {
+    method = "GET",
+    body,
+    token,
+    signal,
+    timeoutMs,
+    expectNoContent = false,
+    _csrfRetried = false,
+  } = options;
   const url = `${getBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 
   const headers: Record<string, string> = {
@@ -166,7 +191,7 @@ export async function laravelFetch<T>(
   const timeoutController = new AbortController();
   const timeoutId = setTimeout(() => {
     timeoutController.abort();
-  }, getTimeoutMs());
+  }, getTimeoutMs(timeoutMs));
   if (typeof (timeoutId as { unref?: () => void }).unref === "function") {
     (timeoutId as { unref: () => void }).unref();
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { LoadingState } from "@/components/system/loading-state";
 import { ErrorState } from "@/components/system/error-state";
@@ -24,6 +24,13 @@ export default function WalletTransactionsPage() {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const q = useWalletTransactionsQuery({ network, status, per_page: 20, page: 1 });
   const syncMu = useWalletTransactionsSyncMutation();
+
+  useEffect(() => {
+    if (!syncMu.isPending) {
+      void runSync();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync once on mount
+  }, []);
 
   async function runSync() {
     try {

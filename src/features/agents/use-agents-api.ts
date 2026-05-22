@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { laravelFetch } from "@/lib/api/client";
+import { getAgentMutationTimeoutMs, laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
 import type { AiAgent, AiAgentRunRow } from "@/types/agents";
@@ -133,6 +133,7 @@ export function useRunAgentMutation() {
         method: "POST",
         body,
         token: assertToken(token),
+        timeoutMs: getAgentMutationTimeoutMs(),
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["agents-dashboard"] });
@@ -142,6 +143,14 @@ export function useRunAgentMutation() {
 }
 
 export type SignalGenerateResponse = {
+  news_impact?: string | null;
+  news_sources?: Array<{
+    title: string;
+    source_name?: string | null;
+    url?: string | null;
+    published_at?: string | null;
+  }>;
+  news_context?: Record<string, unknown> | null;
   signals: MarketSignal[];
   disclaimer?: string | null;
   warnings?: unknown[];
@@ -157,6 +166,7 @@ export function useGenerateSignalMutation() {
         method: "POST",
         body,
         token: assertToken(token),
+        timeoutMs: getAgentMutationTimeoutMs(),
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["agents-dashboard"] });

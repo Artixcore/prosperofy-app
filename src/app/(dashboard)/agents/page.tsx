@@ -9,10 +9,14 @@ import { InlineAlert } from "@/components/system/inline-alert";
 import { EmptyState } from "@/components/empty-state";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useAgentsCatalogQuery, useAgentsDashboardQuery } from "@/features/agents/use-agents-api";
+import { useNewsCryptoQuery, useNewsMarketQuery } from "@/features/news/use-news-api";
+import { NewsPanel } from "@/components/news/news-panel";
 
 export default function AgentsOverviewPage() {
   const dash = useAgentsDashboardQuery(90_000);
   const catalog = useAgentsCatalogQuery();
+  const cryptoNews = useNewsCryptoQuery("bitcoin");
+  const marketNews = useNewsMarketQuery("stock market");
 
   const dashErr = dash.isError ? normalizeApiError(dash.error) : null;
   const catErr = catalog.isError ? normalizeApiError(catalog.error) : null;
@@ -49,6 +53,23 @@ export default function AgentsOverviewPage() {
           <Link href="/agents/rewards" className="font-medium text-primary hover:underline">
             Rewards
           </Link>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <NewsPanel
+            title="Crypto news"
+            articles={cryptoNews.data?.articles ?? []}
+            freshness={cryptoNews.data?.data_freshness}
+            isLoading={cryptoNews.isLoading}
+            error={cryptoNews.error}
+          />
+          <NewsPanel
+            title="Market news"
+            articles={marketNews.data?.articles ?? []}
+            freshness={marketNews.data?.data_freshness}
+            isLoading={marketNews.isLoading}
+            error={marketNews.error}
+          />
         </div>
 
         <section>

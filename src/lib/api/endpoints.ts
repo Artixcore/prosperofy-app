@@ -75,6 +75,12 @@ export const API = {
       transactionCancel: (id: string | number) =>
         `/api/app/wallet/transactions/${encodeURIComponent(String(id))}/cancel` as const,
     },
+    news: {
+      latest: "/api/app/news/latest",
+      market: "/api/app/news/market",
+      crypto: "/api/app/news/crypto",
+      search: "/api/app/news/search",
+    },
     agents: {
       list: "/api/app/agents",
       dashboard: "/api/app/agents/dashboard",
@@ -103,6 +109,11 @@ export const API = {
       symbols: "/api/app/market/symbols",
       insights: "/api/app/market/insights",
       status: "/api/app/market/status",
+      orderbook: "/api/app/market/orderbook",
+      trades: "/api/app/market/trades",
+      trending: "/api/app/market/trending",
+      global: "/api/app/market/global",
+      dashboard: "/api/app/market/dashboard",
       stream: "/api/app/market/stream",
       wsSubscribe: "/api/app/market/ws/subscribe",
       wsUnsubscribe: "/api/app/market/ws/unsubscribe",
@@ -116,16 +127,18 @@ export const API = {
         `/api/app/watchlists/${encodeURIComponent(String(watchlistId))}/items/${encodeURIComponent(String(itemId))}` as const,
     },
     portfolio: {
+      overview: "/api/app/portfolio/overview",
+      history: "/api/app/portfolio/history",
       snapshots: "/api/app/portfolio/snapshots",
     },
     ai: {
-      analysisMarket: "/api/app/analysis/market",
-      strategyGenerate: "/api/app/strategy/generate",
-      riskScore: "/api/app/risk/score",
-      quantBacktestTrend: "/api/app/quant/backtest/trend",
-      strategyEvaluateDispatch: "/api/app/strategy/evaluate/dispatch",
+      analysisMarket: "/api/app/v1/analysis/market",
+      strategyGenerate: "/api/app/v1/strategy/generate",
+      riskScore: "/api/app/v1/risk/score",
+      quantBacktestTrend: "/api/app/v1/quant/backtest/trend",
+      strategyEvaluateDispatch: "/api/app/v1/strategy/evaluate/dispatch",
       orchestrationJob: (jobId: string) =>
-        `/api/app/orchestration/jobs/${jobId}` as const,
+        `/api/app/v1/orchestration/jobs/${jobId}` as const,
     },
   },
 } as const;

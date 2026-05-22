@@ -5,6 +5,7 @@ import { AgentsDisclaimerBanner } from "@/components/agents/disclaimer";
 import { AgentRunForm } from "@/components/agents/agent-run-form";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useAgentsCatalogQuery } from "@/features/agents/use-agents-api";
 import { AGENT_KEYS, type AgentKey } from "@/types/agents";
 
@@ -19,6 +20,7 @@ export default function AgentDetailPage() {
 
   const meta = catalog.data?.agents.find((a) => a.key === key);
   const valid = isAgentKey(key);
+  const catalogErr = catalog.isError ? normalizeApiError(catalog.error) : null;
 
   const defaultSymbols = key === "forex_research" ? "EURUSD" : "BTC";
 
@@ -35,6 +37,7 @@ export default function AgentDetailPage() {
     <>
       <PageHeader title={meta?.name ?? key} description={meta?.description ?? ""} />
       <AgentsDisclaimerBanner />
+      {catalogErr ? <InlineAlert tone="error">{catalogErr}</InlineAlert> : null}
       <AgentRunForm agentKey={key} defaultSymbols={defaultSymbols} showCountryField={key === "country_stock"} />
     </>
   );

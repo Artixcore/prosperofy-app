@@ -1,20 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AgentsDisclaimerBanner } from "@/components/agents/disclaimer";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { EmptyState } from "@/components/empty-state";
+import { ListPagination } from "@/components/system/list-pagination";
 import { SubmitButton } from "@/components/system/submit-button";
 import { RewardStatusBadge } from "@/components/agents/reward-status-badge";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useClaimRewardMutation, useRewardsQuery } from "@/features/agents/use-agents-api";
 
 export default function AgentsRewardsPage() {
-  const q = useRewardsQuery(1);
+  const [page, setPage] = useState(1);
+  const [claimErr, setClaimErr] = useState<string | null>(null);
+  const q = useRewardsQuery(page);
   const claim = useClaimRewardMutation();
   const err = q.isError ? normalizeApiError(q.error) : null;
-  const rows = q.data?.rewards.data ?? [];
+  const paginator = q.data?.rewards;
+  const rows = paginator?.data ?? [];
 
   return (
     <>
@@ -29,6 +34,7 @@ export default function AgentsRewardsPage() {
           transfers unless Solana SPL is configured server-side.
         </div>
         {err ? <InlineAlert tone="error">{err}</InlineAlert> : null}
+        {claimErr ? <InlineAlert tone="error">{claimErr}</InlineAlert> : null}
         <Link href="/agents" className="text-sm font-medium text-primary hover:underline">
           ← Agents overview
         </Link>
@@ -61,7 +67,10 @@ export default function AgentsRewardsPage() {
                         <form
                           onSubmit={(e) => {
                             e.preventDefault();
-                            void claim.mutateAsync(r.id);
+                            setClaimErr(null);
+                            void claim
+                              .mutateAsync(r.id)
+                              .catch((error: unknown) => setClaimErr(normalizeApiError(error)));
                           }}
                         >
                           <SubmitButton pending={claim.isPending}>Claim</SubmitButton>
@@ -76,6 +85,9 @@ export default function AgentsRewardsPage() {
             </table>
           </div>
         )}
+        {paginator ? (
+          <ListPagination page={page} lastPage={paginator.last_page} onPageChange={setPage} />
+        ) : null}
       </div>
     </>
   );

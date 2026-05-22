@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useGenerateSignalMutation } from "@/features/agents/use-agents-api";
+import { NewsImpactSection } from "@/components/news/news-impact-section";
 import { AGENT_KEYS, MARKET_OPTIONS, type AgentKey } from "@/types/agents";
 
 const TIMEFRAMES = [
@@ -174,9 +175,18 @@ export default function GenerateSignalPage() {
         </form>
 
         {mut.isSuccess && mut.data ? (
-          <pre className="max-h-[480px] overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
-            {JSON.stringify(mut.data, null, 2)}
-          </pre>
+          <div className="space-y-4">
+            <NewsImpactSection
+              newsImpact={mut.data.news_impact}
+              newsSources={mut.data.news_sources}
+              dataFreshness={
+                (mut.data.news_context as { data_freshness?: string } | null)?.data_freshness
+              }
+            />
+            <pre className="max-h-[480px] overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
+              {JSON.stringify(mut.data, null, 2)}
+            </pre>
+          </div>
         ) : null}
       </div>
     </>

@@ -16,6 +16,9 @@ export type MarketQuotePayload = {
   ask?: string | null;
   mid?: string | null;
   last?: string | null;
+  price?: string | null;
+  volume_24h?: string | null;
+  change_24h_percent?: string | null;
   open?: string | null;
   high?: string | null;
   low?: string | null;

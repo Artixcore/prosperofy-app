@@ -8,7 +8,7 @@ import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { AnalysisResultPanel } from "@/components/agents/analysis-result-panel";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useRunAgentMutation } from "@/features/agents/use-agents-api";
 import { MARKET_OPTIONS, type AgentKey } from "@/types/agents";
 
@@ -74,7 +74,7 @@ export function AgentRunForm({
         include_trends: values.include_trends,
       });
     } catch (e) {
-      setBanner(isApiClientError(e) ? e.message : "AI analysis could not be generated. Please try again.");
+      setBanner(normalizeApiError(e));
     }
   }
 

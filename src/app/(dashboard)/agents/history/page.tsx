@@ -1,18 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AgentsDisclaimerBanner } from "@/components/agents/disclaimer";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { EmptyState } from "@/components/empty-state";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { ListPagination } from "@/components/system/list-pagination";
 import { useAgentRunsQuery } from "@/features/agents/use-agents-api";
 import type { AiAgentRunRow } from "@/types/agents";
 
 export default function AgentsHistoryPage() {
-  const q = useAgentRunsQuery(1);
+  const [page, setPage] = useState(1);
+  const q = useAgentRunsQuery(page);
   const err = q.isError ? normalizeApiError(q.error) : null;
-  const runs = q.data?.runs.data ?? [];
+  const paginator = q.data?.runs;
+  const runs = paginator?.data ?? [];
 
   return (
     <>
@@ -40,6 +44,9 @@ export default function AgentsHistoryPage() {
             ))}
           </ul>
         )}
+        {paginator ? (
+          <ListPagination page={page} lastPage={paginator.last_page} onPageChange={setPage} />
+        ) : null}
       </div>
     </>
   );

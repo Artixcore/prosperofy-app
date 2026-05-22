@@ -8,12 +8,16 @@ import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { EmptyState } from "@/components/empty-state";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { ListPagination } from "@/components/system/list-pagination";
 import { useSignalsQuery } from "@/features/agents/use-agents-api";
+import { MARKET_OPTIONS } from "@/types/agents";
 
 export default function AgentsSignalsPage() {
-  const q = useSignalsQuery(1);
+  const [page, setPage] = useState(1);
+  const q = useSignalsQuery(page);
   const err = q.isError ? normalizeApiError(q.error) : null;
-  const rawRows = q.data?.signals.data ?? [];
+  const paginator = q.data?.signals;
+  const rawRows = paginator?.data ?? [];
   const [marketFilter, setMarketFilter] = useState<string>("");
   const [directionFilter, setDirectionFilter] = useState<string>("");
   const rows = useMemo(() => {
@@ -50,11 +54,11 @@ export default function AgentsSignalsPage() {
               onChange={(e) => setMarketFilter(e.target.value)}
             >
               <option value="">All</option>
-              <option value="crypto">crypto</option>
-              <option value="forex">forex</option>
-              <option value="stock">stock</option>
-              <option value="index">index</option>
-              <option value="commodity">commodity</option>
+              {MARKET_OPTIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           </label>
           <label className="flex items-center gap-2 text-muted-foreground">
@@ -100,6 +104,9 @@ export default function AgentsSignalsPage() {
             </table>
           </div>
         )}
+        {paginator ? (
+          <ListPagination page={page} lastPage={paginator.last_page} onPageChange={setPage} />
+        ) : null}
       </div>
     </>
   );

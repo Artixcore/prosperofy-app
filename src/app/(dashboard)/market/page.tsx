@@ -18,11 +18,13 @@ import { useMarketCandles } from "@/features/market/use-market-candles";
 import { useMarketQuotes } from "@/features/market/use-market-quotes";
 import { useMarketSymbolsSearch } from "@/features/market/use-market-symbols";
 import type { MarketQuotePayload } from "@/features/market/use-market-quote";
+import { useNewsMarketQuery } from "@/features/news/use-news-api";
+import { NewsPanel } from "@/components/news/news-panel";
 
 type AssetTab = "crypto" | "forex" | "stock" | "index" | "commodity";
 
 const TAB_DEFAULTS: Record<AssetTab, string[]> = {
-  crypto: ["BTCUSD", "ETHUSD", "SOLUSD"],
+  crypto: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
   forex: ["EURUSD", "GBPUSD", "USDJPY"],
   stock: ["AAPL", "MSFT"],
   index: ["SPX500", "DJI"],
@@ -48,7 +50,7 @@ function LiveBadge({ q }: { q: MarketQuotePayload }) {
 
 function QuoteCard({ row }: { row: MarketQuotePayload }) {
   const label = row.display_symbol || row.symbol || "—";
-  const mid = row.mid ?? row.last ?? "—";
+  const mid = row.mid ?? row.last ?? (row as { price?: string }).price ?? "—";
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -138,6 +140,7 @@ export default function MarketDashboardPage() {
 
   const quoteErr = quotesQ.isError ? normalizeApiError(quotesQ.error) : null;
   const candleErr = candlesQ.isError ? normalizeApiError(candlesQ.error) : null;
+  const marketNews = useNewsMarketQuery("global markets");
 
   return (
     <>
@@ -241,6 +244,14 @@ export default function MarketDashboardPage() {
             </div>
           )}
         </section>
+
+        <NewsPanel
+          title="Market news"
+          articles={marketNews.data?.articles ?? []}
+          freshness={marketNews.data?.data_freshness}
+          isLoading={marketNews.isLoading}
+          error={marketNews.error}
+        />
       </div>
     </>
   );

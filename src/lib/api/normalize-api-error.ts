@@ -140,6 +140,15 @@ export function normalizeApiError(error: unknown): string {
   if (error.status === 504) {
     return "The request timed out. Please try again shortly.";
   }
+  if (error.code === "AI_NOT_CONFIGURED") {
+    return "AI analysis is not available right now. Please try again later.";
+  }
+  if (error.code === "AI_UNAVAILABLE" || error.code === "AI_ERROR") {
+    return "AI analysis is temporarily unavailable. Please try again shortly.";
+  }
+  if (error.code === "AI_BUSINESS_ERROR") {
+    return "AI could not complete this request. Please adjust your inputs and try again.";
+  }
   if (
     error.status === 503 ||
     error.code === "WALLET_UNAVAILABLE" ||
