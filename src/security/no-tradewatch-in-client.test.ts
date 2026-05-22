@@ -23,7 +23,10 @@ describe("client bundle must not reference TradeWatch directly", () => {
     expect(files.length).toBeGreaterThan(10);
     const hits: string[] = [];
     for (const f of files) {
-      if (f.includes("no-tradewatch-in-client.test")) {
+      if (
+        f.includes("no-tradewatch-in-client.test") ||
+        f.includes("no-provider-keys-in-client.test")
+      ) {
         continue;
       }
       const text = readFileSync(f, "utf8");

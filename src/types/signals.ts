@@ -17,6 +17,9 @@ export const marketSignalSchema = z.object({
   disclaimer: z.string().nullable().optional(),
   generated_at: z.string().nullable().optional(),
   expires_at: z.string().nullable().optional(),
+  source_data: z.record(z.string(), z.unknown()).nullable().optional(),
+  source_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
+  news_impact_summary: z.string().nullable().optional(),
 });
 
 export type MarketSignal = z.infer<typeof marketSignalSchema>;

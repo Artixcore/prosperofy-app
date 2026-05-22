@@ -13,7 +13,7 @@ import { InlineAlert } from "@/components/system/inline-alert";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useSignalDetailQuery, useTrackSignalMutation } from "@/features/agents/use-agents-api";
 import { NewsImpactSection } from "@/components/news/news-impact-section";
-import type { NewsSourceRow } from "@/types/news";
+import { getSignalNewsContext } from "@/lib/agents/signal-source";
 
 const trackSchema = z.object({
   status: z.enum(["watching", "entered", "exited", "cancelled"]),
@@ -79,17 +79,13 @@ export default function SignalDetailPage() {
               <p className="mt-3 text-muted-foreground">{q.data.signal.reasoning}</p>
             ) : null}
             {(() => {
-              const sd = q.data.signal.source_data as Record<string, unknown> | null | undefined;
-              const impact = typeof sd?.news_impact === "string" ? sd.news_impact : undefined;
-              const sources = Array.isArray(sd?.news_sources) ? (sd.news_sources as NewsSourceRow[]) : [];
-              const freshness =
-                typeof sd?.data_freshness === "string" ? sd.data_freshness : q.data.signal.data_freshness;
+              const { newsImpact, newsSources, dataFreshness } = getSignalNewsContext(q.data.signal);
               return (
                 <div className="mt-4">
                   <NewsImpactSection
-                    newsImpact={impact}
-                    newsSources={sources}
-                    dataFreshness={freshness}
+                    newsImpact={newsImpact}
+                    newsSources={newsSources}
+                    dataFreshness={dataFreshness}
                   />
                 </div>
               );

@@ -9,6 +9,11 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/features/news/use-news-api", () => ({
+  useNewsCryptoQuery: () => ({ isLoading: false, isError: false, data: undefined }),
+  useNewsMarketQuery: () => ({ isLoading: false, isError: false, data: undefined }),
+}));
+
 vi.mock("@/features/agents/use-agents-api", () => ({
   useAgentsDashboardQuery: () => ({
     isLoading: false,

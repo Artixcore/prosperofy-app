@@ -17,16 +17,16 @@ export default function AgentsSignalsPage() {
   const q = useSignalsQuery(page);
   const err = q.isError ? normalizeApiError(q.error) : null;
   const paginator = q.data?.signals;
-  const rawRows = paginator?.data ?? [];
   const [marketFilter, setMarketFilter] = useState<string>("");
   const [directionFilter, setDirectionFilter] = useState<string>("");
   const rows = useMemo(() => {
+    const rawRows = paginator?.data ?? [];
     return rawRows.filter((s) => {
       if (marketFilter && s.market_type !== marketFilter) return false;
       if (directionFilter && s.direction !== directionFilter) return false;
       return true;
     });
-  }, [rawRows, marketFilter, directionFilter]);
+  }, [paginator?.data, marketFilter, directionFilter]);
 
   return (
     <>
