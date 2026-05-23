@@ -15,7 +15,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN test -n "${NEXT_PUBLIC_LARAVEL_API_BASE_URL}" || ( \
   echo >&2 "Missing build-arg NEXT_PUBLIC_LARAVEL_API_BASE_URL (Laravel origin, no /api suffix)."; \
-  echo >&2 "Example: docker build --build-arg NEXT_PUBLIC_LARAVEL_API_BASE_URL=https://backend.example.com ."; \
+  echo >&2 "Example: docker build --build-arg NEXT_PUBLIC_LARAVEL_API_BASE_URL=https://backend.artixcore.com ."; \
   exit 1 \
 )
 RUN npm run build
