@@ -1,6 +1,12 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  normalizeAgentSignal,
+  normalizeAgentSignals,
+  normalizeSignalsPaginator,
+  type RawAgentSignal,
+} from "@/lib/api/agents";
 import { getAgentMutationTimeoutMs, laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
@@ -59,10 +65,27 @@ export function useAgentsDashboardQuery(refetchIntervalMs?: number) {
   const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["agents-dashboard"],
-    queryFn: () =>
-      laravelFetch<AgentDashboardPayload>(API.app.agents.dashboard, {
+    queryFn: async () => {
+      const raw = await laravelFetch<{
+        agents_enabled_count: number;
+        latest_signal?: RawAgentSignal | null;
+        latest_signals: RawAgentSignal[];
+        latest_run?: unknown;
+        recent_runs?: AiAgentRunRow[];
+        sentiment?: unknown | null;
+        trending_assets?: unknown[];
+        reward_summary: AgentDashboardPayload["reward_summary"];
+      }>(API.app.agents.dashboard, {
         token: assertToken(token),
-      }),
+      });
+      return {
+        ...raw,
+        latest_signal: raw.latest_signal
+          ? normalizeAgentSignal(raw.latest_signal)
+          : raw.latest_signal,
+        latest_signals: normalizeAgentSignals(raw.latest_signals),
+      } satisfies AgentDashboardPayload;
+    },
     enabled: Boolean(authReady && isAuthenticated && token),
     refetchInterval: refetchIntervalMs,
     staleTime: 60_000,
@@ -88,11 +111,14 @@ export function useSignalsQuery(page = 1) {
   const qs = page > 1 ? `?page=${page}` : "";
   return useQuery({
     queryKey: ["agent-signals", page],
-    queryFn: () =>
-      laravelFetch<{ signals: LaravelPaginator<MarketSignal> }>(
-        `${API.app.agents.signals}${qs}`,
-        { token: assertToken(token) },
-      ),
+    queryFn: async () => {
+      const raw = await laravelFetch<{
+        signals: LaravelPaginator<RawAgentSignal>;
+      }>(`${API.app.agents.signals}${qs}`, {
+        token: assertToken(token),
+      });
+      return { signals: normalizeSignalsPaginator(raw.signals) };
+    },
     enabled: Boolean(authReady && isAuthenticated && token),
   });
 }
@@ -101,11 +127,13 @@ export function useSignalDetailQuery(signalId: string | null) {
   const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["agent-signal", signalId],
-    queryFn: () =>
-      laravelFetch<{ signal: MarketSignal }>(
+    queryFn: async () => {
+      const raw = await laravelFetch<{ signal: RawAgentSignal }>(
         API.app.agents.signalDetail(signalId!),
         { token: assertToken(token) },
-      ),
+      );
+      return { signal: normalizeAgentSignal(raw.signal) };
+    },
     enabled: Boolean(authReady && isAuthenticated && token && signalId),
   });
 }
@@ -157,17 +185,29 @@ export type SignalGenerateResponse = {
   request_id?: string | null;
 };
 
+type RawSignalGenerateResponse = Omit<SignalGenerateResponse, "signals"> & {
+  signals: RawAgentSignal[];
+};
+
 export function useGenerateSignalMutation() {
   const { token } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: Record<string, unknown>) =>
-      laravelFetch<SignalGenerateResponse>(API.app.agents.signalsGenerate, {
-        method: "POST",
-        body,
-        token: assertToken(token),
-        timeoutMs: getAgentMutationTimeoutMs(),
-      }),
+    mutationFn: async (body: Record<string, unknown>) => {
+      const raw = await laravelFetch<RawSignalGenerateResponse>(
+        API.app.agents.signalsGenerate,
+        {
+          method: "POST",
+          body,
+          token: assertToken(token),
+          timeoutMs: getAgentMutationTimeoutMs(),
+        },
+      );
+      return {
+        ...raw,
+        signals: normalizeAgentSignals(raw.signals),
+      } satisfies SignalGenerateResponse;
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["agents-dashboard"] });
       void qc.invalidateQueries({ queryKey: ["agent-signals"] });

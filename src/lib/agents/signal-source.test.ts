@@ -15,15 +15,14 @@ const baseSignal = {
 } satisfies MarketSignal;
 
 describe("getSignalSourceData", () => {
-  it("returns empty object when both fields missing", () => {
+  it("returns empty object when source_data is missing", () => {
     expect(getSignalSourceData({})).toEqual({});
   });
 
-  it("prefers source_data over source_snapshot", () => {
+  it("reads canonical source_data", () => {
     const signal: MarketSignal = {
       ...baseSignal,
       source_data: { news_impact: "positive" },
-      source_snapshot: { news_impact: "negative" },
     };
     expect(getSignalSourceData(signal).news_impact).toBe("positive");
   });

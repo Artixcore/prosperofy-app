@@ -25,8 +25,17 @@ function buildQs(params: Record<string, string | number | undefined>): string {
   return qs ? `?${qs}` : "";
 }
 
+function newsEnabled(
+  authReady: boolean,
+  isAuthenticated: boolean,
+  token: string | null,
+  extra = true,
+): boolean {
+  return Boolean(authReady && isAuthenticated && token && extra);
+}
+
 export function useNewsLatestQuery(q?: string, enabled = true) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["news-latest", q],
     queryFn: () =>
@@ -35,12 +44,12 @@ export function useNewsLatestQuery(q?: string, enabled = true) {
       }),
     staleTime: 5 * 60_000,
     retry: false,
-    enabled: enabled && Boolean(q?.trim()),
+    enabled: newsEnabled(authReady, isAuthenticated, token, enabled && Boolean(q?.trim())),
   });
 }
 
 export function useNewsCryptoQuery(q?: string, enabled = true) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["news-crypto", q],
     queryFn: () =>
@@ -49,27 +58,27 @@ export function useNewsCryptoQuery(q?: string, enabled = true) {
       }),
     staleTime: 5 * 60_000,
     retry: false,
-    enabled,
+    enabled: newsEnabled(authReady, isAuthenticated, token, enabled),
   });
 }
 
 export function useNewsMarketQuery(q?: string, enabled = true) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["news-market", q],
     queryFn: () =>
       laravelFetch<NewsSearchResult>(
         `${API.app.news.market}${buildQs({ q: q ?? "stock market", limit: 8 })}`,
-        { token: assertToken(token) }
+        { token: assertToken(token) },
       ),
     staleTime: 5 * 60_000,
     retry: false,
-    enabled,
+    enabled: newsEnabled(authReady, isAuthenticated, token, enabled),
   });
 }
 
 export function useNewsSearchQuery(q: string, enabled = true) {
-  const { token } = useAuth();
+  const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["news-search", q],
     queryFn: () =>
@@ -78,6 +87,6 @@ export function useNewsSearchQuery(q: string, enabled = true) {
       }),
     staleTime: 5 * 60_000,
     retry: false,
-    enabled: enabled && q.trim().length >= 2,
+    enabled: newsEnabled(authReady, isAuthenticated, token, enabled && q.trim().length >= 2),
   });
 }

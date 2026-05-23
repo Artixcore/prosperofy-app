@@ -19,6 +19,8 @@ export const marketSignalSchema = z.object({
   expires_at: z.string().nullable().optional(),
   source_data: z.record(z.string(), z.unknown()).nullable().optional(),
   source_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
+  input_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
+  market_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
   news_impact_summary: z.string().nullable().optional(),
 });
 

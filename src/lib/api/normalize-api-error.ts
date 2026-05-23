@@ -146,14 +146,20 @@ export function normalizeApiError(error: unknown): string {
   if (error.code === "AI_UNAVAILABLE" || error.code === "AI_ERROR") {
     return "AI analysis is temporarily unavailable. Please try again shortly.";
   }
+  if (error.code === "SIGNAL_PERSIST_FAILED") {
+    return "The agent could not generate a signal right now. Please try again shortly.";
+  }
   if (error.code === "AI_BUSINESS_ERROR") {
     return "AI could not complete this request. Please adjust your inputs and try again.";
+  }
+  if (error.code === "MARKET_UNAVAILABLE") {
+    return "Market data is temporarily unavailable. Showing cached data if available.";
   }
   if (
     error.code === "news_data_unavailable" ||
     error.code === "NEWS_UNAVAILABLE"
   ) {
-    return "Headlines are temporarily unavailable. Please try again shortly.";
+    return "News data is temporarily unavailable.";
   }
   if (
     error.status === 503 ||
@@ -167,4 +173,45 @@ export function normalizeApiError(error: unknown): string {
     return "The server could not complete your request. Please try again shortly.";
   }
   return error.message || "We could not process your request. Please try again.";
+}
+
+/** User-facing message when agent dashboard data fails to load. */
+export function normalizeAgentDashboardError(error: unknown): string {
+  if (!isApiClientError(error)) {
+    return "Agent data could not be loaded. Please try again shortly.";
+  }
+  if (error.status === 401) {
+    return normalizeApiError(error);
+  }
+  return "Agent data could not be loaded. Please try again shortly.";
+}
+
+/** User-facing message when standalone signal generation fails. */
+export function normalizeSignalGenerateError(error: unknown): string {
+  if (!isApiClientError(error)) {
+    return "The agent could not generate a signal right now. Please try again shortly.";
+  }
+  if (
+    error.code === "SIGNAL_PERSIST_FAILED" ||
+    error.code === "AI_BUSINESS_ERROR" ||
+    error.code === "AI_UNAVAILABLE" ||
+    error.code === "AI_ERROR" ||
+    error.code === "AI_NOT_CONFIGURED" ||
+    error.status === 503 ||
+    error.status === 504
+  ) {
+    return "The agent could not generate a signal right now. Please try again shortly.";
+  }
+  return normalizeApiError(error);
+}
+
+/** User-facing message when market quote/candle data is unavailable. */
+export function normalizeMarketDataError(error: unknown): string {
+  if (!isApiClientError(error)) {
+    return "Market data is temporarily unavailable. Showing cached data if available.";
+  }
+  if (error.code === "MARKET_UNAVAILABLE" || error.status === 503 || error.status === 504) {
+    return "Market data is temporarily unavailable. Showing cached data if available.";
+  }
+  return normalizeApiError(error);
 }

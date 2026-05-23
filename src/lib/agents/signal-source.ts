@@ -1,10 +1,11 @@
 import type { NewsSourceRow } from "@/types/news";
 import type { MarketSignal } from "@/types/signals";
 
+/** Read canonical source payload (normalize via `normalizeAgentSignal` at API boundaries). */
 export function getSignalSourceData(
-  signal: Pick<MarketSignal, "source_data" | "source_snapshot">
+  signal: Pick<MarketSignal, "source_data">,
 ): Record<string, unknown> {
-  return signal.source_data ?? signal.source_snapshot ?? {};
+  return signal.source_data ?? {};
 }
 
 function isNewsSourceRow(value: unknown): value is NewsSourceRow {

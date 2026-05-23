@@ -7,7 +7,7 @@ import { AgentsDisclaimerBanner } from "@/components/agents/disclaimer";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { EmptyState } from "@/components/empty-state";
-import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { normalizeAgentDashboardError, normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useAgentsCatalogQuery, useAgentsDashboardQuery } from "@/features/agents/use-agents-api";
 import { useNewsCryptoQuery, useNewsMarketQuery } from "@/features/news/use-news-api";
 import { NewsPanel } from "@/components/news/news-panel";
@@ -18,7 +18,7 @@ export default function AgentsOverviewPage() {
   const cryptoNews = useNewsCryptoQuery("bitcoin");
   const marketNews = useNewsMarketQuery("stock market");
 
-  const dashErr = dash.isError ? normalizeApiError(dash.error) : null;
+  const dashErr = dash.isError ? normalizeAgentDashboardError(dash.error) : null;
   const catErr = catalog.isError ? normalizeApiError(catalog.error) : null;
 
   const rewards = dash.data?.reward_summary;
@@ -62,6 +62,7 @@ export default function AgentsOverviewPage() {
             freshness={cryptoNews.data?.data_freshness}
             isLoading={cryptoNews.isLoading}
             error={cryptoNews.error}
+            emptyMessage="News data is temporarily unavailable."
           />
           <NewsPanel
             title="Market news"
@@ -69,6 +70,7 @@ export default function AgentsOverviewPage() {
             freshness={marketNews.data?.data_freshness}
             isLoading={marketNews.isLoading}
             error={marketNews.error}
+            emptyMessage="News data is temporarily unavailable."
           />
         </div>
 

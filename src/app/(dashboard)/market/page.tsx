@@ -13,7 +13,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
-import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { normalizeApiError, normalizeMarketDataError } from "@/lib/api/normalize-api-error";
 import { useMarketCandles } from "@/features/market/use-market-candles";
 import { useMarketQuotes } from "@/features/market/use-market-quotes";
 import { useMarketSymbolsSearch } from "@/features/market/use-market-symbols";
@@ -138,8 +138,8 @@ export default function MarketDashboardPage() {
       .filter(Boolean) as { t: string; close: number }[];
   }, [candlesQ.data]);
 
-  const quoteErr = quotesQ.isError ? normalizeApiError(quotesQ.error) : null;
-  const candleErr = candlesQ.isError ? normalizeApiError(candlesQ.error) : null;
+  const quoteErr = quotesQ.isError ? normalizeMarketDataError(quotesQ.error) : null;
+  const candleErr = candlesQ.isError ? normalizeMarketDataError(candlesQ.error) : null;
   const marketNews = useNewsMarketQuery("global markets");
 
   return (

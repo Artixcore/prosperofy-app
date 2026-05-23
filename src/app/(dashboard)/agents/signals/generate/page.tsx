@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
-import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { normalizeSignalGenerateError } from "@/lib/api/normalize-api-error";
 import { useGenerateSignalMutation } from "@/features/agents/use-agents-api";
 import { NewsImpactSection } from "@/components/news/news-impact-section";
 import { AGENT_KEYS, MARKET_OPTIONS, type AgentKey } from "@/types/agents";
@@ -83,7 +83,7 @@ export default function GenerateSignalPage() {
         include_historical: values.include_historical,
       });
     } catch (e) {
-      setBanner(normalizeApiError(e));
+      setBanner(normalizeSignalGenerateError(e));
     }
   }
 
