@@ -150,6 +150,12 @@ export function normalizeApiError(error: unknown): string {
     return "AI could not complete this request. Please adjust your inputs and try again.";
   }
   if (
+    error.code === "news_data_unavailable" ||
+    error.code === "NEWS_UNAVAILABLE"
+  ) {
+    return "Headlines are temporarily unavailable. Please try again shortly.";
+  }
+  if (
     error.status === 503 ||
     error.code === "WALLET_UNAVAILABLE" ||
     error.code === "wallet_error"

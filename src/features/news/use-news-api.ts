@@ -34,6 +34,7 @@ export function useNewsLatestQuery(q?: string, enabled = true) {
         token: assertToken(token),
       }),
     staleTime: 5 * 60_000,
+    retry: false,
     enabled: enabled && Boolean(q?.trim()),
   });
 }
@@ -47,6 +48,7 @@ export function useNewsCryptoQuery(q?: string, enabled = true) {
         token: assertToken(token),
       }),
     staleTime: 5 * 60_000,
+    retry: false,
     enabled,
   });
 }
@@ -61,6 +63,7 @@ export function useNewsMarketQuery(q?: string, enabled = true) {
         { token: assertToken(token) }
       ),
     staleTime: 5 * 60_000,
+    retry: false,
     enabled,
   });
 }
@@ -74,6 +77,7 @@ export function useNewsSearchQuery(q: string, enabled = true) {
         token: assertToken(token),
       }),
     staleTime: 5 * 60_000,
+    retry: false,
     enabled: enabled && q.trim().length >= 2,
   });
 }
