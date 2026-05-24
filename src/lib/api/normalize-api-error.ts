@@ -77,11 +77,11 @@ export function normalizeApiError(error: unknown): string {
   if (error.code === "WALLET_NOT_FOUND") {
     return "No WFL Wallet found. Please activate your wallet first.";
   }
-  if (error.code === "BALANCE_NOT_SYNCED") {
+  if (error.code === "wallet_balance_not_synced" || error.code === "wallet_balance_stale") {
     return "Please refresh your wallet balance before sending.";
   }
-  if (error.code === "INSUFFICIENT_BALANCE") {
-    return "Insufficient SOL balance for this transaction.";
+  if (error.code === "insufficient_balance_after_fee") {
+    return "Insufficient SOL balance for this transaction after network fees.";
   }
   if (error.code === "WALLET_NOT_ACTIVE") {
     return "Your WFL Wallet is not active yet. Please try again shortly.";

@@ -89,12 +89,17 @@ export function parseEnvelope<T>(json: unknown, httpStatus: number, context: Env
     body.message,
     fallbackMessageForStatus(httpStatus),
   );
+  const data =
+    body.data && typeof body.data === "object" && !Array.isArray(body.data)
+      ? (body.data as Record<string, unknown>)
+      : undefined;
 
   throw new ApiClientError(message, {
     status: httpStatus,
     code,
     retryable,
     fieldErrors,
+    data,
     requestId,
     correlationId,
   });

@@ -1,12 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { useToast } from "@/components/system/toast-context";
-import { useAppWalletAssetsQuery } from "@/features/wallets/use-wallet-mutations";
+import {
+  computeMaxSendableSol,
+  formatMaxSendableForInput,
+  isAmountAboveMaxSendable,
+} from "@/features/wallets/sol-send-limits";
+import {
+  useAppWalletAssetsQuery,
+  useRefreshWalletAssetsMutation,
+} from "@/features/wallets/use-wallet-mutations";
 import { useSendConfirmMutation, useSendPreviewMutation } from "@/features/wallets/use-wallet-send";
+import { getApiErrorData, isApiClientError } from "@/lib/api/errors";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import type { WalletSendPreviewPayload } from "@/lib/api/types";
 import {
@@ -16,9 +26,26 @@ import {
   walletSendSplEnabled,
 } from "@/lib/config/wallet-features";
 
+type PreviewErrorState = {
+  message: string;
+  code: string | null;
+  maxSendableAmount: string | null;
+};
+
+function buildPreviewError(error: unknown): PreviewErrorState {
+  const message = normalizeApiError(error) || "Network fee could not be estimated. Please try again.";
+  const code = isApiClientError(error) ? error.code : null;
+  const data = getApiErrorData(error);
+  const maxRaw = data?.max_sendable_amount;
+  const maxSendableAmount = typeof maxRaw === "string" ? maxRaw : null;
+
+  return { message, code, maxSendableAmount };
+}
+
 export default function WalletSendPage() {
   const { pushToast } = useToast();
   const assets = useAppWalletAssetsQuery();
+  const refreshMu = useRefreshWalletAssetsMutation();
   const previewMu = useSendPreviewMutation();
   const confirmMu = useSendConfirmMutation();
 
@@ -30,6 +57,7 @@ export default function WalletSendPage() {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [preview, setPreview] = useState<WalletSendPreviewPayload | null>(null);
+  const [previewError, setPreviewError] = useState<PreviewErrorState | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [acceptedRisk, setAcceptedRisk] = useState(false);
   const [armSeconds, setArmSeconds] = useState(0);
@@ -60,9 +88,52 @@ export default function WalletSendPage() {
       return match?.balance ?? match?.balance_cache ?? null;
     })();
 
+  const isSolNative = network === "solana" && assetType === "native" && symbol.toUpperCase() === "SOL";
+
+  const maxSendable = useMemo(() => {
+    if (!isSolNative || !balanceHint) return null;
+    return computeMaxSendableSol(balanceHint);
+  }, [isSolNative, balanceHint]);
+
+  const amountExceedsMax =
+    isSolNative &&
+    amount.trim() !== "" &&
+    isAmountAboveMaxSendable(amount.trim(), maxSendable);
+
+  const cannotCoverFees = isSolNative && balanceHint !== null && maxSendable === null;
+
+  const handleRefreshBalance = async () => {
+    try {
+      const result = await refreshMu.mutateAsync({ force: true });
+      setPreviewError(null);
+      pushToast({
+        tone: "success",
+        title: result.from_cache ? "Already up to date" : "Balances refreshed",
+        description: result.from_cache
+          ? "Your wallet balances were synced very recently."
+          : "Latest on-chain balances are loaded.",
+      });
+    } catch (error) {
+      pushToast({
+        tone: "error",
+        title: "Could not refresh balance",
+        description:
+          normalizeApiError(error) ||
+          "Balance refresh failed. Please try again shortly.",
+      });
+    }
+  };
+
+  const handleMaxAmount = () => {
+    if (!maxSendable) return;
+    setAmount(formatMaxSendableForInput(maxSendable));
+    setPreviewError(null);
+  };
+
   async function runPreview() {
     idempotencyRef.current = null;
     setPreview(null);
+    setPreviewError(null);
     try {
       const body = {
         network,
@@ -79,11 +150,7 @@ export default function WalletSendPage() {
       setPreview(data);
       pushToast({ tone: "success", title: "Preview ready", description: "Review fees and confirm." });
     } catch (e) {
-      pushToast({
-        tone: "error",
-        title: "Preview failed",
-        description: normalizeApiError(e) || "Network fee could not be estimated. Please try again.",
-      });
+      setPreviewError(buildPreviewError(e));
     }
   }
 
@@ -123,9 +190,37 @@ export default function WalletSendPage() {
     (network === "ethereum" && walletSendEthereumEnabled()) ||
     (network === "bitcoin" && walletSendBitcoinEnabled());
 
+  const previewDisabled =
+    !sendAllowed ||
+    previewMu.isPending ||
+    cannotCoverFees ||
+    amountExceedsMax ||
+    (isSolNative && amount.trim() === "");
+
+  const showRefreshOnError =
+    previewError?.code === "wallet_balance_not_synced" ||
+    previewError?.code === "wallet_balance_stale";
+
   return (
     <>
-      <PageHeader title="Send" description="Preview fees, then confirm an on-chain transfer from your WFL Wallet." />
+      <PageHeader
+        title="Send"
+        description="Preview fees, then confirm an on-chain transfer from your WFL Wallet."
+        action={
+          <button
+            type="button"
+            onClick={() => void handleRefreshBalance()}
+            disabled={refreshMu.isPending || assets.isFetching}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-content-primary shadow-sm hover:bg-muted disabled:opacity-60"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshMu.isPending || assets.isFetching ? "animate-spin" : ""}`}
+              aria-hidden
+            />
+            {refreshMu.isPending ? "Refreshing…" : "Refresh Balance"}
+          </button>
+        }
+      />
       <div className="mb-4 flex gap-3">
         <Link href="/wallet" className="text-sm text-primary hover:underline">
           ← Back to wallet
@@ -138,6 +233,38 @@ export default function WalletSendPage() {
         </InlineAlert>
       ) : null}
 
+      {cannotCoverFees ? (
+        <div className="mt-4">
+          <InlineAlert tone="warning">
+            Not enough SOL to cover network fees.
+          </InlineAlert>
+        </div>
+      ) : null}
+
+      {previewError ? (
+        <div className="mt-4">
+          <InlineAlert tone="error">
+          <p>{previewError.message}</p>
+          {previewError.code === "insufficient_balance_after_fee" &&
+          previewError.maxSendableAmount ? (
+            <p className="mt-1 text-sm">
+              Maximum sendable amount is {previewError.maxSendableAmount} SOL.
+            </p>
+          ) : null}
+          {showRefreshOnError ? (
+            <button
+              type="button"
+              className="mt-2 text-sm font-medium underline"
+              onClick={() => void handleRefreshBalance()}
+              disabled={refreshMu.isPending}
+            >
+              {refreshMu.isPending ? "Refreshing…" : "Refresh balance"}
+            </button>
+          ) : null}
+          </InlineAlert>
+        </div>
+      ) : null}
+
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="space-y-3 rounded-xl border border-surface-border bg-surface-elevated p-4">
           <div>
@@ -148,6 +275,7 @@ export default function WalletSendPage() {
               onChange={(e) => {
                 const n = e.target.value;
                 setNetwork(n);
+                setPreviewError(null);
                 if (n === "solana") {
                   setSymbol("SOL");
                   setAssetType("native");
@@ -175,6 +303,7 @@ export default function WalletSendPage() {
               onChange={(e) => {
                 const [at, sym] = e.target.value.split(":");
                 setAssetType(at ?? "native");
+                setPreviewError(null);
                 if (at === "spl") setSymbol("SPL");
                 else setSymbol(sym ?? "SOL");
               }}
@@ -205,20 +334,47 @@ export default function WalletSendPage() {
             <input
               className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm font-mono"
               value={toAddress}
-              onChange={(e) => setToAddress(e.target.value)}
+              onChange={(e) => {
+                setToAddress(e.target.value);
+                setPreviewError(null);
+              }}
               placeholder="Destination address"
             />
           </div>
           <div>
             <label className="mb-1 block text-xs text-content-muted">Amount</label>
-            <input
-              className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.0"
-            />
+            <div className="flex gap-2">
+              <input
+                className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-sm"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setPreviewError(null);
+                }}
+                placeholder="0.0"
+              />
+              {isSolNative && maxSendable ? (
+                <button
+                  type="button"
+                  className="shrink-0 rounded-md border border-surface-border px-3 py-2 text-sm font-medium hover:bg-muted"
+                  onClick={handleMaxAmount}
+                >
+                  Max
+                </button>
+              ) : null}
+            </div>
             {balanceHint ? (
               <p className="mt-1 text-xs text-content-muted">Cached balance: {balanceHint}</p>
+            ) : null}
+            {isSolNative && maxSendable ? (
+              <p className="mt-1 text-xs text-content-muted">
+                Max sendable (after fees): {maxSendable} SOL
+              </p>
+            ) : null}
+            {amountExceedsMax ? (
+              <p className="mt-1 text-xs text-destructive">
+                Amount exceeds maximum sendable after network fees.
+              </p>
             ) : null}
           </div>
           <div>
@@ -232,7 +388,7 @@ export default function WalletSendPage() {
           </div>
           <button
             type="button"
-            disabled={!sendAllowed || previewMu.isPending}
+            disabled={previewDisabled}
             className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:opacity-50"
             onClick={() => void runPreview()}
           >

@@ -104,10 +104,15 @@ describe("normalizeApiError", () => {
 
   it("maps send-preview specific errors", () => {
     expect(
-      normalizeApiError(new ApiClientError("raw", { status: 409, code: "BALANCE_NOT_SYNCED", retryable: false })),
+      normalizeApiError(new ApiClientError("raw", { status: 409, code: "wallet_balance_not_synced", retryable: false })),
     ).toContain("refresh your wallet balance");
     expect(
-      normalizeApiError(new ApiClientError("raw", { status: 422, code: "INSUFFICIENT_BALANCE", retryable: false })),
+      normalizeApiError(new ApiClientError("raw", { status: 409, code: "wallet_balance_stale", retryable: false })),
+    ).toContain("refresh your wallet balance");
+    expect(
+      normalizeApiError(
+        new ApiClientError("raw", { status: 422, code: "insufficient_balance_after_fee", retryable: false }),
+      ),
     ).toContain("Insufficient SOL balance");
   });
 
