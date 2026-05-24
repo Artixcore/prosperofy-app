@@ -41,9 +41,9 @@ export function useNewsLatestQuery(q?: string, enabled = true) {
     queryFn: () =>
       laravelFetch<NewsSearchResult>(`${API.app.news.latest}${buildQs({ q, limit: 8 })}`, {
         token: assertToken(token),
-      }),
+    }),
     staleTime: 5 * 60_000,
-    retry: 1,
+    retry: false,
     refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled && Boolean(q?.trim())),
   });
@@ -56,9 +56,9 @@ export function useNewsCryptoQuery(q?: string, enabled = true) {
     queryFn: () =>
       laravelFetch<NewsSearchResult>(`${API.app.news.crypto}${buildQs({ q: q ?? "bitcoin", limit: 8 })}`, {
         token: assertToken(token),
-      }),
+    }),
     staleTime: 5 * 60_000,
-    retry: 1,
+    retry: false,
     refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled),
   });
@@ -74,7 +74,7 @@ export function useNewsMarketQuery(q?: string, enabled = true) {
         { token: assertToken(token) },
       ),
     staleTime: 5 * 60_000,
-    retry: 1,
+    retry: false,
     refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled),
   });
@@ -87,9 +87,9 @@ export function useNewsSearchQuery(q: string, enabled = true) {
     queryFn: () =>
       laravelFetch<NewsSearchResult>(`${API.app.news.search}${buildQs({ q, limit: 12 })}`, {
         token: assertToken(token),
-      }),
+    }),
     staleTime: 5 * 60_000,
-    retry: 1,
+    retry: false,
     refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled && q.trim().length >= 2),
   });
