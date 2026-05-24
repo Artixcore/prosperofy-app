@@ -16,8 +16,7 @@ import {
   useRefreshWalletAssetsMutation,
 } from "@/features/wallets/use-wallet-mutations";
 import { useSendConfirmMutation, useSendPreviewMutation } from "@/features/wallets/use-wallet-send";
-import { getApiErrorData, isApiClientError } from "@/lib/api/errors";
-import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { displayApiError, normalizeApiError } from "@/lib/api/display-api-error";
 import type { WalletSendPreviewPayload } from "@/lib/api/types";
 import {
   walletSendBitcoinEnabled,
@@ -29,17 +28,18 @@ import {
 type PreviewErrorState = {
   message: string;
   code: string | null;
-  maxSendableAmount: string | null;
+  hints: string[];
+  showRefreshBalance: boolean;
 };
 
 function buildPreviewError(error: unknown): PreviewErrorState {
-  const message = normalizeApiError(error) || "Network fee could not be estimated. Please try again.";
-  const code = isApiClientError(error) ? error.code : null;
-  const data = getApiErrorData(error);
-  const maxRaw = data?.max_sendable_amount;
-  const maxSendableAmount = typeof maxRaw === "string" ? maxRaw : null;
-
-  return { message, code, maxSendableAmount };
+  const resolved = displayApiError(error, "wallet-send");
+  return {
+    message: resolved.message,
+    code: resolved.code,
+    hints: resolved.hints,
+    showRefreshBalance: resolved.showRefreshBalance,
+  };
 }
 
 export default function WalletSendPage() {
@@ -118,7 +118,7 @@ export default function WalletSendPage() {
         tone: "error",
         title: "Could not refresh balance",
         description:
-          normalizeApiError(error) ||
+          normalizeApiError(error, "wallet-refresh") ||
           "Balance refresh failed. Please try again shortly.",
       });
     }
@@ -197,9 +197,7 @@ export default function WalletSendPage() {
     amountExceedsMax ||
     (isSolNative && amount.trim() === "");
 
-  const showRefreshOnError =
-    previewError?.code === "wallet_balance_not_synced" ||
-    previewError?.code === "wallet_balance_stale";
+  const showRefreshOnError = previewError?.showRefreshBalance ?? false;
 
   return (
     <>
@@ -245,12 +243,11 @@ export default function WalletSendPage() {
         <div className="mt-4">
           <InlineAlert tone="error">
           <p>{previewError.message}</p>
-          {previewError.code === "insufficient_balance_after_fee" &&
-          previewError.maxSendableAmount ? (
-            <p className="mt-1 text-sm">
-              Maximum sendable amount is {previewError.maxSendableAmount} SOL.
+          {previewError.hints.map((hint) => (
+            <p key={hint} className="mt-1 text-sm">
+              {hint}
             </p>
-          ) : null}
+          ))}
           {showRefreshOnError ? (
             <button
               type="button"

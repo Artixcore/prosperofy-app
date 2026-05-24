@@ -43,3 +43,10 @@ export function getApiErrorData(error: unknown): Record<string, unknown> | null 
   }
   return error.data;
 }
+
+export function getApiErrorField(error: unknown, key: string): string | null {
+  const data = getApiErrorData(error);
+  if (!data) return null;
+  const value = data[key];
+  return typeof value === "string" ? value : null;
+}

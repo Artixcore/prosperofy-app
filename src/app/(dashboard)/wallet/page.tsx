@@ -49,7 +49,7 @@ export default function WalletPage() {
         tone: "error",
         title: "Could not refresh balance",
         description:
-          normalizeApiError(error) ||
+          normalizeApiError(error, "wallet-refresh") ||
           "Balance refresh failed. Please try again shortly.",
       });
     }

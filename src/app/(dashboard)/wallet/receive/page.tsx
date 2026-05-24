@@ -10,7 +10,6 @@ import { InlineAlert } from "@/components/system/inline-alert";
 import { useToast } from "@/components/system/toast-context";
 import { useReceiveAddressesQuery } from "@/features/wallets/use-wallet-send";
 import type { WalletReceiveAddressRow } from "@/lib/api/types";
-import { normalizeApiError } from "@/lib/api/normalize-api-error";
 
 type Selection = {
   network: string;
@@ -70,7 +69,9 @@ export default function WalletReceivePage() {
       </div>
 
       {q.isPending ? <LoadingState /> : null}
-      {q.isError ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : null}
+      {q.isError ? (
+        <ErrorState error={q.error} onRetry={() => void q.refetch()} context="wallet-refresh" />
+      ) : null}
 
       {q.isSuccess && q.data && rows.length === 0 ? (
         <InlineAlert tone="warning">
@@ -165,12 +166,6 @@ export default function WalletReceivePage() {
         </div>
       ) : null}
 
-      {q.isError ? (
-        <p className="mt-4 text-sm text-content-muted">
-          {normalizeApiError(q.error) ||
-            "Receive addresses could not be loaded. Please try again."}
-        </p>
-      ) : null}
     </>
   );
 }

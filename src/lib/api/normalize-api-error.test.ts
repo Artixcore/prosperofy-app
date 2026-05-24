@@ -64,10 +64,10 @@ describe("normalizeApiError", () => {
   it("maps wallet load failures to a friendly message", () => {
     expect(
       normalizeApiError(new ApiClientError("raw", { status: 503, code: "WALLET_UNAVAILABLE", retryable: true })),
-    ).toBe("Send preview is temporarily unavailable. Please try again shortly.");
+    ).toContain("Wallet service");
     expect(
-      normalizeApiError(new ApiClientError("raw", { status: 500, code: "wallet_error", retryable: false })),
-    ).toBe("Send preview is temporarily unavailable. Please try again shortly.");
+      normalizeApiError(new ApiClientError("raw", { status: 500, code: "WALLET_ERROR", retryable: false })),
+    ).toContain("wallet data");
   });
 
   it("maps session expired http codes", () => {
@@ -93,7 +93,7 @@ describe("normalizeApiError", () => {
     const networkMessage = normalizeApiError(
       new ApiClientError("raw", { status: 0, code: "NETWORK_ERROR", retryable: true }),
     );
-    expect(networkMessage).toContain("temporarily unavailable");
+    expect(networkMessage).toContain("Unable to connect");
     // Regression guard: the old wording incorrectly framed every network error as a
     // wallet-connection failure, which is wrong for balance refresh, listing, etc.
     expect(networkMessage).not.toMatch(/Wallet connection failed/i);
@@ -104,14 +104,14 @@ describe("normalizeApiError", () => {
 
   it("maps send-preview specific errors", () => {
     expect(
-      normalizeApiError(new ApiClientError("raw", { status: 409, code: "wallet_balance_not_synced", retryable: false })),
+      normalizeApiError(new ApiClientError("raw", { status: 409, code: "WALLET_BALANCE_NOT_SYNCED", retryable: false })),
     ).toContain("refresh your wallet balance");
     expect(
-      normalizeApiError(new ApiClientError("raw", { status: 409, code: "wallet_balance_stale", retryable: false })),
+      normalizeApiError(new ApiClientError("raw", { status: 409, code: "WALLET_BALANCE_STALE", retryable: false })),
     ).toContain("refresh your wallet balance");
     expect(
       normalizeApiError(
-        new ApiClientError("raw", { status: 422, code: "insufficient_balance_after_fee", retryable: false }),
+        new ApiClientError("raw", { status: 422, code: "WALLET_INSUFFICIENT_BALANCE_AFTER_FEE", retryable: false }),
       ),
     ).toContain("Insufficient SOL balance");
   });

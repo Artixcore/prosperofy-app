@@ -1,16 +1,12 @@
+import { displayApiError } from "./display-api-error";
 import { isApiClientError } from "./errors";
 
-/** User-visible message when server field errors were not mapped onto the form. */
-export function resolveAuthFormCatchMessage(error: unknown, fallback: string): string {
-  if (isApiClientError(error)) {
-    if (error.status === 401) return "Invalid credentials. Please try again.";
-    if (error.status === 419) return "Session expired. Please refresh and try again.";
-    if (error.code === "NETWORK_ERROR" || error.status === 0) {
-      return "Connection error. Please try again.";
-    }
-    return error.message;
+/** User-facing auth form error (login/register). */
+export function resolveAuthFormCatchMessage(error: unknown, fallback = "Sign in failed. Please try again."): string {
+  if (!isApiClientError(error)) {
+    return fallback;
   }
-  return fallback;
+  return displayApiError(error, "auth-form").message;
 }
 
 export function logAuthFormErrorInDevelopment(error: unknown): void {

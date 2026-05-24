@@ -16,7 +16,7 @@ describe("friendlySettingsError", () => {
       friendlySettingsError(
         new ApiClientError("x", { status: 422, code: "VERIFICATION_FAILED", retryable: false }),
       ),
-    ).toContain("verify your identity");
+    ).toContain("Verification failed");
   });
 
   it("handles TypeError as network", () => {

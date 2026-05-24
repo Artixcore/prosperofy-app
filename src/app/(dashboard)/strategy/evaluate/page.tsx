@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
-import { isApiClientError } from "@/lib/api/errors";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useStrategyEvaluateDispatchMutation } from "@/features/ai/use-ai-mutations";
 import { useCreateStrategyMutation } from "@/features/app/use-strategies";
 
@@ -128,7 +128,7 @@ export default function StrategyEvaluatePage() {
       }
       setErr("No job id returned. Check the API response in network tools.");
     } catch (e) {
-      setErr(isApiClientError(e) ? e.message : "Dispatch failed.");
+      setErr(normalizeApiError(e));
     }
   }
 
