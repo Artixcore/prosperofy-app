@@ -175,6 +175,38 @@ export function normalizeApiError(error: unknown): string {
   return error.message || "We could not process your request. Please try again.";
 }
 
+export type NewsPanelKind = "crypto" | "market";
+
+/** User-facing message when a news widget on the Agents page fails to load. */
+export function normalizeNewsPanelError(panel: NewsPanelKind, error: unknown): string {
+  if (isApiClientError(error)) {
+    if (
+      error.code === "news_data_unavailable" ||
+      error.code === "NEWS_UNAVAILABLE"
+    ) {
+      return "News data is temporarily unavailable.";
+    }
+    if (error.status === 401 || error.status === 419) {
+      return normalizeApiError(error);
+    }
+    if (error.status === 429) {
+      return "Too many requests. Please wait a moment and try again.";
+    }
+    if (error.status === 504 || error.code === "TIMEOUT") {
+      return "News data is temporarily unavailable.";
+    }
+    if (error.status >= 500 || error.status === 0) {
+      return panel === "crypto"
+        ? "Crypto news could not be loaded."
+        : "Market news could not be loaded.";
+    }
+  }
+
+  return panel === "crypto"
+    ? "Crypto news could not be loaded."
+    : "Market news could not be loaded.";
+}
+
 /** User-facing message when agent dashboard data fails to load. */
 export function normalizeAgentDashboardError(error: unknown): string {
   if (!isApiClientError(error)) {

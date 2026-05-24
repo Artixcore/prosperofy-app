@@ -43,7 +43,8 @@ export function useNewsLatestQuery(q?: string, enabled = true) {
         token: assertToken(token),
       }),
     staleTime: 5 * 60_000,
-    retry: false,
+    retry: 1,
+    refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled && Boolean(q?.trim())),
   });
 }
@@ -57,7 +58,8 @@ export function useNewsCryptoQuery(q?: string, enabled = true) {
         token: assertToken(token),
       }),
     staleTime: 5 * 60_000,
-    retry: false,
+    retry: 1,
+    refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled),
   });
 }
@@ -72,7 +74,8 @@ export function useNewsMarketQuery(q?: string, enabled = true) {
         { token: assertToken(token) },
       ),
     staleTime: 5 * 60_000,
-    retry: false,
+    retry: 1,
+    refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled),
   });
 }
@@ -86,7 +89,8 @@ export function useNewsSearchQuery(q: string, enabled = true) {
         token: assertToken(token),
       }),
     staleTime: 5 * 60_000,
-    retry: false,
+    retry: 1,
+    refetchOnWindowFocus: false,
     enabled: newsEnabled(authReady, isAuthenticated, token, enabled && q.trim().length >= 2),
   });
 }

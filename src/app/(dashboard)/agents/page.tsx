@@ -58,19 +58,21 @@ export default function AgentsOverviewPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <NewsPanel
             title="Crypto news"
+            panel="crypto"
             articles={cryptoNews.data?.articles ?? []}
             freshness={cryptoNews.data?.data_freshness}
             isLoading={cryptoNews.isLoading}
             error={cryptoNews.error}
-            emptyMessage="News data is temporarily unavailable."
+            emptyMessage="No relevant news found."
           />
           <NewsPanel
             title="Market news"
+            panel="market"
             articles={marketNews.data?.articles ?? []}
             freshness={marketNews.data?.data_freshness}
             isLoading={marketNews.isLoading}
             error={marketNews.error}
-            emptyMessage="News data is temporarily unavailable."
+            emptyMessage="No relevant news found."
           />
         </div>
 

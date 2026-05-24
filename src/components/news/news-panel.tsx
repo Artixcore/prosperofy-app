@@ -2,7 +2,7 @@
 
 import { NewsFreshnessBadge } from "@/components/news/news-freshness-badge";
 import { InlineAlert } from "@/components/system/inline-alert";
-import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import { normalizeApiError, normalizeNewsPanelError, type NewsPanelKind } from "@/lib/api/normalize-api-error";
 import type { NormalizedNewsArticle } from "@/types/news";
 
 function stripHtml(text: string): string {
@@ -45,6 +45,7 @@ type Props = {
   isLoading?: boolean;
   error?: unknown;
   emptyMessage?: string;
+  panel?: NewsPanelKind;
 };
 
 export function NewsPanel({
@@ -54,8 +55,13 @@ export function NewsPanel({
   isLoading,
   error,
   emptyMessage = "No relevant news found.",
+  panel,
 }: Props) {
-  const err = error ? normalizeApiError(error) : null;
+  const err = error
+    ? panel
+      ? normalizeNewsPanelError(panel, error)
+      : normalizeApiError(error)
+    : null;
 
   return (
     <section className="rounded-xl border border-border/70 bg-card/30 p-4">
