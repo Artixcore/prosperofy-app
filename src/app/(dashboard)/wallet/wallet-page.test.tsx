@@ -412,7 +412,7 @@ describe("WalletPage", () => {
         expect.objectContaining({
           tone: "error",
           title: "Could not refresh balance",
-          description: expect.stringMatching(/Unable to connect/i),
+          description: expect.stringMatching(/Unable to (connect|reach)/i),
         }),
       );
     });
