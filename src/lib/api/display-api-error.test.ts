@@ -50,4 +50,38 @@ describe("displayApiError", () => {
     );
     expect(result.showRefreshBalance).toBe(true);
   });
+
+  it("uses confirm-specific message for 504 gateway timeout", () => {
+    const result = displayApiError(
+      new ApiClientError("gateway timeout", { status: 504, code: "NON_JSON_RESPONSE", retryable: false }),
+      "wallet-send-confirm",
+    );
+    expect(result.message).toContain("check wallet history");
+    expect(result.retryable).toBe(false);
+  });
+
+  it("uses blockchain unavailable message for wallet rpc timeout on confirm", () => {
+    const result = displayApiError(
+      new ApiClientError("timeout", { status: 503, code: "WALLET_RPC_TIMEOUT", retryable: true }),
+      "wallet-send-confirm",
+    );
+    expect(result.message).toContain("Blockchain network is temporarily unavailable");
+  });
+
+  it("uses session expired message for confirm 401", () => {
+    const result = displayApiError(
+      new ApiClientError("unauth", { status: 401, code: "AUTH_UNAUTHENTICATED", retryable: false }),
+      "wallet-send-confirm",
+    );
+    expect(result.message).toContain("Session expired");
+  });
+
+  it("uses confirm timeout copy for client abort", () => {
+    const result = displayApiError(
+      new ApiClientError("timeout", { status: 0, code: "TIMEOUT", retryable: true }),
+      "wallet-send-confirm",
+    );
+    expect(result.message).toContain("check wallet history");
+    expect(result.retryable).toBe(false);
+  });
 });

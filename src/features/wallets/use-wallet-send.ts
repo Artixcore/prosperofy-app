@@ -78,6 +78,8 @@ export function useSendConfirmMutation() {
         method: "POST",
         body,
         token: assertToken(token),
+        idempotencyKey: body.idempotency_key,
+        timeoutMs: 30_000,
       }),
     retry: false,
     onSuccess: () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -43,6 +44,7 @@ function buildPreviewError(error: unknown): PreviewErrorState {
 }
 
 export default function WalletSendPage() {
+  const router = useRouter();
   const { pushToast } = useToast();
   const assets = useAppWalletAssetsQuery();
   const refreshMu = useRefreshWalletAssetsMutation();
@@ -165,21 +167,39 @@ export default function WalletSendPage() {
         preview_id: preview.preview_id,
         idempotency_key: idempotencyRef.current,
       });
+      const txId = data.wallet_transaction_id ?? data.transaction?.id;
+      const status = data.status ?? data.transaction?.status;
       const txHash = data.transaction?.tx_hash ?? data.tx_hash;
+      const isPending = status === "pending";
       pushToast({
         tone: "success",
-        title: data.duplicate ? "Already sent" : "SOL sent successfully.",
-        description: txHash ? `Tx ${txHash.slice(0, 8)}…` : "Broadcast submitted.",
+        title: data.duplicate
+          ? "Already submitted"
+          : isPending
+            ? "Send submitted"
+            : "SOL sent successfully.",
+        description: txHash
+          ? `Tx ${txHash.slice(0, 8)}…`
+          : isPending
+            ? "Broadcasting your transaction."
+            : "Broadcast submitted.",
       });
       setConfirmOpen(false);
       setPreview(null);
       setAcceptedRisk(false);
+      if (txId != null) {
+        idempotencyRef.current = null;
+        router.push(`/wallet/transactions/${txId}`);
+        return;
+      }
       idempotencyRef.current = null;
     } catch (e) {
       pushToast({
         tone: "error",
         title: "Send failed",
-        description: normalizeApiError(e) || "Transaction could not be sent. Please try again shortly.",
+        description:
+          displayApiError(e, "wallet-send-confirm").message ||
+          "Transaction could not be sent. Please try again shortly.",
       });
     }
   }

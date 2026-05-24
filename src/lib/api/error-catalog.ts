@@ -18,6 +18,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   "SIGNUP_CLOSED": "Registration is currently closed.",
   "WALLET_SERVICE_ERROR": "Wallet service is currently unavailable. Please try again shortly.",
   "WALLET_UNAVAILABLE": "Wallet service is temporarily unavailable. Please try again shortly.",
+  "WALLET_RPC_TIMEOUT": "Blockchain network is temporarily unavailable. Please try again shortly.",
   "WALLET_VERIFY_FAILED": "Wallet signature verification failed. Please try again.",
   "WALLET_RATE_LIMIT": "Too many balance refreshes. Please try again in a moment.",
   "WALLET_REJECTED": "Wallet request could not be completed.",

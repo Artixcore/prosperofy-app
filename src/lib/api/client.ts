@@ -43,6 +43,8 @@ export type LaravelFetchOptions = {
   signal?: AbortSignal;
   /** Override default client timeout (ms). Agent run/signal generate use ~150s. */
   timeoutMs?: number;
+  /** Mirrors JSON idempotency_key for wallet send confirm (crypto transfers). */
+  idempotencyKey?: string;
   expectNoContent?: boolean;
   _csrfRetried?: boolean;
 };
@@ -160,6 +162,7 @@ export async function laravelFetch<T>(
     token,
     signal,
     timeoutMs,
+    idempotencyKey,
     expectNoContent = false,
     _csrfRetried = false,
   } = options;
@@ -173,6 +176,10 @@ export async function laravelFetch<T>(
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (idempotencyKey && idempotencyKey.trim()) {
+    headers["Idempotency-Key"] = idempotencyKey.trim();
   }
 
   let initBody: string | undefined;

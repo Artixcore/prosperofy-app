@@ -6,6 +6,7 @@ export type NewsPanelKind = "crypto" | "market";
 export type ApiErrorContext =
   | "default"
   | "wallet-send"
+  | "wallet-send-confirm"
   | "wallet-refresh"
   | "auth-form"
   | "settings"
@@ -138,18 +139,75 @@ function resolveApiClientError(
   }
 
   if (error.status === 0 && error.code === "TIMEOUT") {
-    return {
-      message:
-        context === "wallet-send"
+    const timeoutMessage =
+      context === "wallet-send-confirm"
+        ? "Send confirmation timed out. Please check wallet history before retrying."
+        : context === "wallet-send"
           ? "Send preview timed out. Please try again shortly."
-          : "The request timed out. Please try again shortly.",
+          : "The request timed out. Please try again shortly.";
+    return {
+      message: timeoutMessage,
       code,
-      retryable: true,
+      retryable: context !== "wallet-send-confirm",
       fieldErrors: error.fieldErrors,
       data,
       hints: [],
       showRefreshBalance: false,
     };
+  }
+
+  if (context === "wallet-send-confirm") {
+    if (error.status === 504) {
+      return {
+        message:
+          "Send confirmation timed out. Please check wallet history before retrying.",
+        code,
+        retryable: false,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (
+      error.status === 503 ||
+      code === "WALLET_RPC_TIMEOUT" ||
+      code === "WALLET_UNAVAILABLE" ||
+      code === "WALLET_UPSTREAM_UNAVAILABLE"
+    ) {
+      return {
+        message: "Blockchain network is temporarily unavailable. Please try again shortly.",
+        code,
+        retryable: error.retryable,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (error.status === 401 || code === "AUTH_UNAUTHENTICATED") {
+      return {
+        message: "Session expired. Please sign in again.",
+        code,
+        retryable: false,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (error.status === 422 || code === "VALIDATION_ERROR") {
+      const fieldFirst = firstFieldError(error.fieldErrors);
+      return {
+        message: fieldFirst ?? lookupMessage(code, "Some fields need your attention."),
+        code,
+        retryable: false,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
   }
 
   if (context === "news" && (code === "NEWS_DATA_UNAVAILABLE" || error.status >= 500 || error.status === 0)) {
