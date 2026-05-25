@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { LoadingState } from "@/components/system/loading-state";
 import { ErrorState } from "@/components/system/error-state";
+import { SolscanLink } from "@/features/wallets/components/solscan-link";
 import {
   useWalletTransactionsQuery,
   useWalletTransactionsSyncMutation,
@@ -17,6 +18,19 @@ function shortAddr(s: string | null | undefined, n = 6): string {
   if (s.length <= n * 2 + 1) return s;
   return `${s.slice(0, n)}…${s.slice(-n)}`;
 }
+
+const STATUS_CLASSES: Record<string, string> = {
+  confirmed:
+    "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900/55 dark:bg-emerald-950/35 dark:text-emerald-200",
+  broadcasted:
+    "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900/55 dark:bg-amber-950/35 dark:text-amber-100",
+  pending:
+    "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900/55 dark:bg-amber-950/35 dark:text-amber-100",
+  previewed: "border-border bg-muted text-muted-foreground",
+  failed:
+    "border-red-300 bg-red-50 text-red-700 dark:border-red-900/55 dark:bg-red-950/35 dark:text-red-200",
+  cancelled: "border-border bg-muted text-muted-foreground",
+};
 
 export default function WalletTransactionsPage() {
   const { pushToast } = useToast();
@@ -96,7 +110,7 @@ export default function WalletTransactionsPage() {
       {q.isPending ? <LoadingState /> : null}
       {q.isError ? (
         <ErrorState
-          title="Transactions could not be loaded"
+          title="Transactions could not be loaded. Please try again shortly."
           error={q.error}
           onRetry={() => void q.refetch()}
         />
@@ -108,13 +122,10 @@ export default function WalletTransactionsPage() {
 
       <ul className="space-y-2">
         {q.data?.transactions.map((t) => {
-          const explorer =
-            t.explorer_url ??
-            (t.tx_hash && t.network === "solana"
-              ? `https://solscan.io/tx/${encodeURIComponent(t.tx_hash)}`
-              : null);
           const counterparty =
             t.transaction_type === "receive" ? t.from_address : t.to_address;
+          const badgeClass =
+            STATUS_CLASSES[t.status] ?? "border-border bg-muted text-muted-foreground";
 
           return (
             <li key={t.id}>
@@ -127,7 +138,11 @@ export default function WalletTransactionsPage() {
                     <span className="font-medium capitalize">
                       {t.transaction_type} · {t.symbol}
                     </span>
-                    <span className="text-xs text-content-muted">{t.status}</span>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${badgeClass}`}
+                    >
+                      {t.status}
+                    </span>
                   </div>
                   <span className="font-mono text-xs text-content-muted">
                     {t.amount} {t.symbol}
@@ -142,16 +157,9 @@ export default function WalletTransactionsPage() {
                     <span className="text-[11px] text-content-muted">{t.created_at}</span>
                   ) : null}
                 </Link>
-                {explorer ? (
-                  <a
-                    href={explorer}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex shrink-0 items-center border-l border-surface-border px-3 text-xs text-primary hover:bg-surface-muted hover:underline"
-                  >
-                    Explorer
-                  </a>
-                ) : null}
+                <div className="flex shrink-0 items-center border-l border-surface-border px-3">
+                  <SolscanLink tx={t} stopPropagation />
+                </div>
               </div>
             </li>
           );

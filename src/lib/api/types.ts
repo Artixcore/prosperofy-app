@@ -246,6 +246,7 @@ export type WalletOnChainTransactionRow = {
   status: string;
   failure_reason_code: string | null;
   failure_message: string | null;
+  explorer_name: string | null;
   explorer_url: string | null;
   broadcasted_at: string | null;
   confirmed_at: string | null;

@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, ListOrdered } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ExternalLink, ListOrdered } from "lucide-react";
 import Link from "next/link";
 import { LoadingState } from "@/components/system/loading-state";
+import { resolveExplorerUrl } from "@/features/wallets/explorer-url";
 import { useWalletTransactionsQuery } from "@/features/wallets/use-wallet-send";
 import { formatChainName, shortenAddress } from "@/lib/formatters";
 import type { WalletOnChainTransactionRow } from "@/lib/api/types";
@@ -87,44 +88,63 @@ function TransactionRow({ tx }: { tx: WalletOnChainTransactionRow }) {
   const badgeClass = STATUS_CLASSES[tx.status] ?? "border-border bg-muted text-muted-foreground";
   const counterparty = isSend ? tx.to_address : tx.from_address;
   const date = tx.broadcasted_at ?? tx.created_at;
+  const explorerUrl = resolveExplorerUrl(tx);
 
   return (
-    <li className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-      <div className="flex min-w-0 items-center gap-3">
-        <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-            isSend
-              ? "bg-red-50 text-red-700 dark:bg-red-950/35 dark:text-red-200"
-              : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-200"
-          }`}
+    <li className="py-3 first:pt-0 last:pb-0">
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href={`/wallet/transactions/${tx.id}`}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-lg hover:bg-muted/50"
         >
-          <Icon className="h-4 w-4" aria-hidden />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-content-primary">
-            {isSend ? "Sent" : "Received"} {tx.symbol}
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+              isSend
+                ? "bg-red-50 text-red-700 dark:bg-red-950/35 dark:text-red-200"
+                : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-200"
+            }`}
+          >
+            <Icon className="h-4 w-4" aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-content-primary">
+              {isSend ? "Sent" : "Received"} {tx.symbol}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {formatChainName(tx.network)} ·{" "}
+              {counterparty ? shortenAddress(counterparty, 4) : "—"}
+              {date ? ` · ${formatRelativeDate(date)}` : ""}
+            </p>
+          </div>
+        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <p
+            className={`font-mono text-sm ${
+              isSend ? "text-content-primary" : "text-emerald-700 dark:text-emerald-300"
+            }`}
+          >
+            {isSend ? "−" : "+"}
+            {tx.amount} {tx.symbol}
           </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {formatChainName(tx.network)} ·{" "}
-            {counterparty ? shortenAddress(counterparty, 4) : "—"}
-            {date ? ` · ${formatRelativeDate(date)}` : ""}
-          </p>
+          <span
+            className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${badgeClass}`}
+          >
+            {tx.status}
+          </span>
+          {explorerUrl ? (
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-0.5 text-[11px] font-medium text-primary hover:underline"
+              aria-label="View on Solscan"
+            >
+              <ExternalLink className="h-3 w-3" aria-hidden />
+              Solscan
+            </a>
+          ) : null}
         </div>
-      </div>
-      <div className="text-right">
-        <p
-          className={`font-mono text-sm ${
-            isSend ? "text-content-primary" : "text-emerald-700 dark:text-emerald-300"
-          }`}
-        >
-          {isSend ? "−" : "+"}
-          {tx.amount} {tx.symbol}
-        </p>
-        <span
-          className={`mt-1 inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${badgeClass}`}
-        >
-          {tx.status}
-        </span>
       </div>
     </li>
   );
