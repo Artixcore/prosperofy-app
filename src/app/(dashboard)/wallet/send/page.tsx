@@ -31,15 +31,18 @@ type PreviewErrorState = {
   code: string | null;
   hints: string[];
   showRefreshBalance: boolean;
+  maxSendableAmount: string | null;
 };
 
 function buildPreviewError(error: unknown): PreviewErrorState {
   const resolved = displayApiError(error, "wallet-send");
+  const max = resolved.data?.max_sendable_amount;
   return {
     message: resolved.message,
     code: resolved.code,
     hints: resolved.hints,
     showRefreshBalance: resolved.showRefreshBalance,
+    maxSendableAmount: typeof max === "string" && max.trim() !== "" ? max : null,
   };
 }
 
@@ -97,12 +100,14 @@ export default function WalletSendPage() {
     return computeMaxSendableSol(balanceHint);
   }, [isSolNative, balanceHint]);
 
+  const effectiveMaxSendable = previewError?.maxSendableAmount ?? maxSendable;
+
   const amountExceedsMax =
     isSolNative &&
     amount.trim() !== "" &&
-    isAmountAboveMaxSendable(amount.trim(), maxSendable);
+    isAmountAboveMaxSendable(amount.trim(), effectiveMaxSendable);
 
-  const cannotCoverFees = isSolNative && balanceHint !== null && maxSendable === null;
+  const cannotCoverFees = isSolNative && balanceHint !== null && effectiveMaxSendable === null;
 
   const handleRefreshBalance = async () => {
     try {
@@ -127,8 +132,8 @@ export default function WalletSendPage() {
   };
 
   const handleMaxAmount = () => {
-    if (!maxSendable) return;
-    setAmount(formatMaxSendableForInput(maxSendable));
+    if (!effectiveMaxSendable) return;
+    setAmount(formatMaxSendableForInput(effectiveMaxSendable));
     setPreviewError(null);
   };
 
@@ -370,7 +375,7 @@ export default function WalletSendPage() {
                 }}
                 placeholder="0.0"
               />
-              {isSolNative && maxSendable ? (
+              {isSolNative && effectiveMaxSendable ? (
                 <button
                   type="button"
                   className="shrink-0 rounded-md border border-surface-border px-3 py-2 text-sm font-medium hover:bg-muted"
@@ -383,9 +388,9 @@ export default function WalletSendPage() {
             {balanceHint ? (
               <p className="mt-1 text-xs text-content-muted">Cached balance: {balanceHint}</p>
             ) : null}
-            {isSolNative && maxSendable ? (
+            {isSolNative && effectiveMaxSendable ? (
               <p className="mt-1 text-xs text-content-muted">
-                Max sendable (after fees): {maxSendable} SOL
+                Max sendable (after fees): {effectiveMaxSendable} SOL
               </p>
             ) : null}
             {amountExceedsMax ? (

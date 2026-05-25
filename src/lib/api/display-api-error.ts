@@ -254,10 +254,13 @@ function resolveApiClientError(
     };
   }
 
-  if (context === "market" && (code === "MARKET_UNAVAILABLE" || error.status === 503 || error.status === 504)) {
+  if (
+    context === "market" &&
+    (code === "MARKET_DATA_UNAVAILABLE" || code === "MARKET_UNAVAILABLE" || error.status === 503 || error.status === 504)
+  ) {
     return {
-      message: lookupMessage("MARKET_UNAVAILABLE"),
-      code,
+      message: lookupMessage("MARKET_DATA_UNAVAILABLE"),
+      code: code === "MARKET_DATA_UNAVAILABLE" ? code : "MARKET_DATA_UNAVAILABLE",
       retryable: error.retryable,
       fieldErrors: error.fieldErrors,
       data,
