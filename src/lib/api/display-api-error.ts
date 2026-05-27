@@ -13,7 +13,8 @@ export type ApiErrorContext =
   | "news"
   | "market"
   | "agents"
-  | "signals";
+  | "signals"
+  | "pa";
 
 export type DisplayApiErrorResult = {
   message: string;
@@ -140,11 +141,13 @@ function resolveApiClientError(
 
   if (error.status === 0 && error.code === "TIMEOUT") {
     const timeoutMessage =
-      context === "wallet-send-confirm"
-        ? "Send confirmation timed out. Please check wallet history before retrying."
-        : context === "wallet-send"
-          ? "Send preview timed out. Please try again shortly."
-          : "The request timed out. Please try again shortly.";
+      context === "pa"
+        ? "Analysis took too long. Please try again."
+        : context === "wallet-send-confirm"
+          ? "Send confirmation timed out. Please check wallet history before retrying."
+          : context === "wallet-send"
+            ? "Send preview timed out. Please try again shortly."
+            : "The request timed out. Please try again shortly.";
     return {
       message: timeoutMessage,
       code,
@@ -372,6 +375,10 @@ export function normalizeAgentDashboardError(error: unknown): string {
 
 export function normalizeSignalGenerateError(error: unknown): string {
   return displayApiError(error, "signals").message;
+}
+
+export function normalizePaAnalysisError(error: unknown): string {
+  return displayApiError(error, "pa").message;
 }
 
 export function normalizeMarketDataError(error: unknown): string {

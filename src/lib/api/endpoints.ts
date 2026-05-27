@@ -81,6 +81,11 @@ export const API = {
       crypto: "/api/app/news/crypto",
       search: "/api/app/news/search",
     },
+    pa: {
+      version: "/api/app/pa/version",
+      analyze: "/api/app/pa/analyze",
+      scan: "/api/app/pa/scan",
+    },
     agents: {
       list: "/api/app/agents",
       dashboard: "/api/app/agents/dashboard",

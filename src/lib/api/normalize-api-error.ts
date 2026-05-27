@@ -5,6 +5,7 @@ export {
   normalizeMarketDataError,
   normalizeNewsPanelError,
   normalizeSignalGenerateError,
+  normalizePaAnalysisError,
   type ApiErrorContext,
   type DisplayApiErrorResult,
 } from "./display-api-error";

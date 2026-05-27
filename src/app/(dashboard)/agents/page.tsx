@@ -9,14 +9,10 @@ import { InlineAlert } from "@/components/system/inline-alert";
 import { EmptyState } from "@/components/empty-state";
 import { normalizeAgentDashboardError, normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useAgentsCatalogQuery, useAgentsDashboardQuery } from "@/features/agents/use-agents-api";
-import { useNewsCryptoQuery, useNewsMarketQuery } from "@/features/news/use-news-api";
-import { NewsPanel } from "@/components/news/news-panel";
 
 export default function AgentsOverviewPage() {
   const dash = useAgentsDashboardQuery(90_000);
   const catalog = useAgentsCatalogQuery();
-  const cryptoNews = useNewsCryptoQuery("bitcoin");
-  const marketNews = useNewsMarketQuery("stock market");
 
   const dashErr = dash.isError ? normalizeAgentDashboardError(dash.error) : null;
   const catErr = catalog.isError ? normalizeApiError(catalog.error) : null;
@@ -42,6 +38,10 @@ export default function AgentsOverviewPage() {
         </section>
 
         <div className="flex flex-wrap gap-3 text-sm">
+          <Link href="/agents/pa" className="font-medium text-primary hover:underline">
+            PA 3.0.0 Analysis
+          </Link>
+          <span className="text-muted-foreground">·</span>
           <Link href="/agents/signals" className="font-medium text-primary hover:underline">
             Signals
           </Link>
@@ -55,31 +55,33 @@ export default function AgentsOverviewPage() {
           </Link>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <NewsPanel
-            title="Crypto news"
-            panel="crypto"
-            articles={cryptoNews.data?.articles ?? []}
-            freshness={cryptoNews.data?.data_freshness}
-            isLoading={cryptoNews.isLoading}
-            error={cryptoNews.error}
-            emptyMessage="No relevant news found."
-          />
-          <NewsPanel
-            title="Market news"
-            panel="market"
-            articles={marketNews.data?.articles ?? []}
-            freshness={marketNews.data?.data_freshness}
-            isLoading={marketNews.isLoading}
-            error={marketNews.error}
-            emptyMessage="No relevant news found."
-          />
-        </div>
+        <section className="rounded-lg border border-primary/30 bg-primary/5 p-6 text-card-foreground">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-2xl">
+              <span className="inline-flex rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                PA 3.0.0
+              </span>
+              <h2 className="mt-2 text-lg font-semibold text-foreground">
+                Market Intelligence Engine
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Quantitative regime detection, strategy scoring, risk-aware trade plans, and
+                indicator snapshots — powered by PA 3.0.0 through the Prosperofy API.
+              </p>
+            </div>
+            <Link
+              href="/agents/pa"
+              className="inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Run PA 3.0.0 Analysis
+            </Link>
+          </div>
+        </section>
 
         <section>
           <h2 className="text-sm font-medium text-foreground">Latest signals</h2>
           {!dash.data?.latest_signals?.length ? (
-            <EmptyState title="No signals yet" description="Run an agent or generate a signal to populate this list." />
+            <EmptyState title="No signals yet" description="Run PA 3.0.0 or generate a signal to populate this list." />
           ) : (
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               {dash.data.latest_signals.slice(0, 4).map((s) => (
@@ -118,6 +120,6 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 
 function fmtNum(n: number | undefined) {
-  if (typeof n !== "number" || Number.isNaN(n)) return "—";
-  return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  if (n === undefined) return "—";
+  return n.toLocaleString();
 }

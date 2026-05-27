@@ -59,6 +59,8 @@ export const ERROR_MESSAGES: Record<string, string> = {
   "AI_UNKNOWN": "AI analysis is temporarily unavailable. Please try again shortly.",
   "AI_HTTP_ERROR": "AI analysis is temporarily unavailable. Please try again shortly.",
   "AI_BUSINESS_ERROR": "AI could not complete this request. Please adjust your inputs and try again.",
+  "pa_engine_unavailable": "PA 3.0.0 is temporarily unavailable. Please try again shortly.",
+  "insufficient_market_data": "Not enough market data to analyze this symbol.",
   "ORCH_INTERNAL": "AI analysis is temporarily unavailable. Please try again shortly.",
   "SIGNAL_PERSIST_FAILED": "The agent could not generate a signal right now. Please try again shortly.",
   "MARKET_UNAVAILABLE": "Market data is temporarily unavailable. Please try again shortly.",
