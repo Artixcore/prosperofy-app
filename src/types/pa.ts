@@ -42,6 +42,12 @@ export type PATradePlan = {
   invalidation?: string | null;
 };
 
+export type PAAnalysisMeta = {
+  run_id?: number;
+  analysis_id?: number;
+  signal_id?: number;
+};
+
 export type PAAnalysisResponse = {
   model: string;
   engine_version: string;
@@ -60,6 +66,34 @@ export type PAAnalysisResponse = {
   reasoning?: string | null;
   warnings?: string[];
   data_freshness?: string;
+  user_personalization?: {
+    used?: boolean;
+    risk_profile?: string;
+    notes?: string[];
+  };
+  _meta?: PAAnalysisMeta;
+};
+
+export type PAHistoryItem = {
+  id: number;
+  symbol: string;
+  timeframe: string;
+  signal_action?: string | null;
+  confidence?: number | null;
+  risk_level?: string | null;
+  market_regime?: string | null;
+  created_at?: string;
+  generated_at?: string;
+};
+
+export type PAHistoryListResponse = {
+  analyses: PAHistoryItem[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 };
 
 export const PA_SYMBOLS = [

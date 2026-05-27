@@ -11,6 +11,22 @@ vi.mock("@/features/pa/use-pa-api", () => ({
   }),
 }));
 
+vi.mock("@/features/behavior/use-behavior-tracking", () => ({
+  useBehaviorTracking: () => ({
+    recordEvent: vi.fn(),
+  }),
+}));
+
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      invalidateQueries: vi.fn(),
+    }),
+  };
+});
+
 describe("PaAnalysisPage", () => {
   it("shows PA title and renders analysis result after submit", async () => {
     mutateAsync.mockResolvedValueOnce({

@@ -29,10 +29,22 @@ export default function PaAnalysisPage() {
             ← Agents overview
           </Link>
           <span className="text-muted-foreground">·</span>
+          <Link href="/agents/pa/history" className="font-medium text-primary hover:underline">
+            PA analysis history
+          </Link>
+          <span className="text-muted-foreground">·</span>
           <Link href="/agents/signals" className="font-medium text-primary hover:underline">
             Signal history
           </Link>
+          <span className="text-muted-foreground">·</span>
+          <Link href="/agents/trading-profile" className="font-medium text-primary hover:underline">
+            Trading profile
+          </Link>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Prosperofy uses your in-app interactions to personalize market analysis. You can manage
+          preferences anytime on your trading profile.
+        </p>
 
         <PaAnalysisForm
           onResult={(data) => {

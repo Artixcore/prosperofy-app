@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { useSignalDetailQuery, useTrackSignalMutation } from "@/features/agents/use-agents-api";
+import { PaSignalInteractions } from "@/components/pa/pa-signal-interactions";
 import { NewsImpactSection } from "@/components/news/news-impact-section";
 import { getSignalNewsContext } from "@/lib/agents/signal-source";
 
@@ -77,6 +78,11 @@ export default function SignalDetailPage() {
             </div>
             {q.data.signal.reasoning ? (
               <p className="mt-3 text-muted-foreground">{q.data.signal.reasoning}</p>
+            ) : null}
+            {q.data.signal.id ? (
+              <div className="mt-4">
+                <PaSignalInteractions signalId={Number(q.data.signal.id)} />
+              </div>
             ) : null}
             {(() => {
               const { newsImpact, newsSources, dataFreshness } = getSignalNewsContext(q.data.signal);

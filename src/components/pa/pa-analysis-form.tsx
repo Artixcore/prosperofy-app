@@ -8,8 +8,10 @@ import { FormField } from "@/components/system/form-field";
 import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { normalizePaAnalysisError } from "@/lib/api/normalize-api-error";
+import { useBehaviorTracking } from "@/features/behavior/use-behavior-tracking";
 import { usePaAnalyzeMutation } from "@/features/pa/use-pa-api";
 import { PA_SYMBOLS, PA_TIMEFRAMES, type PAAnalysisResponse } from "@/types/pa";
+import { useQueryClient } from "@tanstack/react-query";
 
 const schema = z.object({
   symbol: z.enum(PA_SYMBOLS),
@@ -27,6 +29,8 @@ export function PaAnalysisForm({
   onResult: (data: PAAnalysisResponse) => void;
 }) {
   const mut = usePaAnalyzeMutation();
+  const { recordEvent } = useBehaviorTracking();
+  const qc = useQueryClient();
   const [banner, setBanner] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -42,6 +46,13 @@ export function PaAnalysisForm({
 
   async function onSubmit(values: FormValues) {
     setBanner(null);
+    recordEvent({
+      event_type: "ran_analysis",
+      symbol: values.symbol,
+      asset_class: "crypto",
+      timeframe: values.timeframe,
+      metadata: { source: "pa_3_analysis_page" },
+    });
     try {
       const data = await mut.mutateAsync({
         symbol: values.symbol,
@@ -52,6 +63,8 @@ export function PaAnalysisForm({
         include_emotion: values.include_emotion,
       });
       onResult(data);
+      void qc.invalidateQueries({ queryKey: ["agent-signals"] });
+      void qc.invalidateQueries({ queryKey: ["pa-history"] });
     } catch (e) {
       setBanner(normalizePaAnalysisError(e));
     }
@@ -68,7 +81,19 @@ export function PaAnalysisForm({
           <select
             id="symbol"
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-            {...form.register("symbol")}
+            {...form.register("symbol", {
+              onChange: (e) => {
+                recordEvent(
+                  {
+                    event_type: "selected_symbol",
+                    symbol: e.target.value,
+                    asset_class: "crypto",
+                    metadata: { source: "pa_3_analysis_page" },
+                  },
+                  400,
+                );
+              },
+            })}
           >
             {PA_SYMBOLS.map((s) => (
               <option key={s} value={s}>
@@ -82,7 +107,19 @@ export function PaAnalysisForm({
           <select
             id="timeframe"
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-            {...form.register("timeframe")}
+            {...form.register("timeframe", {
+              onChange: (e) => {
+                recordEvent(
+                  {
+                    event_type: "selected_timeframe",
+                    symbol: form.getValues("symbol"),
+                    timeframe: e.target.value,
+                    asset_class: "crypto",
+                  },
+                  400,
+                );
+              },
+            })}
           >
             {PA_TIMEFRAMES.map((t) => (
               <option key={t} value={t}>
