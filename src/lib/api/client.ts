@@ -41,7 +41,7 @@ export type LaravelFetchOptions = {
   body?: unknown;
   token?: string | null;
   signal?: AbortSignal;
-  /** Override default client timeout (ms). Agent run/signal generate use ~150s. */
+  /** Override default client timeout (ms). Agent run/signal generate use the backend bounded budget. */
   timeoutMs?: number;
   /** Mirrors JSON idempotency_key for wallet send confirm (crypto transfers). */
   idempotencyKey?: string;
@@ -88,7 +88,7 @@ function getTimeoutMs(overrideMs?: number): number {
   return Math.floor(parsed);
 }
 
-/** Long-running agent/signal mutations align with Laravel→AI timeouts (~120s). */
+/** Agent/signal mutations align with Laravel to avoid browser hangs. */
 export function getAgentMutationTimeoutMs(): number {
   const raw = process.env.NEXT_PUBLIC_AGENT_TIMEOUT_MS;
   if (raw) {
@@ -97,7 +97,7 @@ export function getAgentMutationTimeoutMs(): number {
       return Math.floor(parsed);
     }
   }
-  return 150_000;
+  return 20_000;
 }
 
 function isAbortError(error: unknown): boolean {

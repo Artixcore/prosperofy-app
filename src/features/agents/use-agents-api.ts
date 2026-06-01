@@ -167,6 +167,7 @@ export function useRunAgentMutation() {
       void qc.invalidateQueries({ queryKey: ["agents-dashboard"] });
       void qc.invalidateQueries({ queryKey: ["agent-runs"] });
     },
+    retry: false,
   });
 }
 
@@ -212,6 +213,7 @@ export function useGenerateSignalMutation() {
       void qc.invalidateQueries({ queryKey: ["agents-dashboard"] });
       void qc.invalidateQueries({ queryKey: ["agent-signals"] });
     },
+    retry: false,
   });
 }
 
