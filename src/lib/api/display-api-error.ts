@@ -272,6 +272,52 @@ function resolveApiClientError(
     };
   }
 
+  if (context === "pa") {
+    if (
+      code === "PA_ENGINE_TIMEOUT" ||
+      code === "pa_engine_timeout" ||
+      code === "provider_timeout"
+    ) {
+      return {
+        message: "Analysis took too long. Try again with news/emotion disabled.",
+        code,
+        retryable: true,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (
+      error.status === 503 ||
+      code === "PA_ENGINE_UNAVAILABLE" ||
+      code === "pa_engine_unavailable"
+    ) {
+      return {
+        message:
+          "PA 3.0.0 analysis is temporarily unavailable. Please try again shortly.",
+        code,
+        retryable: error.retryable,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (error.status === 504) {
+      return {
+        message:
+          "PA 3.0.0 analysis is temporarily unavailable. Please try again shortly.",
+        code,
+        retryable: true,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+  }
+
   const catalogMessage = ERROR_MESSAGES[code];
   const message =
     catalogMessage ?? messageFromStatus(error.status, context) ?? lookupMessage("SERVER_ERROR");

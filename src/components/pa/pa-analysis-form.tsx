@@ -17,6 +17,7 @@ const schema = z.object({
   symbol: z.enum(PA_SYMBOLS),
   timeframe: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]),
   lookback: z.coerce.number().min(50).max(1000),
+  fast_market_only: z.boolean(),
   include_news: z.boolean(),
   include_emotion: z.boolean(),
 });
@@ -39,8 +40,9 @@ export function PaAnalysisForm({
       symbol: "SOLUSDT",
       timeframe: "15m",
       lookback: 250,
-      include_news: true,
-      include_emotion: true,
+      fast_market_only: true,
+      include_news: false,
+      include_emotion: false,
     },
   });
 
@@ -54,13 +56,14 @@ export function PaAnalysisForm({
       metadata: { source: "pa_3_analysis_page" },
     });
     try {
+      const marketOnly = values.fast_market_only;
       const data = await mut.mutateAsync({
         symbol: values.symbol,
         asset_class: "crypto",
         timeframe: values.timeframe,
         lookback: values.lookback,
-        include_news: values.include_news,
-        include_emotion: values.include_emotion,
+        include_news: marketOnly ? false : values.include_news,
+        include_emotion: marketOnly ? false : values.include_emotion,
       });
       onResult(data);
       void qc.invalidateQueries({ queryKey: ["agent-signals"] });
@@ -141,12 +144,34 @@ export function PaAnalysisForm({
         </FormField>
 
         <label className="flex items-center gap-2 text-sm text-foreground">
-          <input type="checkbox" {...form.register("include_news")} />
-          Include news context
+          <input
+            type="checkbox"
+            {...form.register("fast_market_only", {
+              onChange: (e) => {
+                if (e.target.checked) {
+                  form.setValue("include_news", false);
+                  form.setValue("include_emotion", false);
+                }
+              },
+            })}
+          />
+          Fast market-only analysis (recommended)
         </label>
-        <label className="flex items-center gap-2 text-sm text-foreground">
-          <input type="checkbox" {...form.register("include_emotion")} />
-          Include emotion / sentiment
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            disabled={form.watch("fast_market_only")}
+            {...form.register("include_news")}
+          />
+          Include news context (slower)
+        </label>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            disabled={form.watch("fast_market_only")}
+            {...form.register("include_emotion")}
+          />
+          Include emotion / sentiment (slower)
         </label>
 
         <SubmitButton pending={mut.isPending}>Run PA 3.0.0 Analysis</SubmitButton>

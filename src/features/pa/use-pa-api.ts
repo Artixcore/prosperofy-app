@@ -44,7 +44,7 @@ export function usePaAnalyzeMutation() {
         method: "POST",
         body,
         token: assertToken(token),
-        timeoutMs: 25_000,
+        timeoutMs: 15_000,
       }),
     retry: false,
   });
