@@ -4,8 +4,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import type {
-  NowPaymentCreateBody,
-  NowPaymentCreateResponse,
+  BillingCheckoutBody,
+  BillingCheckoutResponse,
   PaymentStatusResponse,
 } from "@/lib/api/types";
 import { ApiClientError } from "@/lib/api/errors";
@@ -20,11 +20,11 @@ function assertToken(token: string | null): string {
   });
 }
 
-export function useCreateNowPaymentMutation() {
+export function useBillingCheckoutMutation() {
   const { token } = useAuth();
   return useMutation({
-    mutationFn: (body: NowPaymentCreateBody) =>
-      laravelFetch<NowPaymentCreateResponse>(API.app.billing.createNowPayment, {
+    mutationFn: (body: BillingCheckoutBody) =>
+      laravelFetch<BillingCheckoutResponse>(API.app.billing.checkout, {
         method: "POST",
         body,
         token: assertToken(token),

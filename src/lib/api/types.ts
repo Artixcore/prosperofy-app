@@ -454,35 +454,66 @@ export type AppDashboardPayload = {
   widgets: Record<string, unknown>;
 };
 
+export type SubscriptionPlanLimits = {
+  watchlists: number;
+  tracked_assets: number;
+  alerts: number;
+  premium_market_data: boolean;
+  priority_support: boolean;
+};
+
 export type SubscriptionPlanRow = {
   id: number;
   name: string;
   slug: string;
   description: string | null;
-  price_minor: number;
+  monthly_price: number;
+  yearly_price: number | null;
   currency: string;
-  billing_interval: string;
-  features: Record<string, unknown> | null;
+  billing_interval_support: string[];
+  features: string[];
+  limits: SubscriptionPlanLimits;
+  sort_order: number;
+  price_minor?: number;
+  billing_interval?: string;
 };
 
 export type SubscriptionPlansPayload = {
   plans: SubscriptionPlanRow[];
 };
 
-export type NowPaymentCreateBody = {
+export type CurrentSubscription = {
+  subscription_id: number | null;
   plan_id: number;
+  plan_slug: string;
+  plan_name: string;
+  status: string;
+  billing_interval: string | null;
+  starts_at: string | null;
+  renews_at: string | null;
+  ends_at: string | null;
+  limits: SubscriptionPlanLimits;
+  features: string[];
+};
+
+export type BillingCheckoutBody = {
+  plan_slug: string;
+  billing_interval?: "monthly" | "yearly";
   pay_currency?: string;
 };
 
-export type NowPaymentCreateResponse = {
-  payment_id: number;
-  internal_reference: string;
+export type BillingCheckoutResponse = {
+  payment_id: number | null;
+  order_id: string | null;
   payment_url: string | null;
   status: string;
-  provider_status: string | null;
-  pay_currency: string | null;
-  expires_at: string | null;
-  fulfilled_at: string | null;
+  subscription_id?: number;
+  plan_slug?: string;
+  provider_status?: string | null;
+  pay_currency?: string | null;
+  expires_at?: string | null;
+  fulfilled_at?: string | null;
+  internal_reference?: string | null;
 };
 
-export type PaymentStatusResponse = NowPaymentCreateResponse;
+export type PaymentStatusResponse = BillingCheckoutResponse;

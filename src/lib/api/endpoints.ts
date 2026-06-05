@@ -112,10 +112,12 @@ export const API = {
       snapshots: "/api/app/portfolio/snapshots",
     },
     billing: {
-      plans: "/api/app/subscription/plans",
-      createNowPayment: "/api/app/payments/nowpayments/create",
+      plans: "/api/app/billing/plans",
+      subscription: "/api/app/billing/subscription",
+      checkout: "/api/app/billing/checkout",
+      cancel: "/api/app/billing/cancel",
       paymentStatus: (id: string | number) =>
-        `/api/app/payments/${encodeURIComponent(String(id))}/status` as const,
+        `/api/app/billing/payments/${encodeURIComponent(String(id))}/status` as const,
     },
   },
 } as const;

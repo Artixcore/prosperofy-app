@@ -5,20 +5,32 @@ import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
-import { usePaymentStatusQuery } from "@/features/billing/use-create-now-payment";
+import { usePaymentStatusQuery } from "@/features/billing/use-billing-checkout";
+import { useCurrentSubscription } from "@/features/billing/use-current-subscription";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 
 export default function BillingSuccessPage() {
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("payment_id") ?? searchParams.get("paymentId");
   const statusQuery = usePaymentStatusQuery(paymentId);
+  const subscriptionQuery = useCurrentSubscription({ pollUntilActive: true });
+
+  const paymentStatus = statusQuery.data?.status ?? "pending";
+  const isPaid = paymentStatus === "paid";
+  const subscriptionActive =
+    subscriptionQuery.data?.status === "active" &&
+    subscriptionQuery.data.plan_slug !== "free";
 
   if (!paymentId) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Payment received" description="Your payment is being confirmed." />
+        <PageHeader
+          title="Payment received"
+          description="Your payment is being verified by Prosperofy."
+        />
         <InlineAlert tone="info">
-          Return here from checkout or open Billing to view your subscription status.
+          Return here from checkout or open Billing to view your subscription status once
+          verification completes.
         </InlineAlert>
         <Link href="/billing" className="text-sm text-primary underline">
           Back to billing
@@ -43,22 +55,34 @@ export default function BillingSuccessPage() {
     );
   }
 
-  const status = statusQuery.data?.status ?? "pending";
-  const isPaid = status === "paid";
+  const verified = isPaid && subscriptionActive;
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title={isPaid ? "Payment complete" : "Payment pending"}
+        title={verified ? "Subscription active" : "Payment being verified"}
         description={
-          isPaid
-            ? "Your subscription is active."
-            : "We are waiting for blockchain confirmation. This page refreshes automatically."
+          verified
+            ? `Your ${subscriptionQuery.data?.plan_name ?? "paid"} plan is now active.`
+            : "We are waiting for blockchain confirmation and backend verification. This page refreshes automatically."
         }
       />
-      <InlineAlert tone={isPaid ? "success" : "info"}>
-        Status: <span className="font-medium">{status}</span>
+      <InlineAlert tone={verified ? "success" : "info"}>
+        Payment status: <span className="font-medium">{paymentStatus}</span>
+        {subscriptionQuery.data ? (
+          <>
+            {" "}
+            · Subscription:{" "}
+            <span className="font-medium">{subscriptionQuery.data.plan_name}</span> (
+            {subscriptionQuery.data.status})
+          </>
+        ) : null}
       </InlineAlert>
+      {!verified ? (
+        <p className="text-sm text-muted-foreground">
+          Premium access will unlock only after Prosperofy confirms your payment.
+        </p>
+      ) : null}
       <Link href="/billing" className="text-sm text-primary underline">
         Back to billing
       </Link>

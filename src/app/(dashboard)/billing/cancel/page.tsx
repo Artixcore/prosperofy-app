@@ -9,10 +9,10 @@ export default function BillingCancelPage() {
     <div className="space-y-4">
       <PageHeader
         title="Checkout canceled"
-        description="Your crypto payment was not completed."
+        description="Your payment checkout was canceled or not completed."
       />
       <InlineAlert tone="warning">
-        No charge was made. You can return to billing and try again when ready.
+        No charge was made. You can return to Billing and try again when ready.
       </InlineAlert>
       <Link href="/billing" className="text-sm text-primary underline">
         Back to billing
