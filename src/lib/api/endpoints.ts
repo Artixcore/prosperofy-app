@@ -116,6 +116,14 @@ export const API = {
       rewards: "/api/app/agents/rewards",
       rewardClaim: (id: string | number) =>
         `/api/app/agents/rewards/${encodeURIComponent(String(id))}/claim` as const,
+      cryptoMarket: {
+        analyze: "/api/app/agents/crypto-market/analyze",
+        history: "/api/app/agents/crypto-market/history",
+        sentiment: "/api/app/agents/crypto-market/sentiment",
+        whaleActivity: "/api/app/agents/crypto-market/whale-activity",
+        manipulationRisk: "/api/app/agents/crypto-market/manipulation-risk",
+        fullReport: "/api/app/agents/crypto-market/full-report",
+      },
     },
     market: {
       quote: "/api/app/market/quote",
