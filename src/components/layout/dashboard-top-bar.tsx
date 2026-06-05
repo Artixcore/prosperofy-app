@@ -15,7 +15,7 @@ type Props = {
 
 export function DashboardTopBar({ sidebarCollapsed, onToggleSidebar, onOpenMobileDrawer }: Props) {
   return (
-    <header className="sticky top-0 z-30 border-b border-surface-border bg-surface-elevated/90 backdrop-blur">
+    <header className="z-30 shrink-0 border-b border-surface-border bg-surface-elevated/90 backdrop-blur">
       <div className="flex flex-nowrap items-center gap-2 px-3 py-2.5 sm:gap-3 md:px-5">
         <div className="flex shrink-0 items-center gap-2">
           <button

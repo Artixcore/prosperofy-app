@@ -19,7 +19,7 @@ export function DashboardSidebar({ collapsed, unreadCount, userEmail, isNonProd 
         collapsed ? "w-16" : "w-60"
       }`}
     >
-      <div className={`flex h-full min-h-screen flex-col ${collapsed ? "px-2 py-4" : "p-4"}`}>
+      <div className={`flex h-full flex-col ${collapsed ? "px-2 py-4" : "p-4"}`}>
         <div className={`mb-6 ${collapsed ? "flex justify-center px-0" : "px-2"}`}>
           {collapsed ? (
             <span className="text-lg font-semibold text-content-primary" title="Prosperofy">

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { FormField } from "@/components/system/form-field";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { SubmitButton } from "@/components/system/submit-button";
+import { ClipboardSafetyCard } from "@/components/security/ClipboardSafetyCard";
 import {
   useStoreBinanceConnectionMutation,
   useValidateBinanceConnectionMutation,
@@ -54,6 +55,9 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
+const SECURITY_REMINDER =
+  "Security reminder: Never share your Binance API key or secret with anyone. Prosperofy staff will never ask for your API secret. Keep withdrawal permission disabled. If you think your API key was exposed, revoke it from Binance API Management immediately.";
+
 export type BinanceConnectFormProps = {
   onSaved?: () => void;
   onValidated?: (preview: BinanceValidationPreview) => void;
@@ -65,6 +69,7 @@ export function BinanceConnectForm({ onSaved, onValidated }: BinanceConnectFormP
   const [showSecret, setShowSecret] = useState(false);
   const [preview, setPreview] = useState<BinanceValidationPreview | null>(null);
   const [banner, setBanner] = useState<{ tone: "success" | "error" | "warning"; message: string } | null>(null);
+  const [showSecurityFlow, setShowSecurityFlow] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -84,14 +89,27 @@ export function BinanceConnectForm({ onSaved, onValidated }: BinanceConnectFormP
 
   const pending = validateMut.isPending || storeMut.isPending;
 
-  function clearSecretField() {
+  function clearCredentialFields(options: { secretOnly?: boolean } = {}) {
     form.setValue("api_secret", "");
     setShowSecret(false);
+    if (!options.secretOnly) {
+      form.setValue("api_key", "");
+    }
+  }
+
+  function clearSecretField() {
+    clearCredentialFields({ secretOnly: true });
+  }
+
+  function activateSecurityFlow(successMessage: string) {
+    setShowSecurityFlow(true);
+    setBanner({ tone: "success", message: successMessage });
   }
 
   async function onValidate() {
     setBanner(null);
     setPreview(null);
+    setShowSecurityFlow(false);
     const values = form.getValues();
     const parsed = schema.safeParse({ ...values, verify_password: undefined, verify_passphrase: undefined, verify_otp: undefined });
     if (!parsed.success) {
@@ -127,10 +145,7 @@ export function BinanceConnectForm({ onSaved, onValidated }: BinanceConnectFormP
             "Your API key only has Reading permission. Portfolio view is available, but trading is disabled.",
         });
       } else {
-        setBanner({
-          tone: "success",
-          message: result.message ?? "API validated successfully.",
-        });
+        activateSecurityFlow(result.message ?? "API validated successfully.");
       }
       onValidated?.(result);
     } catch (e) {
@@ -140,6 +155,7 @@ export function BinanceConnectForm({ onSaved, onValidated }: BinanceConnectFormP
 
   async function onSave(values: FormValues) {
     setBanner(null);
+    setShowSecurityFlow(false);
     const factors = {
       current_password: values.verify_password?.trim() || undefined,
       account_passphrase: values.verify_passphrase?.trim() || undefined,
@@ -166,7 +182,7 @@ export function BinanceConnectForm({ onSaved, onValidated }: BinanceConnectFormP
         trading_risk_ack: values.mode === "trading" ? true : undefined,
         ...factors,
       });
-      clearSecretField();
+      clearCredentialFields();
       form.reset({
         ...form.getValues(),
         api_key: "",
@@ -175,12 +191,11 @@ export function BinanceConnectForm({ onSaved, onValidated }: BinanceConnectFormP
         verify_passphrase: "",
         verify_otp: "",
       });
-      setBanner({
-        tone: "success",
-        message: result.connection?.label
+      activateSecurityFlow(
+        result.connection?.label
           ? `Connection saved: ${result.connection.label}.`
           : "Binance connection saved.",
-      });
+      );
       onSaved?.();
     } catch (e) {
       if (mergeServerFieldErrors(e, form.setError)) return;
@@ -193,6 +208,12 @@ export function BinanceConnectForm({ onSaved, onValidated }: BinanceConnectFormP
       <h3 className="text-sm font-semibold text-foreground">Connect Binance</h3>
 
       {banner ? <InlineAlert tone={banner.tone}>{banner.message}</InlineAlert> : null}
+      {showSecurityFlow ? (
+        <>
+          <InlineAlert tone="warning">{SECURITY_REMINDER}</InlineAlert>
+          <ClipboardSafetyCard visible />
+        </>
+      ) : null}
       {preview?.warnings?.includes("ip_restriction_recommended") ? (
         <InlineAlert tone="info">
           Consider restricting your Binance API key to trusted Prosperofy backend IP addresses when

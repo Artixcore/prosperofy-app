@@ -65,7 +65,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen min-w-0 bg-surface">
+    <div className="flex h-screen min-w-0 overflow-hidden bg-surface">
       <DashboardSidebar
         collapsed={sidebarCollapsed}
         unreadCount={unreadCount}
@@ -75,13 +75,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       <MobileSidebarDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} nav={drawerNav} />
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <DashboardTopBar
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={toggleSidebar}
           onOpenMobileDrawer={() => setDrawerOpen(true)}
         />
-        <main className="flex-1 px-4 py-6 md:px-8">
+        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 md:px-8">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
