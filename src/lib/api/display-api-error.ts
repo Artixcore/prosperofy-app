@@ -11,10 +11,7 @@ export type ApiErrorContext =
   | "auth-form"
   | "settings"
   | "news"
-  | "market"
-  | "agents"
-  | "signals"
-  | "pa";
+  | "market";
 
 export type DisplayApiErrorResult = {
   message: string;
@@ -141,9 +138,7 @@ function resolveApiClientError(
 
   if (error.status === 0 && error.code === "TIMEOUT") {
     const timeoutMessage =
-      context === "pa"
-        ? "Analysis took too long. Please try again."
-        : context === "wallet-send-confirm"
+      context === "wallet-send-confirm"
           ? "Send confirmation timed out. Please check wallet history before retrying."
           : context === "wallet-send"
             ? "Send preview timed out. Please try again shortly."
@@ -225,38 +220,6 @@ function resolveApiClientError(
     };
   }
 
-  if (context === "agents" && (error.status >= 500 || code === "AGENTS_LOAD_FAILED")) {
-    return {
-      message: "Agent data could not be loaded. Please try again shortly.",
-      code,
-      retryable: error.retryable,
-      fieldErrors: error.fieldErrors,
-      data,
-      hints: [],
-      showRefreshBalance: false,
-    };
-  }
-
-  if (
-    context === "signals" &&
-    (code === "SIGNAL_PERSIST_FAILED" ||
-      code === "AI_BUSINESS_ERROR" ||
-      code === "AI_ERROR" ||
-      code === "AI_NOT_CONFIGURED" ||
-      error.status === 503 ||
-      error.status === 504)
-  ) {
-    return {
-      message: "The agent could not generate a signal right now. Please try again shortly.",
-      code,
-      retryable: error.retryable,
-      fieldErrors: error.fieldErrors,
-      data,
-      hints: [],
-      showRefreshBalance: false,
-    };
-  }
-
   if (
     context === "market" &&
     (code === "MARKET_DATA_UNAVAILABLE" || code === "MARKET_UNAVAILABLE" || error.status === 503 || error.status === 504)
@@ -270,52 +233,6 @@ function resolveApiClientError(
       hints: [],
       showRefreshBalance: false,
     };
-  }
-
-  if (context === "pa") {
-    if (
-      code === "PA_ENGINE_TIMEOUT" ||
-      code === "pa_engine_timeout" ||
-      code === "provider_timeout"
-    ) {
-      return {
-        message: "Analysis took too long. Try again with news/emotion disabled.",
-        code,
-        retryable: true,
-        fieldErrors: error.fieldErrors,
-        data,
-        hints: [],
-        showRefreshBalance: false,
-      };
-    }
-    if (
-      error.status === 503 ||
-      code === "PA_ENGINE_UNAVAILABLE" ||
-      code === "pa_engine_unavailable"
-    ) {
-      return {
-        message:
-          "PA 3.0.0 analysis is temporarily unavailable. Please try again shortly.",
-        code,
-        retryable: error.retryable,
-        fieldErrors: error.fieldErrors,
-        data,
-        hints: [],
-        showRefreshBalance: false,
-      };
-    }
-    if (error.status === 504) {
-      return {
-        message:
-          "PA 3.0.0 analysis is temporarily unavailable. Please try again shortly.",
-        code,
-        retryable: true,
-        fieldErrors: error.fieldErrors,
-        data,
-        hints: [],
-        showRefreshBalance: false,
-      };
-    }
   }
 
   const catalogMessage = ERROR_MESSAGES[code];
@@ -413,18 +330,6 @@ export function normalizeNewsPanelError(panel: "crypto" | "market", error: unkno
     return base;
   }
   return panel === "crypto" ? "Crypto news could not be loaded." : "Market news could not be loaded.";
-}
-
-export function normalizeAgentDashboardError(error: unknown): string {
-  return displayApiError(error, "agents").message;
-}
-
-export function normalizeSignalGenerateError(error: unknown): string {
-  return displayApiError(error, "signals").message;
-}
-
-export function normalizePaAnalysisError(error: unknown): string {
-  return displayApiError(error, "pa").message;
 }
 
 export function normalizeMarketDataError(error: unknown): string {

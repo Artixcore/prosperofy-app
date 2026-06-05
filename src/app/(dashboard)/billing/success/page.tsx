@@ -1,0 +1,67 @@
+"use client";
+
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { PageHeader } from "@/components/page-header";
+import { InlineAlert } from "@/components/system/inline-alert";
+import { LoadingState } from "@/components/system/loading-state";
+import { usePaymentStatusQuery } from "@/features/billing/use-create-now-payment";
+import { normalizeApiError } from "@/lib/api/normalize-api-error";
+
+export default function BillingSuccessPage() {
+  const searchParams = useSearchParams();
+  const paymentId = searchParams.get("payment_id") ?? searchParams.get("paymentId");
+  const statusQuery = usePaymentStatusQuery(paymentId);
+
+  if (!paymentId) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Payment received" description="Your payment is being confirmed." />
+        <InlineAlert tone="info">
+          Return here from checkout or open Billing to view your subscription status.
+        </InlineAlert>
+        <Link href="/billing" className="text-sm text-primary underline">
+          Back to billing
+        </Link>
+      </div>
+    );
+  }
+
+  if (statusQuery.isLoading) {
+    return <LoadingState label="Confirming payment…" />;
+  }
+
+  if (statusQuery.isError) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Payment status" description="We could not load your payment status." />
+        <InlineAlert tone="error">{normalizeApiError(statusQuery.error)}</InlineAlert>
+        <Link href="/billing" className="text-sm text-primary underline">
+          Back to billing
+        </Link>
+      </div>
+    );
+  }
+
+  const status = statusQuery.data?.status ?? "pending";
+  const isPaid = status === "paid";
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title={isPaid ? "Payment complete" : "Payment pending"}
+        description={
+          isPaid
+            ? "Your subscription is active."
+            : "We are waiting for blockchain confirmation. This page refreshes automatically."
+        }
+      />
+      <InlineAlert tone={isPaid ? "success" : "info"}>
+        Status: <span className="font-medium">{status}</span>
+      </InlineAlert>
+      <Link href="/billing" className="text-sm text-primary underline">
+        Back to billing
+      </Link>
+    </div>
+  );
+}

@@ -23,22 +23,6 @@ export type ConnectedWallet = {
   updated_at: string | null;
 };
 
-export type OrchestrationJob = {
-  id: string;
-  type: string;
-  status: string;
-  correlation_id: string | null;
-  attempts: number;
-  last_error?: string;
-  created_at: string | null;
-  updated_at: string | null;
-  payload_summary: { symbol: string | null };
-  result_summary?: {
-    success: boolean | null;
-    message: string | null;
-  };
-};
-
 export type WalletNonceData = {
   nonce: string;
   message?: string;
@@ -469,3 +453,36 @@ export type AppDashboardPayload = {
   analytics: { weekly_activity: Array<{ date: string; count: number }> };
   widgets: Record<string, unknown>;
 };
+
+export type SubscriptionPlanRow = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  price_minor: number;
+  currency: string;
+  billing_interval: string;
+  features: Record<string, unknown> | null;
+};
+
+export type SubscriptionPlansPayload = {
+  plans: SubscriptionPlanRow[];
+};
+
+export type NowPaymentCreateBody = {
+  plan_id: number;
+  pay_currency?: string;
+};
+
+export type NowPaymentCreateResponse = {
+  payment_id: number;
+  internal_reference: string;
+  payment_url: string | null;
+  status: string;
+  provider_status: string | null;
+  pay_currency: string | null;
+  expires_at: string | null;
+  fulfilled_at: string | null;
+};
+
+export type PaymentStatusResponse = NowPaymentCreateResponse;

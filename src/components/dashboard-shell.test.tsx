@@ -65,7 +65,7 @@ describe("DashboardShell", () => {
         <div>Child</div>
       </DashboardShell>,
     );
-    expect(screen.getByPlaceholderText("Search wallets, assets, agents...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search wallets, assets...")).toBeInTheDocument();
     expect(screen.getByText("0.011294989 SOL")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Theme" })).toHaveAttribute("data-theme-variant", "compact");
     const toolbar = container.querySelector("header .flex.flex-nowrap");

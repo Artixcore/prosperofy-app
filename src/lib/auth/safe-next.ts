@@ -1,13 +1,11 @@
 const SAFE_NEXT_ALLOWLIST = new Set([
   "/dashboard",
   "/wallets",
-  "/analysis",
   "/strategy",
   "/activity",
   "/notifications",
   "/settings",
   "/profile",
-  "/jobs",
 ]);
 
 function isAllowedPathname(pathname: string): boolean {

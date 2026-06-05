@@ -88,18 +88,6 @@ function getTimeoutMs(overrideMs?: number): number {
   return Math.floor(parsed);
 }
 
-/** Agent/signal mutations align with Laravel to avoid browser hangs. */
-export function getAgentMutationTimeoutMs(): number {
-  const raw = process.env.NEXT_PUBLIC_AGENT_TIMEOUT_MS;
-  if (raw) {
-    const parsed = Number(raw);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      return Math.floor(parsed);
-    }
-  }
-  return 20_000;
-}
-
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
 }

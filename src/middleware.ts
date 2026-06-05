@@ -9,9 +9,7 @@ const PROTECTED_PREFIXES = [
   "/settings",
   "/wallet",
   "/wallets",
-  "/analysis",
   "/strategy",
-  "/jobs",
   "/activity",
   "/notifications",
 ];

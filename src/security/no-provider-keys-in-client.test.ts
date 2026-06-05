@@ -23,6 +23,10 @@ const FORBIDDEN = [
   "TRADEWATCH_API_KEY",
   "BINANCE_API_KEY",
   "COINGECKO_API_KEY",
+  "nowpayments.io",
+  "NOWPAYMENTS_API_KEY",
+  "NOWPAYMENTS_IPN_SECRET",
+  "x-api-key",
 ];
 
 function walkTsFiles(dir: string, out: string[]): void {

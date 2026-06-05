@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CreditCard, ShieldCheck, Wallet } from "lucide-react";
+import { ShieldCheck, Wallet } from "lucide-react";
 import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
 import { InlineAlert } from "@/components/system/inline-alert";
@@ -194,10 +194,6 @@ export default function DashboardHomePage() {
             <Link href="/wallet" className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">
               <Wallet className="h-4 w-4" />
               Open Wallet
-            </Link>
-            <Link href="/analysis" className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-3 py-2 text-sm hover:bg-surface-raised">
-              <CreditCard className="h-4 w-4" />
-              Open Agents
             </Link>
           </div>
         </Card>

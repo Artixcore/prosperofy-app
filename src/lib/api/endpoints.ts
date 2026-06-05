@@ -37,7 +37,6 @@ export const API = {
       create: "/api/app/strategies",
       show: (id: string) => `/api/app/strategies/${id}` as const,
       update: (id: string) => `/api/app/strategies/${id}` as const,
-      evaluations: (id: string) => `/api/app/strategies/${id}/evaluations` as const,
     },
     wallets: {
       nonce: "/api/app/wallets/nonce",
@@ -81,50 +80,6 @@ export const API = {
       crypto: "/api/app/news/crypto",
       search: "/api/app/news/search",
     },
-    pa: {
-      version: "/api/app/pa/version",
-      analyze: "/api/app/pa/analyze",
-      scan: "/api/app/pa/scan",
-      history: "/api/app/pa/history",
-      historyDetail: (id: string | number) =>
-        `/api/app/pa/history/${encodeURIComponent(String(id))}` as const,
-    },
-    behavior: {
-      events: "/api/app/behavior/events",
-    },
-    tradingProfile: {
-      show: "/api/app/trading-profile",
-      preferences: "/api/app/trading-profile/preferences",
-    },
-    agents: {
-      list: "/api/app/agents",
-      dashboard: "/api/app/agents/dashboard",
-      run: "/api/app/agents/run",
-      runs: "/api/app/agents/runs",
-      runDetail: (id: string | number) =>
-        `/api/app/agents/runs/${encodeURIComponent(String(id))}` as const,
-      signalsGenerate: "/api/app/agents/signals/generate",
-      signals: "/api/app/agents/signals",
-      signalDetail: (id: string | number) =>
-        `/api/app/agents/signals/${encodeURIComponent(String(id))}` as const,
-      signalInteraction: (id: string | number) =>
-        `/api/app/agents/signals/${encodeURIComponent(String(id))}/interactions` as const,
-      signalTrack: (id: string | number) =>
-        `/api/app/agents/signals/${encodeURIComponent(String(id))}/track` as const,
-      signalOutcome: (id: string | number) =>
-        `/api/app/agents/signals/${encodeURIComponent(String(id))}/outcome` as const,
-      rewards: "/api/app/agents/rewards",
-      rewardClaim: (id: string | number) =>
-        `/api/app/agents/rewards/${encodeURIComponent(String(id))}/claim` as const,
-      cryptoMarket: {
-        analyze: "/api/app/agents/crypto-market/analyze",
-        history: "/api/app/agents/crypto-market/history",
-        sentiment: "/api/app/agents/crypto-market/sentiment",
-        whaleActivity: "/api/app/agents/crypto-market/whale-activity",
-        manipulationRisk: "/api/app/agents/crypto-market/manipulation-risk",
-        fullReport: "/api/app/agents/crypto-market/full-report",
-      },
-    },
     market: {
       quote: "/api/app/market/quote",
       quotes: "/api/app/market/quotes",
@@ -156,14 +111,11 @@ export const API = {
       history: "/api/app/portfolio/history",
       snapshots: "/api/app/portfolio/snapshots",
     },
-    ai: {
-      analysisMarket: "/api/app/v1/analysis/market",
-      strategyGenerate: "/api/app/v1/strategy/generate",
-      riskScore: "/api/app/v1/risk/score",
-      quantBacktestTrend: "/api/app/v1/quant/backtest/trend",
-      strategyEvaluateDispatch: "/api/app/v1/strategy/evaluate/dispatch",
-      orchestrationJob: (jobId: string) =>
-        `/api/app/v1/orchestration/jobs/${jobId}` as const,
+    billing: {
+      plans: "/api/app/subscription/plans",
+      createNowPayment: "/api/app/payments/nowpayments/create",
+      paymentStatus: (id: string | number) =>
+        `/api/app/payments/${encodeURIComponent(String(id))}/status` as const,
     },
   },
 } as const;

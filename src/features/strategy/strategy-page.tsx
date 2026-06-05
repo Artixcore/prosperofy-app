@@ -10,53 +10,21 @@ import { SubmitButton } from "@/components/system/submit-button";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import {
-  useQuantBacktestMutation,
-  useRiskScoreMutation,
-  useStrategyGenerateMutation,
-} from "@/features/ai/use-ai-mutations";
-import {
   useCreateStrategyMutation,
   useStrategiesQuery,
-  useStrategyEvaluationsQuery,
   useUpdateStrategyMutation,
 } from "@/features/app/use-strategies";
 import type { StrategyRecord } from "@/lib/api/types";
 
-const generateSchema = z.object({
+const createSchema = z.object({
+  name: z.string().min(1).max(256),
+  description: z.string().max(2000).optional(),
   marketType: z.enum(["crypto", "forex", "stock", "futures"]),
-  goal: z.string().min(1).max(4096),
-  riskTolerance: z.enum(["low", "medium", "high"]),
   timeframe: z.enum(["1m", "5m", "15m", "1h", "4h", "1d", "1w"]),
-  capital: z.string().optional(),
-});
-
-const riskSchema = z.object({
-  marketType: z.enum(["crypto", "forex", "stock", "futures"]),
   symbol: z.string().min(1).max(64),
-  confidence: z.coerce.number().min(0).max(1),
-  volatility_indicator: z.coerce.number().min(0).max(1).optional(),
-  exposure: z.coerce.number().min(0).max(1).optional(),
-});
-
-const backtestSchema = z.object({
-  open: z.string().min(1),
-  high: z.string().min(1),
-  low: z.string().min(1),
-  close: z.string().min(1),
-  volume: z.string().min(1),
-  window: z.coerce.number().min(2).max(500).optional(),
 });
 
 const TF = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"] as const;
-
-function parseSeries(value: string): number[] {
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => Number(part))
-    .filter((number) => Number.isFinite(number));
-}
 
 function normalizeMarketType(
   value: string,
@@ -68,399 +36,112 @@ function normalizeMarketType(
 }
 
 export default function StrategyPage() {
-  const genMut = useStrategyGenerateMutation();
-  const riskMut = useRiskScoreMutation();
-  const btMut = useQuantBacktestMutation();
-  const saveMut = useCreateStrategyMutation();
+  const createMut = useCreateStrategyMutation();
   const [listPage, setListPage] = useState(1);
   const strategies = useStrategiesQuery({ page: listPage, perPage: 10 });
   const [selectedStrategy, setSelectedStrategy] = useState<StrategyRecord | null>(null);
   const strategyUpdateMut = useUpdateStrategyMutation(selectedStrategy?.id ?? "");
-  const evaluations = useStrategyEvaluationsQuery(selectedStrategy?.id ?? null, {
-    page: 1,
-    perPage: 5,
-  });
 
-  const [tab, setTab] = useState<"generate" | "risk" | "backtest">("generate");
   const [err, setErr] = useState<string | null>(null);
   const [saveBanner, setSaveBanner] = useState<string | null>(null);
-  const [saveName, setSaveName] = useState("AI generated strategy");
-  const [saveDescription, setSaveDescription] = useState("");
 
-  const genForm = useForm<z.infer<typeof generateSchema>>({
-    resolver: zodResolver(generateSchema),
+  const createForm = useForm<z.infer<typeof createSchema>>({
+    resolver: zodResolver(createSchema),
     defaultValues: {
+      name: "My strategy",
+      description: "",
       marketType: "crypto",
-      goal: "Balanced growth with drawdown control.",
-      riskTolerance: "medium",
       timeframe: "1d",
-      capital: "",
-    },
-  });
-
-  const riskForm = useForm({
-    resolver: zodResolver(riskSchema),
-    defaultValues: {
-      marketType: "crypto" as const,
       symbol: "BTCUSDT",
-      confidence: 0.65,
-      volatility_indicator: 0.4,
-      exposure: 0.3,
     },
   });
-
-  const btForm = useForm({
-    resolver: zodResolver(backtestSchema),
-    defaultValues: {
-      open: "",
-      high: "",
-      low: "",
-      close: "",
-      volume: "",
-      window: 14,
-    },
-  });
-
-  async function saveGeneratedStrategy() {
-    if (!genMut.data) return;
-    setSaveBanner(null);
-    try {
-      await saveMut.mutateAsync({
-        name: saveName,
-        description: saveDescription || null,
-        market_type: genForm.getValues("marketType"),
-        timeframe: genForm.getValues("timeframe"),
-        source: "ai",
-        definition: genMut.data,
-      });
-      setSaveBanner("Generated strategy saved.");
-      await strategies.refetch();
-    } catch (error) {
-      setSaveBanner(normalizeApiError(error));
-    }
-  }
-
-  async function saveManualStrategy() {
-    setSaveBanner(null);
-    try {
-      await saveMut.mutateAsync({
-        name: "Manual strategy draft",
-        description: "User-authored strategy draft",
-        market_type: genForm.getValues("marketType"),
-        timeframe: genForm.getValues("timeframe"),
-        source: "user",
-        definition: {
-          goal: genForm.getValues("goal"),
-          riskTolerance: genForm.getValues("riskTolerance"),
-          capital: genForm.getValues("capital") || null,
-        },
-      });
-      setSaveBanner("Strategy draft saved.");
-      await strategies.refetch();
-    } catch (error) {
-      setSaveBanner(normalizeApiError(error));
-    }
-  }
 
   return (
     <>
       <PageHeader
-        title="Strategy and quant"
-        description="Generate, score, backtest, and persist strategies through Laravel."
+        title="Strategies"
+        description="Save and manage your trading strategy definitions."
       />
-      <InlineAlert tone="info">
-        Strategies are probabilistic tools, not guarantees of profit. Always review risk before execution.
-      </InlineAlert>
       {err ? <InlineAlert tone="error">{err}</InlineAlert> : null}
-      {saveBanner ? (
-        <InlineAlert
-          tone={
-            ["Generated strategy saved.", "Strategy draft saved.", "Strategy updated."].includes(saveBanner)
-              ? "success"
-              : "error"
+      {saveBanner ? <InlineAlert tone="info">{saveBanner}</InlineAlert> : null}
+
+      <form
+        onSubmit={createForm.handleSubmit(async (values) => {
+          setErr(null);
+          try {
+            await createMut.mutateAsync({
+              name: values.name,
+              description: values.description || null,
+              market_type: values.marketType,
+              timeframe: values.timeframe,
+              source: "user",
+              definition: { symbol: values.symbol },
+            });
+            setSaveBanner("Strategy saved.");
+            createForm.reset({
+              name: "My strategy",
+              description: "",
+              marketType: "crypto",
+              timeframe: "1d",
+              symbol: "BTCUSDT",
+            });
+            await strategies.refetch();
+          } catch (error) {
+            setErr(normalizeApiError(error));
           }
-        >
-          {saveBanner}
-        </InlineAlert>
-      ) : null}
-      <div className="mt-4 flex gap-2 border-b border-surface-border pb-2">
-        {(
-          [
-            ["generate", "Generate"],
-            ["risk", "Risk score"],
-            ["backtest", "Backtest"],
-          ] as const
-        ).map(([k, label]) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => {
-              setTab(k);
-              setErr(null);
-            }}
-            className={`rounded-md px-3 py-1.5 text-sm ${
-              tab === k ? "bg-surface-raised text-foreground ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
-            }`}
+        })}
+        className="mt-6 max-w-xl space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6"
+      >
+        <h2 className="text-sm font-semibold text-foreground">Create strategy</h2>
+        <FormField id="name" label="Name" error={createForm.formState.errors.name?.message}>
+          <input
+            id="name"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground"
+            {...createForm.register("name")}
+          />
+        </FormField>
+        <FormField id="description" label="Description" error={createForm.formState.errors.description?.message}>
+          <textarea
+            id="description"
+            rows={2}
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground"
+            {...createForm.register("description")}
+          />
+        </FormField>
+        <FormField id="marketType" label="Market type" error={createForm.formState.errors.marketType?.message}>
+          <select
+            id="marketType"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground"
+            {...createForm.register("marketType")}
           >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "generate" ? (
-        <form
-          className="mt-6 max-w-xl space-y-4"
-          onSubmit={genForm.handleSubmit(async (v) => {
-            setErr(null);
-            try {
-              const body: Record<string, unknown> = { ...v };
-              if (v.capital) body.capital = Number(v.capital);
-              await genMut.mutateAsync(body);
-            } catch (e) {
-              setErr(normalizeApiError(e));
-            }
-          })}
-        >
-          <FormField id="g_market" label="Market type" error={genForm.formState.errors.marketType?.message}>
-            <select
-              id="g_market"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...genForm.register("marketType")}
-            >
-              <option value="crypto">Crypto</option>
-              <option value="forex">Forex</option>
-              <option value="stock">Stock</option>
-              <option value="futures">Futures</option>
-            </select>
-          </FormField>
-          <FormField id="g_goal" label="Goal" error={genForm.formState.errors.goal?.message}>
-            <textarea
-              id="g_goal"
-              rows={4}
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...genForm.register("goal")}
-            />
-          </FormField>
-          <FormField id="g_risk" label="Risk tolerance" error={genForm.formState.errors.riskTolerance?.message}>
-            <select
-              id="g_risk"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...genForm.register("riskTolerance")}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </FormField>
-          <FormField id="g_tf" label="Timeframe" error={genForm.formState.errors.timeframe?.message}>
-            <select
-              id="g_tf"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...genForm.register("timeframe")}
-            >
-              {TF.map((tf) => (
-                <option key={tf} value={tf}>
-                  {tf}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField id="g_cap" label="Capital (optional)" error={genForm.formState.errors.capital?.message}>
-            <input
-              id="g_cap"
-              type="number"
-              step="any"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...genForm.register("capital")}
-            />
-          </FormField>
-          <SubmitButton pending={genMut.isPending}>Generate strategy</SubmitButton>
-          {genMut.isSuccess && genMut.data ? (
-            <div className="space-y-4">
-              <pre className="max-h-96 overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
-                {JSON.stringify(genMut.data, null, 2)}
-              </pre>
-              <FormField id="save_name" label="Save as strategy name">
-                <input
-                  id="save_name"
-                  value={saveName}
-                  onChange={(event) => setSaveName(event.target.value)}
-                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                />
-              </FormField>
-              <FormField id="save_description" label="Description (optional)">
-                <textarea
-                  id="save_description"
-                  rows={2}
-                  value={saveDescription}
-                  onChange={(event) => setSaveDescription(event.target.value)}
-                  className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                />
-              </FormField>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={saveMut.isPending || !saveName.trim()}
-                  onClick={() => void saveGeneratedStrategy()}
-                  className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {saveMut.isPending ? "Please wait…" : "Save generated strategy"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void saveManualStrategy()}
-                  className="rounded-md border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-secondary"
-                >
-                  Save form as draft
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </form>
-      ) : null}
-
-      {tab === "risk" ? (
-        <form
-          className="mt-6 max-w-xl space-y-4"
-          onSubmit={riskForm.handleSubmit(async (v) => {
-            setErr(null);
-            try {
-              await riskMut.mutateAsync({
-                marketType: v.marketType,
-                symbol: v.symbol,
-                confidence: v.confidence,
-                volatility_indicator: v.volatility_indicator,
-                exposure: v.exposure,
-              });
-            } catch (e) {
-              setErr(normalizeApiError(e));
-            }
-          })}
-        >
-          <FormField id="r_market" label="Market type" error={riskForm.formState.errors.marketType?.message}>
-            <select
-              id="r_market"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...riskForm.register("marketType")}
-            >
-              <option value="crypto">Crypto</option>
-              <option value="forex">Forex</option>
-              <option value="stock">Stock</option>
-              <option value="futures">Futures</option>
-            </select>
-          </FormField>
-          <FormField id="r_sym" label="Symbol" error={riskForm.formState.errors.symbol?.message}>
-            <input
-              id="r_sym"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...riskForm.register("symbol")}
-            />
-          </FormField>
-          <FormField id="r_conf" label="Confidence (0–1)" error={riskForm.formState.errors.confidence?.message}>
-            <input
-              id="r_conf"
-              type="number"
-              step="0.01"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...riskForm.register("confidence")}
-            />
-          </FormField>
-          <SubmitButton pending={riskMut.isPending}>Score risk</SubmitButton>
-          {riskMut.isSuccess && riskMut.data ? (
-            <pre className="max-h-96 overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
-              {JSON.stringify(riskMut.data, null, 2)}
-            </pre>
-          ) : null}
-        </form>
-      ) : null}
-
-      {tab === "backtest" ? (
-        <form
-          className="mt-6 max-w-xl space-y-4"
-          onSubmit={btForm.handleSubmit(async (v) => {
-            setErr(null);
-            try {
-              const open = parseSeries(v.open);
-              const high = parseSeries(v.high);
-              const low = parseSeries(v.low);
-              const close = parseSeries(v.close);
-              const volume = parseSeries(v.volume);
-              const lengths = [open.length, high.length, low.length, close.length, volume.length];
-              const size = lengths[0] ?? 0;
-              if (size < 2 || lengths.some((length) => length !== size)) {
-                setErr("OHLCV arrays must be numeric, non-empty, and equal length.");
-                return;
-              }
-              const body: Record<string, unknown> = {
-                open,
-                high,
-                low,
-                close,
-                volume,
-              };
-              if (v.window != null) body.window = v.window;
-              await btMut.mutateAsync(body);
-            } catch (e) {
-              setErr(normalizeApiError(e));
-            }
-          })}
-        >
-          <FormField id="bt_open" label="Open values (comma-separated)" error={btForm.formState.errors.open?.message}>
-            <textarea
-              id="bt_open"
-              rows={3}
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...btForm.register("open")}
-            />
-          </FormField>
-          <FormField id="bt_high" label="High values (comma-separated)" error={btForm.formState.errors.high?.message}>
-            <textarea
-              id="bt_high"
-              rows={3}
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...btForm.register("high")}
-            />
-          </FormField>
-          <FormField id="bt_low" label="Low values (comma-separated)" error={btForm.formState.errors.low?.message}>
-            <textarea
-              id="bt_low"
-              rows={3}
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...btForm.register("low")}
-            />
-          </FormField>
-          <FormField id="bt_close" label="Close values (comma-separated)" error={btForm.formState.errors.close?.message}>
-            <textarea
-              id="bt_close"
-              rows={3}
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...btForm.register("close")}
-            />
-          </FormField>
-          <FormField id="bt_volume" label="Volume values (comma-separated)" error={btForm.formState.errors.volume?.message}>
-            <textarea
-              id="bt_volume"
-              rows={3}
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...btForm.register("volume")}
-            />
-          </FormField>
-          <FormField id="bt_win" label="Window (optional)" error={btForm.formState.errors.window?.message}>
-            <input
-              id="bt_win"
-              type="number"
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              {...btForm.register("window")}
-            />
-          </FormField>
-          <SubmitButton pending={btMut.isPending}>Run backtest</SubmitButton>
-          {btMut.isSuccess && btMut.data ? (
-            <pre className="max-h-96 overflow-auto rounded-md border border-border bg-muted p-4 font-mono text-xs text-muted-foreground">
-              {JSON.stringify(btMut.data, null, 2)}
-            </pre>
-          ) : null}
-        </form>
-      ) : null}
+            <option value="crypto">Crypto</option>
+            <option value="forex">Forex</option>
+            <option value="stock">Stock</option>
+            <option value="futures">Futures</option>
+          </select>
+        </FormField>
+        <FormField id="timeframe" label="Timeframe" error={createForm.formState.errors.timeframe?.message}>
+          <select
+            id="timeframe"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground"
+            {...createForm.register("timeframe")}
+          >
+            {TF.map((tf) => (
+              <option key={tf} value={tf}>
+                {tf}
+              </option>
+            ))}
+          </select>
+        </FormField>
+        <FormField id="symbol" label="Symbol" error={createForm.formState.errors.symbol?.message}>
+          <input
+            id="symbol"
+            className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground"
+            {...createForm.register("symbol")}
+          />
+        </FormField>
+        <SubmitButton pending={createMut.isPending}>Save strategy</SubmitButton>
+      </form>
 
       <section className="mt-10 space-y-4">
         <div className="flex items-center justify-between">
@@ -524,15 +205,10 @@ export default function StrategyPage() {
               value={selectedStrategy.name}
               onChange={(event) =>
                 setSelectedStrategy((current) =>
-                  current
-                    ? {
-                        ...current,
-                        name: event.target.value,
-                      }
-                    : current,
+                  current ? { ...current, name: event.target.value } : current,
                 )
               }
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground"
             />
           </FormField>
           <FormField id="selected_description" label="Description">
@@ -542,15 +218,10 @@ export default function StrategyPage() {
               value={selectedStrategy.description ?? ""}
               onChange={(event) =>
                 setSelectedStrategy((current) =>
-                  current
-                    ? {
-                        ...current,
-                        description: event.target.value,
-                      }
-                    : current,
+                  current ? { ...current, description: event.target.value } : current,
                 )
               }
-              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+              className="w-full rounded-md border border-input bg-surface px-3 py-2 text-sm text-foreground"
             />
           </FormField>
           <button
@@ -576,33 +247,6 @@ export default function StrategyPage() {
           >
             {strategyUpdateMut.isPending ? "Please wait…" : "Update strategy"}
           </button>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Evaluation history
-            </p>
-            {(evaluations.data?.items?.length ?? 0) === 0 ? (
-              <p className="mt-2 text-sm text-muted-foreground">No evaluations linked to this strategy yet.</p>
-            ) : (
-              <ul className="mt-2 space-y-2">
-                {evaluations.data?.items.map((job) => (
-                  <li
-                    key={job.id}
-                    className="rounded border border-border bg-surface p-3 text-sm text-muted-foreground"
-                  >
-                    <p className="font-medium text-foreground">
-                      {job.type} - {job.status}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Attempts: {job.attempts} | Updated: {job.updated_at ?? "—"}
-                    </p>
-                    {job.last_error ? (
-                      <p className="mt-1 text-xs text-red-300">{job.last_error}</p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </section>
       ) : null}
     </>

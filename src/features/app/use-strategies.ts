@@ -5,7 +5,6 @@ import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import type {
   AppListResponse,
-  OrchestrationJob,
   StrategyCreateBody,
   StrategyPatchBody,
   StrategyRecord,
@@ -82,17 +81,3 @@ export function useUpdateStrategyMutation(id: string) {
   });
 }
 
-export function useStrategyEvaluationsQuery(strategyId: string | null, params?: PaginationParams) {
-  const { token, authReady, isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: ["app-strategy-evaluations", strategyId, token, params?.perPage, params?.page],
-    queryFn: () =>
-      laravelFetch<AppListResponse<OrchestrationJob>>(
-        addPagination(API.app.strategies.evaluations(strategyId!), params),
-        {
-          token,
-        },
-      ),
-    enabled: Boolean(authReady && isAuthenticated && token && strategyId),
-  });
-}

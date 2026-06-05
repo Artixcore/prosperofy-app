@@ -8,9 +8,9 @@ export function DashboardSearch() {
       <Search className="h-4 w-4 shrink-0" aria-hidden />
       <input
         type="search"
-        placeholder="Search wallets, assets, agents..."
+        placeholder="Search wallets, assets..."
         className="min-w-0 flex-1 bg-transparent text-sm text-content-primary placeholder:text-content-muted focus:outline-none"
-        aria-label="Search wallets, assets, agents"
+        aria-label="Search wallets, assets"
       />
     </label>
   );
