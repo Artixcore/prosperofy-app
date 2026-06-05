@@ -9,6 +9,7 @@ import { useCurrentSubscription } from "@/features/billing/use-current-subscript
 import { useSubscriptionPlans } from "@/features/billing/use-subscription-plans";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import type { SubscriptionPlanRow } from "@/lib/api/types";
+import { isSafePaymentRedirectUrl } from "@/lib/billing/safe-payment-url";
 
 function formatPrice(amount: number, currency: string): string {
   return new Intl.NumberFormat(undefined, {
@@ -27,6 +28,7 @@ export default function BillingPage() {
   const subscription = useCurrentSubscription();
   const checkout = useBillingCheckoutMutation();
   const [checkoutSlug, setCheckoutSlug] = useState<string | null>(null);
+  const [redirectError, setRedirectError] = useState<string | null>(null);
 
   if (plans.isLoading || subscription.isLoading) {
     return <LoadingState label="Loading plans…" />;
@@ -47,6 +49,7 @@ export default function BillingPage() {
 
   async function handleCheckout(plan: SubscriptionPlanRow) {
     setCheckoutSlug(plan.slug);
+    setRedirectError(null);
     try {
       const result = await checkout.mutateAsync({
         plan_slug: plan.slug,
@@ -54,6 +57,13 @@ export default function BillingPage() {
       });
 
       if (result.payment_url) {
+        if (!isSafePaymentRedirectUrl(result.payment_url)) {
+          setRedirectError(
+            "Checkout returned an invalid payment link. Please try again or contact support.",
+          );
+          setCheckoutSlug(null);
+          return;
+        }
         window.location.href = result.payment_url;
         return;
       }
@@ -91,6 +101,8 @@ export default function BillingPage() {
       {checkout.isError ? (
         <InlineAlert tone="error">{normalizeApiError(checkout.error)}</InlineAlert>
       ) : null}
+
+      {redirectError ? <InlineAlert tone="error">{redirectError}</InlineAlert> : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {planRows.map((plan) => {

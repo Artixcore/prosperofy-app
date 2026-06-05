@@ -1,22 +1,16 @@
+import { resolveLaravelApiBaseUrl } from "./base-url";
 import { parseEnvelope } from "./envelope";
 import { ApiClientError } from "./errors";
 
 export const AUTH_UNAUTHORIZED_EVENT = "prosperofy:auth-unauthorized";
 
 function getBaseUrl(): string {
-  const raw =
-    typeof process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL === "string"
-      ? process.env.NEXT_PUBLIC_LARAVEL_API_BASE_URL.trim()
-      : typeof process.env.NEXT_PUBLIC_API_BASE_URL === "string"
-        ? process.env.NEXT_PUBLIC_API_BASE_URL.trim()
-        : "";
-  const base = raw;
-  if (!base) {
+  const normalized = resolveLaravelApiBaseUrl();
+  if (!normalized) {
     throw new Error(
       "NEXT_PUBLIC_LARAVEL_API_BASE_URL (or NEXT_PUBLIC_API_BASE_URL) is not configured.",
     );
   }
-  const normalized = base.replace(/\/+$/, "");
   if (/\/api$/i.test(normalized)) {
     throw new Error("NEXT_PUBLIC_LARAVEL_API_BASE_URL must not include /api suffix.");
   }
@@ -41,7 +35,7 @@ export type LaravelFetchOptions = {
   body?: unknown;
   token?: string | null;
   signal?: AbortSignal;
-  /** Override default client timeout (ms). Agent run/signal generate use the backend bounded budget. */
+  /** Override default client timeout (ms) for slow endpoints such as wallet send confirm. */
   timeoutMs?: number;
   /** Mirrors JSON idempotency_key for wallet send confirm (crypto transfers). */
   idempotencyKey?: string;

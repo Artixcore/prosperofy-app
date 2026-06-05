@@ -5,6 +5,9 @@ import { resolveSafeNextPath } from "@/lib/auth/safe-next";
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/market",
+  "/billing",
+  "/portfolio",
   "/profile",
   "/settings",
   "/wallet",

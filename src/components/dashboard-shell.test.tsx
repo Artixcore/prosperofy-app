@@ -17,16 +17,6 @@ vi.mock("@/features/app/use-notifications", () => ({
   useNotificationsQuery: () => ({ data: { pagination: { total: 0 }, items: [] } }),
 }));
 
-vi.mock("@/features/app/use-app-dashboard", () => ({
-  useAppDashboardQuery: () => ({
-    isPending: false,
-    isError: false,
-    data: {
-      overview: { totalBalance: 0 },
-    },
-  }),
-}));
-
 const logoutMock = vi.fn();
 
 vi.mock("@/lib/auth/session-context", () => ({

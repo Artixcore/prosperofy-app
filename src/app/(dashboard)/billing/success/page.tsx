@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
@@ -9,17 +10,30 @@ import { usePaymentStatusQuery } from "@/features/billing/use-billing-checkout";
 import { useCurrentSubscription } from "@/features/billing/use-current-subscription";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 
+const BILLING_POLL_TIMEOUT_MS = 5000 * 60;
+
 export default function BillingSuccessPage() {
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("payment_id") ?? searchParams.get("paymentId");
   const statusQuery = usePaymentStatusQuery(paymentId);
   const subscriptionQuery = useCurrentSubscription({ pollUntilActive: true });
+  const [pollTimedOut, setPollTimedOut] = useState(false);
 
   const paymentStatus = statusQuery.data?.status ?? "pending";
   const isPaid = paymentStatus === "paid";
   const subscriptionActive =
     subscriptionQuery.data?.status === "active" &&
     subscriptionQuery.data.plan_slug !== "free";
+  const verified = isPaid && subscriptionActive;
+
+  useEffect(() => {
+    if (!paymentId || verified) {
+      setPollTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setPollTimedOut(true), BILLING_POLL_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [paymentId, verified]);
 
   if (!paymentId) {
     return (
@@ -55,8 +69,6 @@ export default function BillingSuccessPage() {
     );
   }
 
-  const verified = isPaid && subscriptionActive;
-
   return (
     <div className="space-y-4">
       <PageHeader
@@ -64,7 +76,9 @@ export default function BillingSuccessPage() {
         description={
           verified
             ? `Your ${subscriptionQuery.data?.plan_name ?? "paid"} plan is now active.`
-            : "We are waiting for blockchain confirmation and backend verification. This page refreshes automatically."
+            : pollTimedOut
+              ? "Verification is taking longer than expected. Check Billing in a few minutes or contact support if this persists."
+              : "We are waiting for blockchain confirmation and backend verification. This page refreshes automatically."
         }
       />
       <InlineAlert tone={verified ? "success" : "info"}>

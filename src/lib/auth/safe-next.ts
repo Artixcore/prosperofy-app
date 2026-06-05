@@ -1,5 +1,9 @@
 const SAFE_NEXT_ALLOWLIST = new Set([
   "/dashboard",
+  "/market",
+  "/billing",
+  "/portfolio",
+  "/wallet",
   "/wallets",
   "/strategy",
   "/activity",

@@ -115,10 +115,19 @@ export default function MarketDashboardPage() {
   const defaults = TAB_DEFAULTS[tab];
   const quotesQ = useMarketQuotes(tab, defaults);
 
-  const now = Math.floor(Date.now() / 1000);
-  const fromSec = now - 86400 * 7;
   const chartSymbol = defaults[0] ?? "BTCUSD";
-  const candlesQ = useMarketCandles(tab, chartSymbol, "1h", fromSec, now, true);
+  const candleRange = useMemo(() => {
+    const toSec = Math.floor(Date.now() / 1000);
+    return { fromSec: toSec - 86400 * 7, toSec, symbol: chartSymbol };
+  }, [chartSymbol]);
+  const candlesQ = useMarketCandles(
+    tab,
+    chartSymbol,
+    "1h",
+    candleRange.fromSec,
+    candleRange.toSec,
+    true,
+  );
 
   const symSearch = useMarketSymbolsSearch(tab, debouncedSearch, debouncedSearch.length >= 1);
   const searchRows = useMemo(
@@ -212,8 +221,8 @@ export default function MarketDashboardPage() {
 
         {!quotesQ.isLoading && quotesQ.data && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {quotesQ.data.map((row) => (
-              <QuoteCard key={row.symbol ?? "quote"} row={row} />
+            {quotesQ.data.map((row, index) => (
+              <QuoteCard key={row.symbol ?? `quote-${index}`} row={row} />
             ))}
           </div>
         )}

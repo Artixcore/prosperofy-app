@@ -138,6 +138,10 @@ const mockSubscription: CurrentSubscription = {
 };
 
 beforeEach(() => {
+  vi.stubEnv(
+    "NEXT_PUBLIC_PAYMENT_REDIRECT_HOST_SUFFIXES",
+    ".nowpayments.io,.nowpayments.com",
+  );
   vi.clearAllMocks();
   plansQuery.mockReturnValue({
     isLoading: false,
