@@ -185,6 +185,10 @@ export type WalletSendPreviewPayload = {
   from_address?: string | null;
   to_address?: string | null;
   amount?: string | null;
+  verification_required?: {
+    passphrase?: boolean;
+    two_factor?: boolean;
+  };
 };
 
 export type WalletSendBroadcastTransactionRow = {

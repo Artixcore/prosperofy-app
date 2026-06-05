@@ -8,6 +8,7 @@ import { useToast } from "@/components/system/toast-context";
 import { AssetsSection } from "@/features/wallets/components/assets-section";
 import { ConnectedWalletsSection } from "@/features/wallets/components/connected-wallets-section";
 import { RecentTransactionsSection } from "@/features/wallets/components/recent-transactions-section";
+import { WalletTransactionsChartSection } from "@/features/wallets/components/wallet-transactions-chart-section";
 import { WalletBalanceCard } from "@/features/wallets/components/wallet-balance-card";
 import { WflWalletStatusBanner } from "@/features/wallets/components/wfl-wallet-status-banner";
 import {
@@ -86,6 +87,7 @@ export default function WalletPage() {
           <WflWalletStatusBanner overview={overview.data} />
           <WalletBalanceCard overview={overview.data} assets={assets.data?.assets} />
           <ConnectedWalletsSection overview={overview.data} />
+          <WalletTransactionsChartSection />
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-7">
               <AssetsSection

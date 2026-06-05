@@ -24,3 +24,11 @@ export function walletSendBitcoinEnabled(): boolean {
 export function walletSendErc20Enabled(): boolean {
   return process.env.NEXT_PUBLIC_WALLET_SEND_ERC20_ENABLED === "true";
 }
+
+export function walletSendRequirePassphrase(): boolean {
+  return process.env.NEXT_PUBLIC_WALLET_SEND_REQUIRE_PASSPHRASE === "true";
+}
+
+export function walletSendRequireTwoFactor(): boolean {
+  return process.env.NEXT_PUBLIC_WALLET_SEND_REQUIRE_2FA === "true";
+}

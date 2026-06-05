@@ -128,6 +128,33 @@ export function useWalletTransactionsQuery(filters: WalletTransactionsFilters = 
       })),
     enabled: Boolean(authReady && isAuthenticated && token),
     retry: false,
+    refetchInterval: (query) => {
+      const rows = query.state.data?.transactions ?? [];
+      const hasPending = rows.some((tx) =>
+        ["pending", "broadcasted", "previewed"].includes(tx.status),
+      );
+      return hasPending ? 8000 : false;
+    },
+  });
+}
+
+export function useWalletTransactionsChartQuery(range: "7d" | "30d" | "90d" = "30d") {
+  const { token, authReady, isAuthenticated } = useAuth();
+
+  return useQuery({
+    queryKey: ["wallet-transactions-chart", token, range],
+    queryFn: () =>
+      laravelFetch<{
+        range: string;
+        points: Array<{
+          date: string;
+          sent_amount: string;
+          received_amount: string;
+          transaction_count: number;
+        }>;
+      }>(`${API.app.wallet.transactionsChart}?range=${encodeURIComponent(range)}`, { token }),
+    enabled: Boolean(authReady && isAuthenticated && token),
+    retry: false,
   });
 }
 

@@ -22,6 +22,8 @@ import type { WalletSendPreviewPayload } from "@/lib/api/types";
 import {
   walletSendBitcoinEnabled,
   walletSendEthereumEnabled,
+  walletSendRequirePassphrase,
+  walletSendRequireTwoFactor,
   walletSendSolanaEnabled,
   walletSendSplEnabled,
 } from "@/lib/config/wallet-features";
@@ -66,6 +68,9 @@ export default function WalletSendPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [acceptedRisk, setAcceptedRisk] = useState(false);
   const [armSeconds, setArmSeconds] = useState(0);
+  const [passphrase, setPassphrase] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const idempotencyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -108,6 +113,15 @@ export default function WalletSendPage() {
     isAmountAboveMaxSendable(amount.trim(), effectiveMaxSendable);
 
   const cannotCoverFees = isSolNative && balanceHint !== null && effectiveMaxSendable === null;
+
+  const requirePassphrase =
+    preview?.verification_required?.passphrase ?? walletSendRequirePassphrase();
+  const requireTwoFactor =
+    preview?.verification_required?.two_factor ?? walletSendRequireTwoFactor();
+  const requireStepUp = requirePassphrase || requireTwoFactor;
+  const stepUpReady =
+    (!requirePassphrase || passphrase.trim() !== "") &&
+    (!requireTwoFactor || twoFactorCode.trim() !== "");
 
   const handleRefreshBalance = async () => {
     try {
@@ -171,6 +185,11 @@ export default function WalletSendPage() {
       const data = await confirmMu.mutateAsync({
         preview_id: preview.preview_id,
         idempotency_key: idempotencyRef.current,
+        ...(requirePassphrase && passphrase.trim() !== "" ? { passphrase: passphrase.trim() } : {}),
+        ...(requireTwoFactor && twoFactorCode.trim() !== ""
+          ? { two_factor_code: twoFactorCode.trim() }
+          : {}),
+        ...(currentPassword.trim() !== "" ? { current_password: currentPassword.trim() } : {}),
       });
       const txId = data.wallet_transaction_id ?? data.transaction?.id;
       const status = data.status ?? data.transaction?.status;
@@ -486,6 +505,45 @@ export default function WalletSendPage() {
                 </li>
               ) : null}
             </ul>
+            {requireStepUp ? (
+              <div className="mt-4 space-y-3">
+                {requirePassphrase ? (
+                  <label className="block text-sm">
+                    <span className="font-medium">Security passphrase</span>
+                    <input
+                      type="password"
+                      autoComplete="off"
+                      value={passphrase}
+                      onChange={(e) => setPassphrase(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </label>
+                ) : null}
+                {requireTwoFactor ? (
+                  <label className="block text-sm">
+                    <span className="font-medium">Two-factor code</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </label>
+                ) : null}
+                <label className="block text-sm">
+                  <span className="font-medium">Account password (optional)</span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </label>
+              </div>
+            ) : null}
             <label className="mt-4 flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -510,7 +568,11 @@ export default function WalletSendPage() {
               <button
                 type="button"
                 disabled={
-                  !acceptedRisk || armSeconds > 0 || confirmMu.isPending || !preview
+                  !acceptedRisk ||
+                  armSeconds > 0 ||
+                  confirmMu.isPending ||
+                  !preview ||
+                  (requireStepUp && !stepUpReady)
                 }
                 className="rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground hover:brightness-110 disabled:opacity-50"
                 onClick={() => void runConfirm()}

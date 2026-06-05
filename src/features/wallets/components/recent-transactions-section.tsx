@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, ExternalLink, ListOrdered } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ListOrdered } from "lucide-react";
 import Link from "next/link";
 import { LoadingState } from "@/components/system/loading-state";
-import { resolveExplorerUrl } from "@/features/wallets/explorer-url";
+import { SolscanLink } from "@/features/wallets/components/solscan-link";
 import { useWalletTransactionsQuery } from "@/features/wallets/use-wallet-send";
 import { formatChainName, shortenAddress } from "@/lib/formatters";
 import type { WalletOnChainTransactionRow } from "@/lib/api/types";
@@ -88,7 +88,6 @@ function TransactionRow({ tx }: { tx: WalletOnChainTransactionRow }) {
   const badgeClass = STATUS_CLASSES[tx.status] ?? "border-border bg-muted text-muted-foreground";
   const counterparty = isSend ? tx.to_address : tx.from_address;
   const date = tx.broadcasted_at ?? tx.created_at;
-  const explorerUrl = resolveExplorerUrl(tx);
 
   return (
     <li className="py-3 first:pt-0 last:pb-0">
@@ -131,18 +130,8 @@ function TransactionRow({ tx }: { tx: WalletOnChainTransactionRow }) {
           >
             {tx.status}
           </span>
-          {explorerUrl ? (
-            <a
-              href={explorerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-0.5 text-[11px] font-medium text-primary hover:underline"
-              aria-label="View on Solscan"
-            >
-              <ExternalLink className="h-3 w-3" aria-hidden />
-              Solscan
-            </a>
+          {tx.tx_hash ? (
+            <SolscanLink tx={tx} className="text-[11px] font-medium" />
           ) : null}
         </div>
       </div>
