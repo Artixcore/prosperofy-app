@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -604,7 +605,15 @@ export default function SettingsPage() {
         </div>
 
         <div>
-          <h2 className="text-base font-semibold text-foreground">Exchange APIs</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-foreground">Exchange Connections</h2>
+            <Link
+              href="/settings/exchange-connections"
+              className="text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-300"
+            >
+              Manage exchange connections →
+            </Link>
+          </div>
           <InlineAlert tone="warning">
             For your safety, use read-only API keys and never enable withdrawal permissions.
           </InlineAlert>

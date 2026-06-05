@@ -20,6 +20,19 @@ export const API = {
     settingsTwoFactorConfirm: "/api/app/settings/2fa/confirm",
     settingsTwoFactorDisable: "/api/app/settings/2fa/disable",
     settingsExchanges: "/api/app/settings/exchanges",
+    settingsExchangeConnections: "/api/app/settings/exchange-connections",
+    settingsBinanceValidate: "/api/app/settings/exchange-connections/binance/validate",
+    settingsBinanceStore: "/api/app/settings/exchange-connections/binance",
+    settingsExchangeConnection: (id: string) =>
+      `/api/app/settings/exchange-connections/${encodeURIComponent(id)}` as const,
+    settingsExchangeConnectionRevalidate: (id: string) =>
+      `/api/app/settings/exchange-connections/${encodeURIComponent(id)}/revalidate` as const,
+    settingsExchangePortfolio: (id: string) =>
+      `/api/app/settings/exchange-connections/${encodeURIComponent(id)}/portfolio` as const,
+    settingsExchangeBalances: (id: string) =>
+      `/api/app/settings/exchange-connections/${encodeURIComponent(id)}/balances` as const,
+    settingsExchangePermissions: (id: string) =>
+      `/api/app/settings/exchange-connections/${encodeURIComponent(id)}/permissions` as const,
     settingsExchangeTest: (id: string) =>
       `/api/app/settings/exchanges/${encodeURIComponent(id)}/test` as const,
     settingsExchange: (id: string) =>

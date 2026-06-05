@@ -307,19 +307,73 @@ export type AppSettingsSecurityOverview = {
 
 export type ExchangeProviderId = "binance" | "coinbase" | "bybit";
 
+export type ExchangeConnectionMode = "portfolio_only" | "trading";
+
 export type ExchangeConnectionSummary = {
   id?: string;
   exchange: ExchangeProviderId | string;
+  provider?: ExchangeProviderId | string;
   connection_id?: string | null;
   label?: string | null;
   status: string;
+  connection_mode?: ExchangeConnectionMode | string | null;
   key_fingerprint?: string | null;
   key_display_suffix?: string | null;
+  masked_api_key?: string | null;
+  provider_account_uid?: string | null;
+  binance_uid?: string | null;
+  account_type?: string | null;
   permissions?: Record<string, unknown> | null;
+  can_trade?: boolean;
+  can_withdraw?: boolean;
+  can_deposit?: boolean | null;
+  is_valid?: boolean;
   last_verified_at?: string | null;
+  last_synced_at?: string | null;
+  last_error_code?: string | null;
   failure_reason_code?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+export type BinanceValidationPreview = {
+  provider: "binance";
+  label?: string | null;
+  binance_uid?: string | null;
+  account_type?: string | null;
+  permissions?: string[];
+  can_trade?: boolean;
+  can_withdraw?: boolean;
+  can_deposit?: boolean | null;
+  valid?: boolean;
+  warnings?: string[];
+  message?: string | null;
+};
+
+export type ExchangePortfolioBalance = {
+  asset: string;
+  free: string;
+  locked: string;
+};
+
+export type ExchangePortfolioResponse = {
+  connection: ExchangeConnectionSummary;
+  account: {
+    binance_uid?: string | null;
+    account_type?: string | null;
+    permissions?: string[];
+    can_trade?: boolean;
+    can_withdraw?: boolean;
+    can_deposit?: boolean | null;
+  };
+  balances: ExchangePortfolioBalance[];
+  total_estimated_usd?: string | null;
+  valuation_available?: boolean;
+};
+
+export type ExchangeConnectionsListData = {
+  connections: ExchangeConnectionSummary[];
+  exchanges: ExchangeConnectionSummary[];
 };
 
 /** GET /api/app/settings — envelope `data` */

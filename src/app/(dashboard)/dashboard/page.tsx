@@ -13,6 +13,7 @@ import {
   useCreateWflWalletMutation,
 } from "@/features/wallets/use-wallet-mutations";
 import { useMarketQuote } from "@/features/market/use-market-quote";
+import { DashboardBinancePortfolioCard } from "@/components/dashboard/dashboard-binance-portfolio-card";
 
 function Card({
   title,
@@ -197,6 +198,10 @@ export default function DashboardHomePage() {
             </Link>
           </div>
         </Card>
+
+        <div className="sm:col-span-2 xl:col-span-3">
+          <DashboardBinancePortfolioCard />
+        </div>
       </div>
 
       {connectedWallets.length > 0 ? (
