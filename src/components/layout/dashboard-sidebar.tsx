@@ -3,6 +3,7 @@
 import { ShieldCheck } from "lucide-react";
 import { DashboardNavLink } from "@/components/layout/dashboard-nav-link";
 import { DASHBOARD_NAV } from "@/components/layout/dashboard-nav";
+import { ProsperofyLogo } from "@/components/layout/prosperofy-logo";
 
 type Props = {
   collapsed: boolean;
@@ -22,13 +23,11 @@ export function DashboardSidebar({ collapsed, unreadCount, userEmail, isNonProd 
       <div className={`flex h-full flex-col ${collapsed ? "px-2 py-4" : "p-4"}`}>
         <div className={`mb-6 ${collapsed ? "flex justify-center px-0" : "px-2"}`}>
           {collapsed ? (
-            <span className="text-lg font-semibold text-content-primary" title="Prosperofy">
-              P
-            </span>
+            <ProsperofyLogo variant="mark" />
           ) : (
             <>
-              <span className="text-lg font-semibold text-content-primary">Prosperofy</span>
-              <p className="text-xs text-content-muted">Wallet dashboard</p>
+              <ProsperofyLogo variant="full" />
+              <p className="mt-1 text-xs text-content-muted">Wallet dashboard</p>
             </>
           )}
         </div>

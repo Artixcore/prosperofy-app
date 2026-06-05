@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { DashboardNavLink } from "@/components/layout/dashboard-nav-link";
 import type { DashboardNavItem } from "@/components/layout/dashboard-nav";
+import { ProsperofyLogo } from "@/components/layout/prosperofy-logo";
 
 type Props = {
   open: boolean;
@@ -24,8 +25,8 @@ export function MobileSidebarDrawer({ open, onClose, nav }: Props) {
       <aside className="absolute left-0 top-0 h-full w-[min(18rem,85vw)] border-r border-surface-border bg-surface-elevated p-4 shadow-soft motion-safe:transition-transform">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-lg font-semibold text-content-primary">Prosperofy</p>
-            <p className="text-xs text-content-muted">Navigation</p>
+            <ProsperofyLogo variant="full" />
+            <p className="mt-1 text-xs text-content-muted">Navigation</p>
           </div>
           <button
             type="button"
