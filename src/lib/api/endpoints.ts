@@ -51,6 +51,30 @@ export const API = {
       show: (id: string) => `/api/app/strategies/${id}` as const,
       update: (id: string) => `/api/app/strategies/${id}` as const,
     },
+    agents: {
+      capabilities: "/api/app/agents/capabilities",
+      list: "/api/app/agents",
+      create: "/api/app/agents",
+      show: (id: string) => `/api/app/agents/${encodeURIComponent(id)}` as const,
+      update: (id: string) => `/api/app/agents/${encodeURIComponent(id)}` as const,
+      delete: (id: string) => `/api/app/agents/${encodeURIComponent(id)}` as const,
+      disable: (id: string) => `/api/app/agents/${encodeURIComponent(id)}/disable` as const,
+      run: (id: string) => `/api/app/agents/${encodeURIComponent(id)}/run` as const,
+      runs: (id: string) => `/api/app/agents/${encodeURIComponent(id)}/runs` as const,
+      analyses: (id: string) => `/api/app/agents/${encodeURIComponent(id)}/analyses` as const,
+      tradeSuggestions: (id: string) =>
+        `/api/app/agents/${encodeURIComponent(id)}/trade-suggestions` as const,
+      tradeSuggestionExplain: (agentId: string, suggestionId: string) =>
+        `/api/app/agents/${encodeURIComponent(agentId)}/trade-suggestions/${encodeURIComponent(suggestionId)}/explain` as const,
+      tradeSuggestionSave: (agentId: string, suggestionId: string) =>
+        `/api/app/agents/${encodeURIComponent(agentId)}/trade-suggestions/${encodeURIComponent(suggestionId)}/save` as const,
+      tradeSuggestionCancel: (agentId: string, suggestionId: string) =>
+        `/api/app/agents/${encodeURIComponent(agentId)}/trade-suggestions/${encodeURIComponent(suggestionId)}/cancel` as const,
+      tradeSuggestionExecute: (agentId: string, suggestionId: string) =>
+        `/api/app/agents/${encodeURIComponent(agentId)}/trade-suggestions/${encodeURIComponent(suggestionId)}/execute` as const,
+      tradeExecutions: (id: string) =>
+        `/api/app/agents/${encodeURIComponent(id)}/trade-executions` as const,
+    },
     wallets: {
       nonce: "/api/app/wallets/nonce",
       connectPhantom: "/api/app/wallets/connect/phantom",

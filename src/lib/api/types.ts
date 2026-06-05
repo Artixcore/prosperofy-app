@@ -447,6 +447,113 @@ export type StrategyPatchBody = {
   definition?: Record<string, unknown>;
 };
 
+export type AgentCapabilities = {
+  agents_enabled: boolean;
+  trade_suggestions_enabled: boolean;
+  trade_execution_enabled: boolean;
+  has_valid_binance_connection: boolean;
+  has_trading_binance_connection: boolean;
+  disclaimer: string;
+};
+
+export type UserAgentRecord = {
+  id: string;
+  name: string;
+  slug?: string | null;
+  primary_job: string;
+  description_prompt: string;
+  agent_type: string;
+  can_suggest_trades: boolean;
+  can_prepare_executable_trades: boolean;
+  risk_profile: string;
+  symbols: string[];
+  timeframe?: string | null;
+  strategy_preferences: string[];
+  max_trade_size?: string | number | null;
+  max_daily_trades?: number;
+  status: string;
+  exchange_connection_id?: number | null;
+  last_run_at?: string | null;
+  total_analyses?: number;
+  total_trade_suggestions?: number;
+  created_at?: string;
+  updated_at?: string;
+  disclaimer?: string;
+};
+
+export type UserAgentCreateBody = {
+  name: string;
+  primary_job: string;
+  description_prompt: string;
+  agent_type: string;
+  can_suggest_trades?: boolean;
+  can_prepare_executable_trades?: boolean;
+  symbols?: string[];
+  timeframe?: string;
+  risk_profile?: string;
+  max_trade_size?: number;
+  exchange_connection_id?: number | null;
+  strategy_preferences?: string[];
+  safety_confirmations?: Record<string, boolean>;
+};
+
+export type AgentRunRecord = {
+  id: string;
+  user_agent_id: string;
+  run_type: string;
+  status: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  error_code?: string | null;
+  output_snapshot?: Record<string, unknown>;
+  created_at?: string;
+};
+
+export type AgentMarketAnalysisRecord = {
+  id: string;
+  symbol: string;
+  timeframe?: string | null;
+  explanation?: string | null;
+  confidence_score?: number | null;
+  calculated_indicators?: Record<string, unknown>;
+  pattern_summary?: Record<string, unknown>;
+  risk_summary?: Record<string, unknown>;
+  created_at?: string;
+};
+
+export type AgentTradeSuggestionRecord = {
+  id: string;
+  symbol: string;
+  side: string;
+  order_type: string;
+  quantity?: string | number | null;
+  quote_amount?: string | number | null;
+  suggested_entry_price?: string | number | null;
+  stop_loss_price?: string | number | null;
+  take_profit_price?: string | number | null;
+  risk_reward_ratio?: string | number | null;
+  confidence_score?: string | number | null;
+  status: string;
+  reasoning?: string | null;
+  estimated_max_loss?: number | null;
+  invalidation_condition?: string | null;
+  expires_at?: string | null;
+  is_expired?: boolean;
+  disclaimer?: string;
+  created_at?: string;
+};
+
+export type AgentTradeExecutionRecord = {
+  id: string;
+  provider_order_id?: string | null;
+  client_order_id?: string | null;
+  symbol: string;
+  side: string;
+  status: string;
+  error_code?: string | null;
+  created_at?: string;
+};
+
 export type SubscriptionPlanLimits = {
   watchlists: number;
   tracked_assets: number;

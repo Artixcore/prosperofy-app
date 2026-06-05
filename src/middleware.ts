@@ -13,6 +13,7 @@ const PROTECTED_PREFIXES = [
   "/wallet",
   "/wallets",
   "/strategy",
+  "/agent",
   "/activity",
   "/notifications",
 ];

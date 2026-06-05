@@ -1,5 +1,6 @@
 import {
   Bell,
+  Bot,
   ChartColumn,
   CreditCard,
   Home,
@@ -24,6 +25,7 @@ export const DASHBOARD_NAV: DashboardNavItem[] = [
   { href: "/billing", label: "Billing", icon: Receipt },
   { href: "/portfolio", label: "Portfolio", icon: PieChart },
   { href: "/strategy", label: "Strategy", icon: Target },
+  { href: "/agent", label: "Agent", icon: Bot },
   { href: "/activity", label: "Activity", icon: ChartColumn },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },
