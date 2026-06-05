@@ -35,10 +35,6 @@ services:
         value: "15000"
         scope: RUN_AND_BUILD_TIME
 
-      - key: NEXT_PUBLIC_AGENT_TIMEOUT_MS
-        value: "20000"
-        scope: RUN_AND_BUILD_TIME
-
       - key: APP_URL
         value: https://app.prosperofy.com
 

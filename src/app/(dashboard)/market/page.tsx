@@ -115,7 +115,7 @@ export default function MarketDashboardPage() {
   const defaults = TAB_DEFAULTS[tab];
   const quotesQ = useMarketQuotes(tab, defaults);
 
-  const chartSymbol = defaults[0] ?? "BTCUSD";
+  const chartSymbol = defaults[0] ?? "BTCUSDT";
   const candleRange = useMemo(() => {
     const toSec = Math.floor(Date.now() / 1000);
     return { fromSec: toSec - 86400 * 7, toSec, symbol: chartSymbol };

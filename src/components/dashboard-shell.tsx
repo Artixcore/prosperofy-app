@@ -22,10 +22,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       ? unreadFromPagination
       : (unreadQuery.data?.items?.length ?? 0);
 
-  const isNonProd =
-    typeof process.env.NEXT_PUBLIC_VERCEL_ENV !== "undefined"
-      ? process.env.NEXT_PUBLIC_VERCEL_ENV !== "production"
-      : process.env.NODE_ENV !== "production";
+  const isNonProd = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
     try {
