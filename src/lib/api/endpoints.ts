@@ -98,6 +98,7 @@ export const API = {
       create: "/api/app/wallet/create",
       assets: "/api/app/wallet/assets",
       assetsRefresh: "/api/app/wallet/assets/refresh",
+      balanceRefresh: "/api/app/wallet/balance/refresh",
       pricesRefresh: "/api/app/wallet/prices/refresh",
       activity: "/api/app/wallet/activity",
       disconnect: (id: string) => `/api/app/wallet/connected/${id}` as const,

@@ -131,6 +131,67 @@ export function useAppWalletAssetsQuery() {
   });
 }
 
+export function invalidateWalletQueries(qc: ReturnType<typeof useQueryClient>): void {
+  void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+  void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
+  void qc.invalidateQueries({ queryKey: ["app-wallet-summary"] });
+  void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
+  void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
+}
+
+export type WalletTransactionsSyncPayload = {
+  synced_count: number;
+  not_implemented: boolean;
+  balance_refreshed?: boolean;
+  wallet?: {
+    id: number;
+    address: string;
+    network: string;
+    asset: string;
+    balance_lamports: string;
+    balance_sol: string;
+    last_balance_synced_at: string | null;
+  } | null;
+  balance_refresh_error?: {
+    code: string;
+    message: string;
+    retryable: boolean;
+  };
+};
+
+export type WalletFullRefreshResult = {
+  sync: WalletTransactionsSyncPayload;
+  assets: WalletAssetsRefreshPayload;
+};
+
+/**
+ * Sync on-chain deposits then force-refresh cached balances. Used by the wallet
+ * dashboard Refresh control and mount-time auto-sync.
+ */
+export function useWalletFullRefreshMutation() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<WalletFullRefreshResult> => {
+      const authToken = assertAuthenticatedToken(token);
+      const sync = await laravelFetch<WalletTransactionsSyncPayload>(
+        API.app.wallet.transactionsSync,
+        { method: "POST", body: {}, token: authToken },
+      );
+      const assets = await laravelFetch<WalletAssetsRefreshPayload>(API.app.wallet.assetsRefresh, {
+        method: "POST",
+        body: { force: true },
+        token: authToken,
+      });
+      return { sync, assets };
+    },
+    retry: false,
+    onSuccess: () => {
+      invalidateWalletQueries(qc);
+    },
+  });
+}
+
 /**
  * POST /api/app/wallet/assets/refresh — force a fresh on-chain balance pull
  * via wallet-service. Returns the updated assets list (or a `from_cache: true`
@@ -148,11 +209,7 @@ export function useRefreshWalletAssetsMutation() {
       }),
     retry: false,
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
-      void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
-      void qc.invalidateQueries({ queryKey: ["app-wallet-summary"] });
-      void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
-      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
+      invalidateWalletQueries(qc);
     },
   });
 }

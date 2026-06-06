@@ -1,6 +1,7 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
 import { PageHeader } from "@/components/page-header";
@@ -14,47 +15,102 @@ import { WflWalletStatusBanner } from "@/features/wallets/components/wfl-wallet-
 import {
   useAppWalletAssetsQuery,
   useAppWalletOverviewQuery,
-  useRefreshWalletAssetsMutation,
+  useWalletFullRefreshMutation,
 } from "@/features/wallets/use-wallet-mutations";
+import { useWalletTransactionsQuery } from "@/features/wallets/use-wallet-send";
+import { wflWalletState } from "@/features/wallets/wallet-derive";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 
 export default function WalletPage() {
   const overview = useAppWalletOverviewQuery();
   const assets = useAppWalletAssetsQuery();
-  const refreshMu = useRefreshWalletAssetsMutation();
+  const refreshMu = useWalletFullRefreshMutation();
+  const txs = useWalletTransactionsQuery({ per_page: 5 });
   const { pushToast } = useToast();
+  const autoSyncedRef = useRef(false);
 
-  const refreshing = refreshMu.isPending || overview.isFetching || assets.isFetching;
+  const walletState = wflWalletState(overview.data);
+  const refreshing =
+    refreshMu.isPending || overview.isFetching || assets.isFetching || txs.isFetching;
 
-  // Prefer the freshest of the three sources of `last_synced_at` we have:
-  // the just-completed refresh response, the cached assets list, or the
-  // overview snapshot. None of these contain user secrets — only timestamps.
+  const hasPendingTx = (txs.data?.transactions ?? []).some((tx) =>
+    ["pending", "broadcasted", "previewed"].includes(tx.status),
+  );
+
   const lastSyncedAt =
-    refreshMu.data?.last_synced_at ??
+    refreshMu.data?.assets.last_synced_at ??
     assets.data?.last_synced_at ??
     overview.data?.last_synced_at ??
     null;
 
-  const handleRefresh = async () => {
+  const runFullRefresh = async (options?: { silent?: boolean }) => {
     try {
-      const result = await refreshMu.mutateAsync({ force: true });
-      pushToast({
-        tone: "success",
-        title: result.from_cache ? "Already up to date" : "Balances refreshed",
-        description: result.from_cache
-          ? "Your wallet balances were synced very recently."
-          : "Latest on-chain balances are loaded.",
-      });
+      const result = await refreshMu.mutateAsync();
+      const { sync, assets: assetsResult } = result;
+
+      if (!options?.silent) {
+        if (sync.not_implemented) {
+          pushToast({
+            tone: "info",
+            title: "Deposit sync unavailable",
+            description:
+              "Incoming receive history is not enabled on this deployment yet.",
+          });
+        } else if (sync.balance_refresh_error) {
+          pushToast({
+            tone: "warning",
+            title: "Transactions synced",
+            description:
+              sync.balance_refresh_error.message ||
+              "Balance could not be refreshed. Please try again.",
+          });
+        } else {
+          pushToast({
+            tone: assetsResult.from_cache ? "info" : "success",
+            title: assetsResult.from_cache ? "Already up to date" : "Wallet refreshed",
+            description: assetsResult.from_cache
+              ? "Your wallet was synced very recently."
+              : `Synced ${sync.synced_count} transaction(s) and loaded the latest on-chain balance.`,
+          });
+        }
+      }
+
+      return result;
     } catch (error) {
-      pushToast({
-        tone: "error",
-        title: "Could not refresh balance",
-        description:
-          normalizeApiError(error, "wallet-refresh") ||
-          "Balance refresh failed. Please try again shortly.",
-      });
+      if (!options?.silent) {
+        pushToast({
+          tone: "error",
+          title: "Could not refresh wallet",
+          description:
+            normalizeApiError(error, "wallet-refresh") ||
+            "Wallet refresh failed. Please try again shortly.",
+        });
+      }
     }
   };
+
+  useEffect(() => {
+    if (autoSyncedRef.current) return;
+    if (walletState.status !== "active") return;
+    if (overview.isPending) return;
+
+    autoSyncedRef.current = true;
+    void runFullRefresh({ silent: true }).catch(() => {
+      // Errors are surfaced on manual refresh; mount sync is best-effort.
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync once when wallet is active
+  }, [walletState.status, overview.isPending]);
+
+  useEffect(() => {
+    if (!hasPendingTx) return;
+
+    const intervalId = window.setInterval(() => {
+      void runFullRefresh({ silent: true }).catch(() => undefined);
+    }, 10_000);
+
+    return () => window.clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- poll while pending txs exist
+  }, [hasPendingTx]);
 
   return (
     <>
@@ -64,12 +120,12 @@ export default function WalletPage() {
         action={
           <button
             type="button"
-            onClick={() => void handleRefresh()}
+            onClick={() => void runFullRefresh()}
             disabled={refreshing}
             className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-content-primary shadow-sm hover:bg-muted disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} aria-hidden />
-            {refreshing ? "Refreshing…" : "Refresh Balance"}
+            {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         }
       />
@@ -85,7 +141,11 @@ export default function WalletPage() {
       ) : (
         <div className="space-y-6">
           <WflWalletStatusBanner overview={overview.data} />
-          <WalletBalanceCard overview={overview.data} assets={assets.data?.assets} />
+          <WalletBalanceCard
+            overview={overview.data}
+            assets={assets.data?.assets}
+            lastSyncedAt={lastSyncedAt}
+          />
           <ConnectedWalletsSection overview={overview.data} />
           <WalletTransactionsChartSection />
           <div className="grid gap-6 lg:grid-cols-12">

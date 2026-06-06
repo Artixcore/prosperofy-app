@@ -28,6 +28,8 @@ type Props = {
    * instead of "0.00 USD" so a funded wallet never appears empty.
    */
   assets?: WalletAssetItem[] | null;
+  /** ISO timestamp of the most recent on-chain balance sync. */
+  lastSyncedAt?: string | null;
 };
 
 const STATUS_BADGE: Record<
@@ -67,7 +69,7 @@ const STATUS_BADGE: Record<
  * Send is disabled unless the WFL wallet is active so users never get stuck
  * mid-flow.
  */
-export function WalletBalanceCard({ overview, assets }: Props) {
+export function WalletBalanceCard({ overview, assets, lastSyncedAt }: Props) {
   const state = wflWalletState(overview);
   const primary = primaryWalletAddress(overview);
   const sendEnabled = shouldEnableSend(overview);
@@ -154,6 +156,25 @@ export function WalletBalanceCard({ overview, assets }: Props) {
           ) : state.status === "pending" ? (
             <p className="mt-5 text-sm text-muted-foreground">
               Your wallet addresses appear here once setup completes.
+            </p>
+          ) : null}
+
+          {state.status === "active" ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Balance updates after network confirmation. If you recently deposited SOL, click
+              Refresh to sync the latest on-chain balance.
+            </p>
+          ) : null}
+
+          {lastSyncedAt ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Last synced{" "}
+              {new Date(lastSyncedAt).toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
             </p>
           ) : null}
         </div>

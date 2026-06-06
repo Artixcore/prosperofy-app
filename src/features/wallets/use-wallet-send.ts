@@ -171,6 +171,8 @@ export function useWalletTransactionsSyncMutation() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
       void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+      void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
+      void qc.invalidateQueries({ queryKey: ["app-wallet-summary"] });
     },
   });
 }
