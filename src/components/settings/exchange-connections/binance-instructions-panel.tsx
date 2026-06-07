@@ -4,7 +4,7 @@ import { InlineAlert } from "@/components/system/inline-alert";
 
 export function BinanceInstructionsPanel() {
   return (
-    <div className="rounded-lg border border-surface-border bg-surface-raised/40 p-5">
+    <div className="min-w-0 max-w-full rounded-lg border border-surface-border bg-surface-raised/40 p-5">
       <h3 className="text-sm font-semibold text-foreground">How to connect Binance safely</h3>
       <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
         <li>Log in to Binance.</li>

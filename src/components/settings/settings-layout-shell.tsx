@@ -10,7 +10,7 @@ export function SettingsLayoutShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full min-w-0 space-y-6">
       <PageHeader
         title="Settings"
         description="Manage your account, security, billing, and integrations."
@@ -36,10 +36,10 @@ export function SettingsLayoutShell({ children }: { children: ReactNode }) {
         </select>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <div className="grid w-full min-w-0 gap-6 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
         <nav
           aria-label="Settings sections"
-          className="hidden shrink-0 lg:block lg:w-56 xl:w-60"
+          className="hidden min-w-0 lg:block lg:sticky lg:top-24 lg:self-start"
         >
           <ul className="space-y-1">
             {SETTINGS_NAV.map((item) => {
@@ -70,11 +70,11 @@ export function SettingsLayoutShell({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        <div className="min-w-0 flex-1">
-          <div className="rounded-2xl border border-surface-border bg-surface-elevated p-5 shadow-soft md:p-6">
+        <section className="min-w-0 max-w-full">
+          <div className="min-w-0 max-w-full rounded-2xl border border-surface-border bg-surface-elevated p-5 shadow-soft md:p-6">
             {children}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

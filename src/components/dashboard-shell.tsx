@@ -70,7 +70,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           unreadCount={unreadCount}
         />
         <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 md:px-8">
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
+          <div className="mx-auto w-full min-w-0 max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

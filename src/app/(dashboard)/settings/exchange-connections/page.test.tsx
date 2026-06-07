@@ -16,6 +16,8 @@ vi.mock("@/features/exchanges/use-exchange-connections", () => ({
           provider: "binance",
           status: "connected",
           label: "spider",
+          masked_api_key: "****" + "B".repeat(40),
+          connection_mode: "portfolio_only",
         },
       ],
       exchanges: [],
@@ -57,6 +59,7 @@ describe("ExchangeConnectionsPage", () => {
     expect(screen.getByText("Exchange Connections")).toBeInTheDocument();
     expect(screen.getByText(/How to connect Binance safely/)).toBeInTheDocument();
     expect(screen.getByTestId("binance-connect-form")).toBeInTheDocument();
+    expect(screen.getByText("Current connection")).toBeInTheDocument();
   });
 
   it("does not call revalidate on mount", () => {

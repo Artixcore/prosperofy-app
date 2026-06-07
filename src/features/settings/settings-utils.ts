@@ -23,6 +23,31 @@ export function statusLabel(row: ExchangeConnectionSummary): string {
   }
 }
 
+export function connectionStatusBadge(status: string): {
+  label: string;
+  tone: "success" | "warning" | "muted" | "error";
+} {
+  switch (status) {
+    case "connected":
+      return { label: "Active", tone: "success" };
+    case "verification_failed":
+      return { label: "Needs attention", tone: "warning" };
+    case "disabled":
+    case "revoked":
+      return { label: "Inactive", tone: "muted" };
+    case "not_connected":
+      return { label: "Not connected", tone: "muted" };
+    default:
+      return { label: status, tone: "muted" };
+  }
+}
+
+export function connectionModeLabel(mode: string | null | undefined): string {
+  if (mode === "trading") return "Trading";
+  if (mode === "portfolio_only") return "Portfolio only";
+  return "Portfolio only";
+}
+
 export function permissionSummary(row: ExchangeConnectionSummary): string {
   const p = row.permissions as Record<string, unknown> | null | undefined;
   if (!p || typeof p !== "object") return "Unknown";

@@ -160,8 +160,8 @@ export function SecuritySettingsPanel({ data }: { data: AppSettingsOverviewData 
         </form>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-surface-border bg-surface-raised/40 p-5">
+      <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="min-w-0 max-w-full rounded-lg border border-surface-border bg-surface-raised/40 p-5">
           <h3 className="text-sm font-medium text-foreground">Two-factor authentication</h3>
           <p className="mt-2 text-sm text-muted-foreground">
             Status:{" "}
@@ -272,7 +272,7 @@ export function SecuritySettingsPanel({ data }: { data: AppSettingsOverviewData 
           ) : null}
         </div>
 
-        <div className="rounded-lg border border-surface-border bg-surface-raised/40 p-5">
+        <div className="min-w-0 max-w-full rounded-lg border border-surface-border bg-surface-raised/40 p-5">
           <h3 className="text-sm font-medium text-foreground">Security passphrase</h3>
           <p className="mt-2 text-sm text-muted-foreground">
             Status: <span className="text-foreground">{sec.passphrase_set ? "Set" : "Not set"}</span>

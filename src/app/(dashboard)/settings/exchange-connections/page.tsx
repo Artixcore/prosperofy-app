@@ -59,7 +59,7 @@ export default function ExchangeConnectionsPage() {
   const connected = Boolean(connectionId && binanceConnection?.status !== "not_connected");
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div>
         <h2 className="text-base font-semibold text-foreground">Exchange Connections</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -70,9 +70,11 @@ export default function ExchangeConnectionsPage() {
 
       {banner ? <InlineAlert tone={banner.tone}>{banner.message}</InlineAlert> : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <BinanceInstructionsPanel />
-        <div className="space-y-4">
+      <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="min-w-0 max-w-full">
+          <BinanceInstructionsPanel />
+        </div>
+        <div className="min-w-0 max-w-full space-y-4">
           {connected && binanceConnection ? <BinanceConnectionStatus connection={binanceConnection} /> : null}
           <BinanceConnectForm
             onSaved={() => {
