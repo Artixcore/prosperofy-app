@@ -85,12 +85,21 @@ export function useRevalidateExchangeConnectionMutation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      laravelFetch<{ connection: ExchangeConnectionSummary; verified: boolean }>(
-        API.app.settingsExchangeConnectionRevalidate(id),
-        { method: "POST", body: {}, token },
-      ),
+      laravelFetch<{
+        connection: ExchangeConnectionSummary;
+        binance?: {
+          uid?: string | null;
+          account_type?: string | null;
+          permissions?: string[];
+          can_trade?: boolean;
+          can_withdraw?: boolean;
+          can_deposit?: boolean | null;
+        };
+        verified: boolean;
+      }>(API.app.settingsExchangeConnectionRevalidate(id), { method: "POST", body: {}, token }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["exchange-connections"] });
+      qc.invalidateQueries({ queryKey: ["app-settings"] });
       qc.invalidateQueries({ queryKey: ["exchange-portfolio"] });
     },
   });

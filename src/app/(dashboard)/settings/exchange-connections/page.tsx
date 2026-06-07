@@ -94,19 +94,30 @@ export default function ExchangeConnectionsPage() {
             <div className="flex gap-2">
               <button
                 type="button"
-                className="rounded-md border border-border px-2 py-1.5 text-xs text-foreground hover:bg-muted"
+                disabled={revalidateMut.isPending}
+                className="rounded-md border border-border px-2 py-1.5 text-xs text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={async () => {
+                  if (revalidateMut.isPending) return;
                   setBanner(null);
                   try {
-                    await revalidateMut.mutateAsync(connectionId);
-                    setBanner({ tone: "success", message: "Connection revalidated." });
+                    const result = await revalidateMut.mutateAsync(connectionId);
+                    const label = result.connection?.label ?? binanceConnection?.label;
+                    const uid =
+                      result.connection?.provider_account_uid ?? result.connection?.binance_uid;
+                    const detail =
+                      label && uid
+                        ? `${label} (Binance UID: ${uid})`
+                        : uid
+                          ? `Binance UID: ${uid}`
+                          : "Connection";
+                    setBanner({ tone: "success", message: `${detail} revalidated.` });
                     void connectionsQuery.refetch();
                   } catch (e) {
                     setBanner({ tone: "error", message: friendlySettingsError(e) });
                   }
                 }}
               >
-                Revalidate
+                {revalidateMut.isPending ? "Revalidating…" : "Revalidate"}
               </button>
               <button
                 type="button"

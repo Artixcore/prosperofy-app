@@ -23,11 +23,11 @@ import {
   usePatchSettingsPasswordMutation,
   usePatchSettingsProfileMutation,
   usePostSecurityPassphraseMutation,
-  useTestExchangeConnectionMutation,
   useTwoFactorConfirmMutation,
   useTwoFactorDisableMutation,
   useTwoFactorSetupMutation,
 } from "@/features/app/use-settings-security";
+import { useRevalidateExchangeConnectionMutation } from "@/features/exchanges/use-exchange-connections";
 
 const preferencesSchema = z.object({
   theme: z.enum(["light", "dark", "system"]),
@@ -117,7 +117,7 @@ export default function SettingsPage() {
   const tfSetup = useTwoFactorSetupMutation();
   const tfConfirm = useTwoFactorConfirmMutation();
   const tfDisable = useTwoFactorDisableMutation();
-  const testExchange = useTestExchangeConnectionMutation();
+  const revalidateExchange = useRevalidateExchangeConnectionMutation();
   const deleteExchange = useDeleteExchangeConnectionMutation();
 
   const [banner, setBanner] = useState<{ tone: "success" | "error"; message: string } | null>(null);
@@ -655,24 +655,38 @@ export default function SettingsPage() {
                       </button>
                     ) : (
                       <>
-                        <button
-                          type="button"
-                          className="rounded-md border border-border px-2 py-1.5 text-xs text-foreground hover:bg-muted"
-                          onClick={async () => {
-                            setBanner(null);
-                            try {
-                              await testExchange.mutateAsync(cid);
-                              setBanner({
-                                tone: "success",
-                                message: "Exchange API credentials verified.",
-                              });
-                            } catch (e) {
-                              setBanner({ tone: "error", message: friendlySettingsError(e) });
-                            }
-                          }}
-                        >
-                          Test connection
-                        </button>
+                        {ex === "binance" ? (
+                          <button
+                            type="button"
+                            disabled={revalidateExchange.isPending}
+                            className="rounded-md border border-border px-2 py-1.5 text-xs text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={async () => {
+                              if (revalidateExchange.isPending) return;
+                              setBanner(null);
+                              try {
+                                const result = await revalidateExchange.mutateAsync(cid);
+                                const label = result.connection?.label ?? row.label;
+                                const uid =
+                                  result.connection?.provider_account_uid ??
+                                  result.connection?.binance_uid;
+                                const detail =
+                                  label && uid
+                                    ? `${label} (Binance UID: ${uid})`
+                                    : uid
+                                      ? `Binance UID: ${uid}`
+                                      : "Binance connection";
+                                setBanner({
+                                  tone: "success",
+                                  message: `${detail} verified successfully.`,
+                                });
+                              } catch (e) {
+                                setBanner({ tone: "error", message: friendlySettingsError(e) });
+                              }
+                            }}
+                          >
+                            {revalidateExchange.isPending ? "Testing…" : "Test connection"}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className="rounded-md border border-border px-2 py-1.5 text-xs text-foreground hover:bg-muted"

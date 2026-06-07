@@ -33,8 +33,6 @@ export const API = {
       `/api/app/settings/exchange-connections/${encodeURIComponent(id)}/balances` as const,
     settingsExchangePermissions: (id: string) =>
       `/api/app/settings/exchange-connections/${encodeURIComponent(id)}/permissions` as const,
-    settingsExchangeTest: (id: string) =>
-      `/api/app/settings/exchanges/${encodeURIComponent(id)}/test` as const,
     settingsExchange: (id: string) =>
       `/api/app/settings/exchanges/${encodeURIComponent(id)}` as const,
     notifications: {

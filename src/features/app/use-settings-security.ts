@@ -173,25 +173,6 @@ export function useUpdateExchangeConnectionMutation() {
   });
 }
 
-export function useTestExchangeConnectionMutation() {
-  const { token } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) =>
-      laravelFetch<{ connection: Record<string, unknown>; verified: boolean }>(
-        API.app.settingsExchangeTest(id),
-        {
-          method: "POST",
-          body: {},
-          token,
-        },
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["app-settings"] });
-    },
-  });
-}
-
 export function useDeleteExchangeConnectionMutation() {
   const { token } = useAuth();
   const qc = useQueryClient();
