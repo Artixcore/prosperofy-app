@@ -77,7 +77,10 @@ export default function AgentPage() {
       <ErrorState
         title="Agents could not be loaded. Please try again."
         error={agents.error}
-        onRetry={() => agents.refetch()}
+        retryDisabled={agents.isFetching}
+        onRetry={() => {
+          if (!agents.isFetching) void agents.refetch();
+        }}
       />
     );
   }

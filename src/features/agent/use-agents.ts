@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
+import { isApiClientError } from "@/lib/api/errors";
 import type {
   AgentCapabilities,
   AgentMarketAnalysisRecord,
@@ -14,6 +15,7 @@ import type {
   UserAgentRecord,
 } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
+import { normalizeAgentListResponse, type NormalizedAgentList } from "@/features/agent/normalize-agent-list";
 
 type PaginationParams = { page?: number; perPage?: number };
 
@@ -36,16 +38,29 @@ export function useAgentCapabilitiesQuery() {
 
 export function useAgentsQuery(params?: PaginationParams) {
   const { token, authReady, isAuthenticated } = useAuth();
+  const perPage = params?.perPage ?? 20;
   return useQuery({
-    queryKey: ["app-agents", token, params?.page, params?.perPage],
-    queryFn: () =>
-      laravelFetch<AppListResponse<UserAgentRecord>>(addPagination(API.app.agents.list, params), {
-        token,
-      }),
+    queryKey: ["app-agents", token, params?.page, perPage],
+    queryFn: async () => {
+      const raw = await laravelFetch<AppListResponse<UserAgentRecord> | Record<string, unknown>>(
+        addPagination(API.app.agents.list, params),
+        { token },
+      );
+      return normalizeAgentListResponse(raw, perPage);
+    },
     enabled: Boolean(authReady && isAuthenticated && token),
-    retry: 1,
+    retry: (failureCount, error) => {
+      if (isApiClientError(error) && error.code === "AGENT_LOAD_FAILED") return false;
+      if (isApiClientError(error) && !error.retryable) return false;
+      return failureCount < 1;
+    },
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
+
+export type { NormalizedAgentList };
 
 export function useAgentQuery(agentId: string) {
   const { token, authReady, isAuthenticated } = useAuth();

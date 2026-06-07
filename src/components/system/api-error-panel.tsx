@@ -6,6 +6,7 @@ import { isApiClientError } from "@/lib/api/errors";
 type Props = {
   error: unknown;
   onRetry?: () => void;
+  retryDisabled?: boolean;
   title?: string;
   context?: ApiErrorContext;
 };
@@ -13,6 +14,7 @@ type Props = {
 export function ApiErrorPanel({
   error,
   onRetry,
+  retryDisabled = false,
   title = "Something went wrong",
   context = "default",
 }: Props) {
@@ -52,7 +54,8 @@ export function ApiErrorPanel({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-3 rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600 dark:bg-red-900/60 dark:hover:bg-red-800/80"
+          disabled={retryDisabled}
+          className="mt-3 rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-900/60 dark:hover:bg-red-800/80"
         >
           Retry
         </button>

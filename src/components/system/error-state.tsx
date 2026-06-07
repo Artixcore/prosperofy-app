@@ -4,10 +4,25 @@ import type { ApiErrorContext } from "@/lib/api/display-api-error";
 type Props = {
   error: unknown;
   onRetry?: () => void;
+  retryDisabled?: boolean;
   title?: string;
   context?: ApiErrorContext;
 };
 
-export function ErrorState({ error, onRetry, title = "Something went wrong", context = "default" }: Props) {
-  return <ApiErrorPanel error={error} onRetry={onRetry} title={title} context={context} />;
+export function ErrorState({
+  error,
+  onRetry,
+  retryDisabled = false,
+  title = "Something went wrong",
+  context = "default",
+}: Props) {
+  return (
+    <ApiErrorPanel
+      error={error}
+      onRetry={onRetry}
+      retryDisabled={retryDisabled}
+      title={title}
+      context={context}
+    />
+  );
 }
