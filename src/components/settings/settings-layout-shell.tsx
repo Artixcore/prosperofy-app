@@ -70,8 +70,8 @@ export function SettingsLayoutShell({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        <section className="min-w-0 max-w-full">
-          <div className="min-w-0 max-w-full rounded-2xl border border-surface-border bg-surface-elevated p-5 shadow-soft md:p-6">
+        <section className="min-w-0 max-w-full w-full">
+          <div className="min-w-0 max-w-full w-full break-words rounded-2xl border border-surface-border bg-surface-elevated p-5 shadow-soft md:p-6">
             {children}
           </div>
         </section>

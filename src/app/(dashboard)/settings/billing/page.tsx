@@ -1,7 +1,7 @@
 "use client";
 
-import { BillingPageContent } from "@/features/billing/billing-page-content";
+import { BillingSettingsContent } from "@/features/billing/billing-settings-content";
 
 export default function SettingsBillingPage() {
-  return <BillingPageContent />;
+  return <BillingSettingsContent />;
 }
