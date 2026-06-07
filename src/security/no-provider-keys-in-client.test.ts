@@ -2,6 +2,12 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
+/** Host suffix allowlist for billing redirects — not direct provider API access. */
+const BILLING_REDIRECT_ALLOWLIST_FILE = join(
+  process.cwd(),
+  "src/lib/billing/safe-payment-url.ts",
+);
+
 const FORBIDDEN = [
   "api.tradewatch.io",
   "api.binance.com",
@@ -50,6 +56,9 @@ describe("client bundle must not reference market providers directly", () => {
     for (const f of files) {
       const text = readFileSync(f, "utf8");
       for (const bad of FORBIDDEN) {
+        if (bad === "nowpayments.io" && f === BILLING_REDIRECT_ALLOWLIST_FILE) {
+          continue;
+        }
         if (text.includes(bad)) {
           hits.push(`${f}: contains ${bad}`);
         }
