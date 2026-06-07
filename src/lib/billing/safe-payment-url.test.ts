@@ -24,8 +24,8 @@ describe("isSafePaymentRedirectUrl", () => {
     expect(isSafePaymentRedirectUrl("https://evil.example/phish")).toBe(false);
   });
 
-  it("rejects when allowlist env is unset", () => {
+  it("accepts default NOWPayments hosts when allowlist env is unset", () => {
     vi.stubEnv("NEXT_PUBLIC_PAYMENT_REDIRECT_HOST_SUFFIXES", "");
-    expect(isSafePaymentRedirectUrl("https://nowpayments.io/pay")).toBe(false);
+    expect(isSafePaymentRedirectUrl("https://nowpayments.io/pay")).toBe(true);
   });
 });

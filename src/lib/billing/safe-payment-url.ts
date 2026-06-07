@@ -1,8 +1,9 @@
+const DEFAULT_PAYMENT_REDIRECT_HOST_SUFFIXES = ".nowpayments.io,.nowpayments.com";
+
 function paymentRedirectHostSuffixes(): string[] {
-  const raw = process.env.NEXT_PUBLIC_PAYMENT_REDIRECT_HOST_SUFFIXES?.trim() ?? "";
-  if (!raw) {
-    return [];
-  }
+  const raw =
+    process.env.NEXT_PUBLIC_PAYMENT_REDIRECT_HOST_SUFFIXES?.trim() ||
+    DEFAULT_PAYMENT_REDIRECT_HOST_SUFFIXES;
 
   return raw
     .split(",")
@@ -18,9 +19,6 @@ export function isSafePaymentRedirectUrl(url: string): boolean {
   }
 
   const suffixes = paymentRedirectHostSuffixes();
-  if (suffixes.length === 0) {
-    return false;
-  }
 
   try {
     const parsed = new URL(trimmed);

@@ -1,10 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiClientError } from "@/lib/api/errors";
 import type { CurrentSubscription, SubscriptionPlanRow } from "@/lib/api/types";
 
 const plansQuery = vi.fn();
 const subscriptionQuery = vi.fn();
 const checkoutMutate = vi.fn();
+const locationAssign = vi.fn();
 
 vi.mock("@/features/billing/use-subscription-plans", () => ({
   useSubscriptionPlans: () => plansQuery(),
@@ -164,7 +166,8 @@ beforeEach(() => {
     payment_url: "https://nowpayments.io/payment/?iid=test",
     status: "pending",
   });
-  vi.stubGlobal("location", { href: "" });
+  locationAssign.mockReset();
+  vi.stubGlobal("location", { href: "", assign: locationAssign });
 });
 
 describe("BillingSettingsContent", () => {
@@ -245,8 +248,86 @@ describe("UpgradePlansContent", () => {
       expect(checkoutMutate).toHaveBeenCalledWith({
         plan_slug: "starter",
         billing_interval: "monthly",
+        pay_currency: "usdttrc20",
       });
     });
+  });
+
+  it("redirects to payment_url on successful checkout", async () => {
+    render(<UpgradePlansContent />);
+    const upgradeButtons = screen.getAllByRole("button", { name: "Upgrade" });
+    fireEvent.click(upgradeButtons[0]);
+
+    await waitFor(() => {
+      expect(locationAssign).toHaveBeenCalledWith(
+        "https://nowpayments.io/payment/?iid=test",
+      );
+    });
+    expect(locationAssign).toHaveBeenCalledTimes(1);
+  });
+
+  it("redirects when only invoice_url is returned", async () => {
+    checkoutMutate.mockResolvedValueOnce({
+      payment_id: 99,
+      order_id: "prosperofy_test",
+      payment_url: null,
+      invoice_url: "https://nowpayments.io/payment/?iid=invoice-only",
+      status: "pending",
+    });
+
+    render(<UpgradePlansContent />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Upgrade" })[0]);
+
+    await waitFor(() => {
+      expect(locationAssign).toHaveBeenCalledWith(
+        "https://nowpayments.io/payment/?iid=invoice-only",
+      );
+    });
+  });
+
+  it("shows error when checkout succeeds without a payment link", async () => {
+    checkoutMutate.mockResolvedValueOnce({
+      payment_id: 99,
+      order_id: "prosperofy_test",
+      payment_url: null,
+      status: "pending",
+    });
+
+    render(<UpgradePlansContent />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Upgrade" })[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/no payment link was returned/i),
+      ).toBeInTheDocument();
+    });
+    expect(locationAssign).not.toHaveBeenCalled();
+  });
+
+  it("shows mapped error for unavailable payment provider", async () => {
+    checkoutMutate.mockRejectedValueOnce(
+      new ApiClientError("Payment provider is temporarily unavailable.", {
+        status: 503,
+        code: "PAYMENT_PROVIDER_UNAVAILABLE",
+        retryable: true,
+      }),
+    );
+
+    render(<UpgradePlansContent />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Upgrade" })[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Payment provider is temporarily unavailable/i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("does not call checkout for current plan button", async () => {
+    render(<UpgradePlansContent />);
+    const currentButtons = screen.getAllByRole("button", { name: "Current plan" });
+    fireEvent.click(currentButtons[0]);
+    expect(checkoutMutate).not.toHaveBeenCalled();
   });
 
   it("shows friendly checkout error message", async () => {

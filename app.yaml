@@ -35,6 +35,10 @@ services:
         value: "15000"
         scope: RUN_AND_BUILD_TIME
 
+      - key: NEXT_PUBLIC_PAYMENT_REDIRECT_HOST_SUFFIXES
+        value: ".nowpayments.io,.nowpayments.com"
+        scope: RUN_AND_BUILD_TIME
+
       - key: APP_URL
         value: https://app.prosperofy.com
 

@@ -15,13 +15,15 @@ import { useBillingCheckoutMutation } from "@/features/billing/use-billing-check
 import { useCurrentSubscription } from "@/features/billing/use-current-subscription";
 import { useSubscriptionPlans } from "@/features/billing/use-subscription-plans";
 import type { SubscriptionPlanRow } from "@/lib/api/types";
+import { getCheckoutErrorMessage } from "@/lib/billing/checkout-error-message";
+import { resolveCheckoutUrl } from "@/lib/billing/resolve-checkout-url";
 import { isSafePaymentRedirectUrl } from "@/lib/billing/safe-payment-url";
 
-const CHECKOUT_ERROR_MESSAGE =
-  "We couldn't start checkout right now. Please try again.";
 const CHECKOUT_REDIRECT_MESSAGE = "Checkout created. Redirecting you to payment…";
+const MISSING_PAYMENT_URL_MESSAGE =
+  "Checkout was created, but no payment link was returned.";
 const INVALID_PAYMENT_URL_MESSAGE =
-  "Checkout returned an invalid payment link. Please try again or contact support.";
+  "The payment link returned by the server is invalid. Please try again.";
 
 export function UpgradePlansContent() {
   const plans = useSubscriptionPlans();
@@ -75,23 +77,32 @@ export function UpgradePlansContent() {
       const result = await checkout.mutateAsync({
         plan_slug: plan.slug,
         billing_interval: billingInterval,
+        pay_currency: "usdttrc20",
       });
 
-      if (result.payment_url) {
-        if (!isSafePaymentRedirectUrl(result.payment_url)) {
+      const checkoutUrl = resolveCheckoutUrl(result);
+
+      if (checkoutUrl) {
+        if (!isSafePaymentRedirectUrl(checkoutUrl)) {
           setRedirectError(INVALID_PAYMENT_URL_MESSAGE);
           setCheckoutSlug(null);
           return;
         }
         setRedirectMessage(CHECKOUT_REDIRECT_MESSAGE);
-        window.location.href = result.payment_url;
+        window.location.assign(checkoutUrl);
         return;
       }
 
-      await subscription.refetch();
+      if (plan.slug === "free") {
+        await subscription.refetch();
+        setCheckoutSlug(null);
+        return;
+      }
+
+      setCheckoutError(MISSING_PAYMENT_URL_MESSAGE);
       setCheckoutSlug(null);
-    } catch {
-      setCheckoutError(CHECKOUT_ERROR_MESSAGE);
+    } catch (error) {
+      setCheckoutError(getCheckoutErrorMessage(error));
       setCheckoutSlug(null);
     }
   }

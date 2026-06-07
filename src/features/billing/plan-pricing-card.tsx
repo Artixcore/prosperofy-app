@@ -90,7 +90,7 @@ export function PlanPricingCard({
             }
           }}
         >
-          {isBusy ? "Creating checkout…" : ctaState.label}
+          {isBusy ? "Redirecting…" : ctaState.label}
         </button>
       )}
     </section>
