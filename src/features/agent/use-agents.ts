@@ -43,6 +43,7 @@ export function useAgentsQuery(params?: PaginationParams) {
         token,
       }),
     enabled: Boolean(authReady && isAuthenticated && token),
+    retry: 1,
   });
 }
 
