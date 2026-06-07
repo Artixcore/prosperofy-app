@@ -7,12 +7,11 @@ import { ProsperofyLogo } from "@/components/layout/prosperofy-logo";
 
 type Props = {
   collapsed: boolean;
-  unreadCount: number;
   userEmail: string | undefined;
   isNonProd: boolean;
 };
 
-export function DashboardSidebar({ collapsed, unreadCount, userEmail, isNonProd }: Props) {
+export function DashboardSidebar({ collapsed, userEmail, isNonProd }: Props) {
   return (
     <aside
       id="dashboard-sidebar"
@@ -32,20 +31,9 @@ export function DashboardSidebar({ collapsed, unreadCount, userEmail, isNonProd 
           )}
         </div>
         <nav className="flex flex-1 flex-col space-y-0.5 overflow-y-auto overflow-x-hidden">
-          {DASHBOARD_NAV.map((item) => {
-            const label =
-              item.href === "/notifications" && unreadCount > 0
-                ? `${item.label} (${unreadCount})`
-                : item.label;
-            return (
-              <DashboardNavLink
-                key={item.href}
-                {...item}
-                label={label}
-                collapsed={collapsed}
-              />
-            );
-          })}
+          {DASHBOARD_NAV.map((item) => (
+            <DashboardNavLink key={item.href} {...item} collapsed={collapsed} />
+          ))}
         </nav>
         <div
           className={`mt-auto shrink-0 border-t border-surface-border pt-4 text-xs text-content-muted ${

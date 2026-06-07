@@ -55,7 +55,7 @@ export default function NotificationsPage() {
     <>
       <PageHeader
         title="Notifications"
-        description="Your real in-app notifications from Laravel."
+        description="Important updates about your account, wallets, and billing."
         action={
           <button
             type="button"
@@ -72,12 +72,11 @@ export default function NotificationsPage() {
       ) : null}
       {items.length === 0 ? (
         <EmptyState
-          title="No notifications"
-          description="You are all caught up. New notifications will appear here."
+          title="You're all caught up"
+          description="New notifications will appear here when something needs your attention."
         />
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Unread in this page: {unreadCount}</p>
           <ul className="space-y-3">
             {items.map((notification) => (
               <li
@@ -87,13 +86,15 @@ export default function NotificationsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {notification.title ?? notification.type ?? "Notification"}
+                      {notification.title ?? "Notification"}
                     </p>
                     {notification.body ? (
                       <p className="mt-1 text-sm text-muted-foreground">{notification.body}</p>
                     ) : null}
                     <p className="mt-2 text-xs text-muted-foreground">
-                      {notification.created_at ?? "Unknown time"}
+                      {notification.created_at
+                        ? new Date(notification.created_at).toLocaleString()
+                        : "Recently"}
                     </p>
                   </div>
                   {notification.read ? (

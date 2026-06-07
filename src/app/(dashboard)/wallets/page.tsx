@@ -75,7 +75,7 @@ export default function WalletsPage() {
     <>
       <PageHeader
         title="Wallets"
-        description="Challenge and signature verification go through Laravel, which calls the internal wallet service. Your browser never talks to that service directly."
+        description="Connect external wallets with a secure signature challenge. Verification stays on Prosperofy servers—your browser never handles private keys directly."
         action={
           <div className="flex flex-wrap gap-2">
             <button

@@ -23,7 +23,7 @@ vi.mock("@/features/billing/use-billing-checkout", () => ({
   }),
 }));
 
-import BillingPage from "./page";
+import { BillingPageContent as BillingPage } from "@/features/billing/billing-page-content";
 
 const mockPlans: SubscriptionPlanRow[] = [
   {

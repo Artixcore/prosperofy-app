@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/favicon.ico", destination: "/icon.svg", permanent: false },
+      { source: "/billing", destination: "/settings/billing", permanent: false },
+      { source: "/billing/:path*", destination: "/settings/billing/:path*", permanent: false },
     ];
   },
   async headers() {

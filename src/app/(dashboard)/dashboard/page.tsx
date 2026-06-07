@@ -14,6 +14,7 @@ import {
 } from "@/features/wallets/use-wallet-mutations";
 import { useMarketQuote } from "@/features/market/use-market-quote";
 import { DashboardBinancePortfolioCard } from "@/components/dashboard/dashboard-binance-portfolio-card";
+import { ActivityFeedItem } from "@/components/activity/activity-feed-item";
 
 function Card({
   title,
@@ -81,7 +82,7 @@ export default function DashboardHomePage() {
             <p className="text-sm text-content-muted">Wallet Dashboard</p>
             <h1 className="mt-1 text-2xl font-semibold text-content-primary">Welcome back to Prosperofy</h1>
             <p className="mt-1 text-sm text-content-muted">
-              Monitor WFL status, connected wallets, assets, and wallet activity.
+              Monitor your WFL wallet, linked wallets, assets, and recent activity.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -103,26 +104,26 @@ export default function DashboardHomePage() {
       {!data ? <InlineAlert>Wallet data is not available right now.</InlineAlert> : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Card title="Total Balance" description="Fiat valuation is not provided by current API.">
+        <Card title="Total Balance" description="Fiat valuation is not available yet.">
           <p className="text-3xl font-semibold text-content-primary">Balance unavailable</p>
-          <p className="mt-2 text-sm text-content-muted">Use Assets to view per-token balances.</p>
+          <p className="mt-2 text-sm text-content-muted">View Assets to see your token balances.</p>
         </Card>
 
-        <Card title="WFL Wallet Status" description="Internal wallet managed by Laravel core.">
+        <Card title="WFL Wallet Status" description="Your Prosperofy-managed wallet.">
           <p className="text-2xl font-semibold text-content-primary">{wflWallet?.status ?? "No WFL Wallet yet"}</p>
           <p className="mt-2 text-sm text-content-muted">
             Supported chains: {data?.supported_chains?.map((chain) => formatChainName(chain)).join(", ") ?? "Not available"}
           </p>
         </Card>
 
-        <Card title="Connected Wallets" description="External wallet connections verified by challenge signatures.">
+        <Card title="Linked Wallets" description="External wallets verified with a secure signature.">
           <p className="text-3xl font-semibold text-content-primary">{connectedWallets.length}</p>
           <p className="mt-2 text-sm text-content-muted">
-            {connectedWallets.length === 0 ? "No external wallets connected." : "Connections are ready."}
+            {connectedWallets.length === 0 ? "No external wallets linked yet." : "Your wallets are ready."}
           </p>
         </Card>
 
-        <Card title="BTC snapshot" description="Spot quote via Laravel market API (TradeWatch-backed).">
+        <Card title="BTC snapshot" description="Live spot quote for Bitcoin.">
           {btcQuote.isPending ? (
             <p className="text-sm text-content-muted">Loading market data…</p>
           ) : btcQuote.isError ? (
@@ -152,9 +153,9 @@ export default function DashboardHomePage() {
           )}
         </Card>
 
-        <Card title="Assets" description="Token list from /api/app/wallet/assets.">
+        <Card title="Assets" description="Token balances across your wallets.">
           <p className="text-sm text-content-muted">
-            View token balances and network details from your wallet assets page.
+            View token balances and network details on your assets page.
           </p>
           <Link
             href="/wallet/assets"
@@ -164,17 +165,19 @@ export default function DashboardHomePage() {
           </Link>
         </Card>
 
-        <Card title="Recent Activity" description="Last wallet activity records from Laravel.">
+        <Card title="Recent Activity" description="Your latest wallet and account activity.">
           {activity.length === 0 ? (
-            <p className="text-sm text-content-muted">No wallet activity found yet.</p>
+            <p className="text-sm text-content-muted">No activity yet.</p>
           ) : (
             <ul className="space-y-2">
               {activity.slice(0, 4).map((item) => (
-                <li key={item.id} className="rounded-lg border border-surface-border bg-surface px-3 py-2">
-                  <p className="text-sm font-medium text-content-primary">{item.action}</p>
-                  <p className="text-xs text-content-muted">
-                    {formatChainName(item.chain)} • {new Date(item.created_at).toLocaleString()}
-                  </p>
+                <li key={item.id}>
+                  <ActivityFeedItem
+                    action={item.action}
+                    chain={item.chain}
+                    created_at={item.created_at}
+                    compact
+                  />
                 </li>
               ))}
             </ul>
@@ -205,7 +208,7 @@ export default function DashboardHomePage() {
       </div>
 
       {connectedWallets.length > 0 ? (
-        <Card title="Wallet Connections" description="Providers currently linked to your account.">
+        <Card title="Wallet Connections" description="Wallets linked to your account.">
           <div className="grid gap-2 md:grid-cols-2">
             {connectedWallets.map((wallet) => (
               <div key={wallet.id} className="rounded-xl border border-surface-border bg-surface-raised p-3">
@@ -219,7 +222,7 @@ export default function DashboardHomePage() {
       ) : null}
       {connectedWallets.length === 0 ? (
         <InlineAlert tone="info">
-          No external wallets connected. Use the wallet page to connect Phantom or MetaMask.
+          No external wallets linked yet. Connect Phantom or MetaMask from the Wallets page.
         </InlineAlert>
       ) : null}
       {createWflWallet.isError ? (

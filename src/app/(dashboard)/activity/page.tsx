@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ActivityFeedItem } from "@/components/activity/activity-feed-item";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/system/error-state";
@@ -26,42 +27,23 @@ export default function ActivityPage() {
     <>
       <PageHeader
         title="Activity"
-        description="Your account timeline across wallet, strategy, AI, and account events."
+        description="Your account timeline across wallet, strategy, and account events."
       />
       {items.length === 0 ? (
         <EmptyState
           title="No activity yet"
-          description="No account activity has been recorded yet."
+          description="Your account activity will appear here as things happen."
         />
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <article
+            <ActivityFeedItem
               key={item.id}
-              className="rounded-lg border border-border bg-card p-4 text-card-foreground"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {item.kind ?? "activity"}: {item.action ?? "event"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Subject: {item.subject_type ?? "—"} {item.subject_id ?? ""}
-                  </p>
-                  {item.correlation_id ? (
-                    <p className="mt-1 font-mono text-xs text-muted-foreground">
-                      Correlation: {item.correlation_id}
-                    </p>
-                  ) : null}
-                </div>
-                <p className="text-xs text-muted-foreground">{item.created_at ?? "Unknown time"}</p>
-              </div>
-              {item.payload ? (
-                <pre className="mt-3 max-h-48 overflow-auto rounded-md border border-border bg-muted p-2 font-mono text-xs text-muted-foreground">
-                  {JSON.stringify(item.payload, null, 2)}
-                </pre>
-              ) : null}
-            </article>
+              action={item.action}
+              kind={item.kind}
+              chain={null}
+              created_at={item.created_at}
+            />
           ))}
           {pagination?.last_page && pagination.last_page > 1 ? (
             <div className="flex items-center gap-2">

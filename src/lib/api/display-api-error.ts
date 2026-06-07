@@ -302,8 +302,12 @@ export function displayApiError(
   }
 
   if (!isApiClientError(error)) {
+    const message =
+      error instanceof Error && /failed to fetch/i.test(error.message)
+        ? "We couldn't load this right now. Please try again."
+        : "We could not process your request. Please try again.";
     return {
-      message: "We could not process your request. Please try again.",
+      message,
       code: null,
       retryable: false,
       fieldErrors: {},

@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ErrorState } from "@/components/system/error-state";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
-import { PageHeader } from "@/components/page-header";
 import { BinanceConnectForm } from "@/components/settings/exchange-connections/binance-connect-form";
 import { BinanceConnectionStatus } from "@/components/settings/exchange-connections/binance-connection-status";
 import { BinanceInstructionsPanel } from "@/components/settings/exchange-connections/binance-instructions-panel";
@@ -62,15 +60,13 @@ export default function ExchangeConnectionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Exchange Connections"
-        description="Connect your Binance account securely. Credentials are encrypted on Prosperofy servers and never stored in your browser."
-        action={
-          <Link href="/settings" className="text-sm text-emerald-700 hover:underline dark:text-emerald-300">
-            ← Back to Settings
-          </Link>
-        }
-      />
+      <div>
+        <h2 className="text-base font-semibold text-foreground">Exchange Connections</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Connect exchanges like Binance securely. Credentials are encrypted on Prosperofy servers
+          and never stored in your browser.
+        </p>
+      </div>
 
       {banner ? <InlineAlert tone={banner.tone}>{banner.message}</InlineAlert> : null}
 

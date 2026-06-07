@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { DashboardNavItem } from "@/components/layout/dashboard-nav";
+import { isDashboardNavActive } from "@/components/layout/dashboard-nav";
 
 export function DashboardNavLink({
   href,
@@ -12,7 +13,7 @@ export function DashboardNavLink({
   onNavigate,
 }: DashboardNavItem & { collapsed?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
-  const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+  const active = isDashboardNavActive(pathname, href);
   return (
     <Link
       href={href}

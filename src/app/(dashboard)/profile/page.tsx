@@ -77,7 +77,7 @@ export default function ProfilePage() {
     <>
       <PageHeader
         title="Profile"
-        description="Manage your account profile synced with Laravel."
+        description="Manage your account profile and personal details."
       />
       {banner ? <InlineAlert tone={banner.tone}>{banner.message}</InlineAlert> : null}
 

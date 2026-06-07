@@ -64,7 +64,7 @@ function LoginForm() {
     <div className="rounded-xl border border-surface-border bg-surface-raised p-8 shadow-lg">
       <h1 className="text-xl font-semibold text-foreground">Sign in</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Use your Prosperofy account. API: Laravel core only.
+        Sign in with your Prosperofy account.
       </p>
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         {formError ? (

@@ -187,7 +187,7 @@ export default function MarketDashboardPage() {
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h2 className="text-base font-semibold">Symbol search</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Uses Laravel <code className="rounded bg-muted px-1">/api/app/market/symbols</code> only.
+            Search symbols across crypto, forex, stocks, and futures.
           </p>
           <input
             className="mt-3 w-full max-w-md rounded-lg border border-input bg-background px-3 py-2 text-sm"
@@ -231,7 +231,7 @@ export default function MarketDashboardPage() {
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
               <h2 className="text-base font-semibold">Sample chart ({chartSymbol}, 1h)</h2>
-              <p className="text-sm text-muted-foreground">Data from Laravel candles endpoint (7d window).</p>
+              <p className="text-sm text-muted-foreground">Price history for the last 7 days.</p>
             </div>
             {candleErr ? <span className="text-sm text-destructive">{candleErr}</span> : null}
           </div>

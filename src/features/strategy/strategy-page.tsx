@@ -1,5 +1,6 @@
 "use client";
 
+import { AgentSubNav } from "@/components/layout/agent-subnav";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,6 +59,7 @@ export default function StrategyPage() {
 
   return (
     <>
+      <AgentSubNav />
       <PageHeader
         title="Strategies"
         description="Save and manage your trading strategy definitions."

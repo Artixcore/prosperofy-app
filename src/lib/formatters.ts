@@ -25,6 +25,16 @@ export function formatChainName(chain: string | null | undefined): string {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
+export function formatActivityNetwork(chain: string | null | undefined): string | null {
+  const normalized = (chain ?? "").toLowerCase().trim();
+  if (!normalized || normalized === "n/a" || normalized === "unknown") {
+    return null;
+  }
+  const name = formatChainName(chain);
+  if (name === "Unknown network") return null;
+  return name;
+}
+
 export function formatWalletProvider(provider: string | null | undefined): string {
   const normalized = (provider ?? "").toLowerCase().trim();
   if (!normalized) return "Wallet";

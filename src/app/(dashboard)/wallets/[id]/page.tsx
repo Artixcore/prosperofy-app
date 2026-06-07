@@ -146,8 +146,8 @@ function WalletDetailContent({ id }: { id: string }) {
       <section className="mt-8 space-y-4 rounded-lg border border-surface-border bg-surface-raised/40 p-6">
         <h2 className="text-lg font-medium text-foreground">Prepare transfer</h2>
         <p className="text-sm text-muted-foreground">
-          Build an unsigned transaction via Laravel. Sign in your wallet, then paste the serialized
-          transaction for simulate/broadcast (Solana only).
+          Prepare an unsigned transaction, sign it in your wallet, then submit it for simulation or
+          broadcast (Solana only).
         </p>
         <form className="space-y-4" onSubmit={form.handleSubmit(onPrepare)}>
           <FormField id="to" label="To address" error={form.formState.errors.to?.message}>
@@ -271,8 +271,8 @@ function WalletDetailContent({ id }: { id: string }) {
         </section>
       ) : (
         <p className="mt-8 text-sm text-muted-foreground">
-          On-chain simulate/broadcast in this UI is limited to Solana wallets. For EVM, use your wallet
-          after prepare or extend the app when Laravel adds EVM broadcast support.
+          On-chain simulate and broadcast in this view is available for Solana wallets. For EVM
+          wallets, sign the prepared transaction directly in your wallet app.
         </p>
       )}
     </>

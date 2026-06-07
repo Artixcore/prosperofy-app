@@ -59,7 +59,7 @@ export default function RegisterPage() {
   return (
     <div className="rounded-xl border border-surface-border bg-surface-raised p-8 shadow-lg">
       <h1 className="text-xl font-semibold text-foreground">Create account</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Register through Laravel core.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Create your Prosperofy account to get started.</p>
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         {formError ? (
           <InlineAlert tone="error">{formError}</InlineAlert>

@@ -15,6 +15,11 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/app/use-notifications", () => ({
   useNotificationsQuery: () => ({ data: { pagination: { total: 0 }, items: [] } }),
+  useMarkNotificationReadMutation: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 const logoutMock = vi.fn();
@@ -60,6 +65,20 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("button", { name: "Theme" })).toHaveAttribute("data-theme-variant", "compact");
     const toolbar = container.querySelector("header .flex.flex-nowrap");
     expect(toolbar).toBeTruthy();
+  });
+
+  it("renders notification bell and opens dropdown", () => {
+    render(
+      <DashboardShell>
+        <div>Child</div>
+      </DashboardShell>,
+    );
+    const bell = screen.getByRole("button", { name: "Open notifications" });
+    expect(bell).toBeInTheDocument();
+    fireEvent.click(bell);
+    expect(screen.getByText("Notifications")).toBeInTheDocument();
+    expect(screen.getByText("You're all caught up.")).toBeInTheDocument();
+    fireEvent.click(bell);
   });
 
   it("opens user menu", () => {
