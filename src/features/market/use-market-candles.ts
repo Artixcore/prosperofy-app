@@ -5,6 +5,7 @@ import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/session-context";
+import { marketQueryRetry } from "@/features/market/market-query-retry";
 
 function assertToken(token: string | null): string {
   if (token) return token;
@@ -16,16 +17,26 @@ function assertToken(token: string | null): string {
 }
 
 export type CandleBar = {
-  timestamp?: string | null;
+  time?: number | null;
+  timestamp?: string | number | null;
   open?: string | null;
   high?: string | null;
   low?: string | null;
   close?: string | null;
+  volume?: string | null;
+};
+
+export type ChartPoint = {
+  time?: number | null;
+  timestamp?: string | number | null;
+  price?: string | null;
 };
 
 export type MarketCandlesPayload = {
   symbol?: string;
   resolution?: string;
+  points?: ChartPoint[];
+  candles?: CandleBar[];
   items?: CandleBar[];
 };
 
@@ -59,6 +70,7 @@ export function useMarketCandles(
       authReady && isAuthenticated && token && enabled && symbol.length > 0,
     ),
     staleTime: 60_000,
-    retry: false,
+    refetchInterval: 90_000,
+    retry: marketQueryRetry,
   });
 }

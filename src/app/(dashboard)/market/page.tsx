@@ -13,13 +13,14 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
-import { normalizeApiError, normalizeMarketDataError } from "@/lib/api/normalize-api-error";
-import { useMarketCandles } from "@/features/market/use-market-candles";
+import { normalizeMarketDataError } from "@/lib/api/normalize-api-error";
+import { useMarketCandles, type ChartPoint, type CandleBar } from "@/features/market/use-market-candles";
 import { useMarketQuotes } from "@/features/market/use-market-quotes";
 import { useMarketSymbolsSearch } from "@/features/market/use-market-symbols";
 import type { MarketQuotePayload } from "@/features/market/use-market-quote";
 import { useNewsMarketQuery } from "@/features/news/use-news-api";
 import { NewsPanel } from "@/components/news/news-panel";
+import { ApiClientError } from "@/lib/api/errors";
 
 type AssetTab = "crypto" | "forex" | "stock" | "index" | "commodity";
 
@@ -30,6 +31,15 @@ const TAB_DEFAULTS: Record<AssetTab, string[]> = {
   index: ["SPX500", "DJI"],
   commodity: ["XAUUSD", "XAGUSD"],
 };
+
+function formatUpdatedAt(ms: number): string {
+  if (!ms) return "";
+  return new Date(ms).toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
 
 function LiveBadge({ q }: { q: MarketQuotePayload }) {
   const live = Boolean(q.is_live);
@@ -50,7 +60,9 @@ function LiveBadge({ q }: { q: MarketQuotePayload }) {
 
 function QuoteCard({ row }: { row: MarketQuotePayload }) {
   const label = row.display_symbol || row.symbol || "—";
-  const mid = row.mid ?? row.last ?? (row as { price?: string }).price ?? "—";
+  const mid = row.mid ?? row.last ?? row.price ?? "—";
+  const change =
+    row.change_percentage_24h ?? row.change_24h_percent ?? null;
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -61,6 +73,9 @@ function QuoteCard({ row }: { row: MarketQuotePayload }) {
         <LiveBadge q={row} />
       </div>
       <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">{mid}</p>
+      {change != null && change !== "" ? (
+        <p className="mt-1 text-xs tabular-nums text-muted-foreground">24h: {change}%</p>
+      ) : null}
       <p className="mt-1 text-xs text-muted-foreground">
         Signals are informational, not financial advice. Markets involve risk.
       </p>
@@ -102,6 +117,53 @@ function extractSymbolHints(raw: unknown): { symbol: string; name: string }[] {
   return out;
 }
 
+function timestampLabel(value: string | number | null | undefined): string {
+  if (value == null || value === "") return "";
+  const raw = String(value);
+  if (/^\d+$/.test(raw)) {
+    const n = Number(raw);
+    const ms = n > 1_000_000_000_000 ? n : n * 1000;
+    return new Date(ms).toISOString().slice(0, 16).replace("T", " ");
+  }
+  return raw.slice(0, 16);
+}
+
+function buildChartRows(payload: {
+  points?: ChartPoint[];
+  candles?: CandleBar[];
+  items?: CandleBar[];
+}): { t: string; close: number }[] {
+  const points = payload.points ?? [];
+  if (points.length > 0) {
+    return points
+      .map((p) => {
+        const price = p.price != null ? parseFloat(String(p.price)) : NaN;
+        const t = timestampLabel(p.timestamp ?? (p.time != null ? p.time * 1000 : null));
+        if (!t || Number.isNaN(price)) return null;
+        return { t, close: price };
+      })
+      .filter(Boolean) as { t: string; close: number }[];
+  }
+
+  const bars = payload.candles?.length ? payload.candles : (payload.items ?? []);
+  return bars
+    .map((c) => {
+      const ts = timestampLabel(c.timestamp ?? (c.time != null ? c.time * 1000 : null));
+      const close = c.close != null ? parseFloat(String(c.close)) : NaN;
+      if (!ts || Number.isNaN(close)) return null;
+      return { t: ts, close };
+    })
+    .filter(Boolean) as { t: string; close: number }[];
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof ApiClientError) {
+    if (error.retryable) return true;
+    return [500, 502, 503, 504].includes(error.status ?? 0);
+  }
+  return false;
+}
+
 export default function MarketDashboardPage() {
   const [tab, setTab] = useState<AssetTab>("crypto");
   const [searchInput, setSearchInput] = useState("");
@@ -135,21 +197,20 @@ export default function MarketDashboardPage() {
     [symSearch.data],
   );
 
-  const chartData = useMemo(() => {
-    const items = candlesQ.data?.items ?? [];
-    return items
-      .map((c) => {
-        const ts = c.timestamp ?? "";
-        const close = c.close != null ? parseFloat(String(c.close)) : NaN;
-        if (!ts || Number.isNaN(close)) return null;
-        return { t: ts.slice(0, 16), close };
-      })
-      .filter(Boolean) as { t: string; close: number }[];
-  }, [candlesQ.data]);
+  const chartData = useMemo(
+    () => (candlesQ.data ? buildChartRows(candlesQ.data) : []),
+    [candlesQ.data],
+  );
 
   const quoteErr = quotesQ.isError ? normalizeMarketDataError(quotesQ.error) : null;
   const candleErr = candlesQ.isError ? normalizeMarketDataError(candlesQ.error) : null;
   const marketNews = useNewsMarketQuery("global markets");
+  const newsNotice = marketNews.data?.notice ?? null;
+  const newsEmptyMessage =
+    newsNotice ??
+    (marketNews.data?.articles?.length === 0
+      ? "No market news available yet."
+      : "No relevant news found.");
 
   return (
     <>
@@ -199,7 +260,7 @@ export default function MarketDashboardPage() {
           {symSearch.isFetching ? <p className="mt-2 text-sm text-muted-foreground">Searching…</p> : null}
           {symSearch.isError ? (
             <p className="mt-2 text-sm text-destructive">
-              {normalizeApiError(symSearch.error)} — try again later.
+              {normalizeMarketDataError(symSearch.error)} — try again later.
             </p>
           ) : null}
           {searchRows.length > 0 ? (
@@ -216,15 +277,35 @@ export default function MarketDashboardPage() {
           ) : null}
         </section>
 
-        {quoteErr ? <InlineAlert tone="error">{quoteErr}</InlineAlert> : null}
+        {quoteErr ? (
+          <InlineAlert tone="error">
+            <div className="flex flex-wrap items-center gap-3">
+              <span>{quoteErr}</span>
+              {isRetryableError(quotesQ.error) ? (
+                <button
+                  type="button"
+                  className="text-sm font-medium underline"
+                  onClick={() => void quotesQ.refetch()}
+                >
+                  Retry
+                </button>
+              ) : null}
+            </div>
+          </InlineAlert>
+        ) : null}
         {quotesQ.isLoading ? <LoadingState label="Loading quotes…" /> : null}
 
-        {!quotesQ.isLoading && quotesQ.data && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {quotesQ.data.map((row, index) => (
-              <QuoteCard key={row.symbol ?? `quote-${index}`} row={row} />
-            ))}
-          </div>
+        {!quotesQ.isLoading && quotesQ.data && quotesQ.data.length > 0 && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              Last updated {formatUpdatedAt(quotesQ.dataUpdatedAt)}
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {quotesQ.data.map((row, index) => (
+                <QuoteCard key={row.symbol ?? `quote-${index}`} row={row} />
+              ))}
+            </div>
+          </>
         )}
 
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -232,15 +313,33 @@ export default function MarketDashboardPage() {
             <div>
               <h2 className="text-base font-semibold">Sample chart ({chartSymbol}, 1h)</h2>
               <p className="text-sm text-muted-foreground">Price history for the last 7 days.</p>
+              {candlesQ.dataUpdatedAt ? (
+                <p className="text-xs text-muted-foreground">
+                  Last updated {formatUpdatedAt(candlesQ.dataUpdatedAt)}
+                </p>
+              ) : null}
             </div>
-            {candleErr ? <span className="text-sm text-destructive">{candleErr}</span> : null}
+            {candleErr ? (
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <span>{candleErr}</span>
+                {isRetryableError(candlesQ.error) ? (
+                  <button
+                    type="button"
+                    className="font-medium underline"
+                    onClick={() => void candlesQ.refetch()}
+                  >
+                    Retry
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           {candlesQ.isLoading ? (
-            <p className="mt-4 text-sm text-muted-foreground">Loading chart…</p>
+            <LoadingState label="Loading chart…" className="mt-4 !py-8" />
           ) : chartData.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">No candle rows returned for this symbol.</p>
+            <p className="mt-4 text-sm text-muted-foreground">No chart data available yet.</p>
           ) : (
-            <div className="mt-4 h-72 w-full min-w-0">
+            <div className="mt-4 h-72 min-h-[280px] w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -260,6 +359,8 @@ export default function MarketDashboardPage() {
           freshness={marketNews.data?.data_freshness}
           isLoading={marketNews.isLoading}
           error={marketNews.error}
+          emptyMessage={newsEmptyMessage}
+          panel="market"
         />
       </div>
     </>

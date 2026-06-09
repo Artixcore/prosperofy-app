@@ -6,6 +6,7 @@ import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/session-context";
 import type { MarketQuotePayload } from "@/features/market/use-market-quote";
+import { marketQueryRetry } from "@/features/market/market-query-retry";
 
 function assertToken(token: string | null): string {
   if (token) return token;
@@ -17,6 +18,7 @@ function assertToken(token: string | null): string {
 }
 
 export type MarketQuotesEnvelope = {
+  quotes?: MarketQuotePayload[];
   items?: MarketQuotePayload[];
 };
 
@@ -36,12 +38,14 @@ export function useMarketQuotes(assetClass: string, symbols: string[]) {
         `${API.app.market.quotes}?${params.toString()}`,
         { token: t },
       );
-      return Array.isArray(data.items) ? data.items : [];
+      const rows = data.quotes ?? data.items;
+      return Array.isArray(rows) ? rows : [];
     },
     enabled: Boolean(
       authReady && isAuthenticated && token && symbols.length > 0,
     ),
-    staleTime: 15_000,
-    retry: false,
+    staleTime: 30_000,
+    refetchInterval: 45_000,
+    retry: marketQueryRetry,
   });
 }

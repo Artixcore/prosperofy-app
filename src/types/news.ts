@@ -20,8 +20,9 @@ export const newsSearchResultSchema = z.object({
   endpoint: z.string().optional(),
   articles: z.array(normalizedNewsArticleSchema),
   total_results: z.number().optional(),
-  data_freshness: z.enum(["live", "cached", "disabled", "unavailable"]).optional(),
+  data_freshness: z.enum(["live", "cached", "disabled", "unavailable", "unconfigured"]).optional(),
   fetched_at: z.string().nullable().optional(),
+  notice: z.string().nullable().optional(),
 });
 
 export type NewsSearchResult = z.infer<typeof newsSearchResultSchema>;

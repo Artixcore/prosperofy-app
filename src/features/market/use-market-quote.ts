@@ -19,6 +19,7 @@ export type MarketQuotePayload = {
   price?: string | null;
   volume_24h?: string | null;
   change_24h_percent?: string | null;
+  change_percentage_24h?: string | null;
   open?: string | null;
   high?: string | null;
   low?: string | null;
@@ -27,6 +28,8 @@ export type MarketQuotePayload = {
   source?: string;
   is_live?: boolean;
 };
+
+import { marketQueryRetry } from "@/features/market/market-query-retry";
 
 function assertToken(token: string | null): string {
   if (token) return token;
@@ -54,7 +57,8 @@ export function useMarketQuote(assetClass: string, symbol: string) {
       );
     },
     enabled: Boolean(authReady && isAuthenticated && token),
-    staleTime: 15_000,
-    retry: false,
+    staleTime: 30_000,
+    refetchInterval: 45_000,
+    retry: marketQueryRetry,
   });
 }

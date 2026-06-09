@@ -13,13 +13,14 @@ vi.mock("@/lib/auth/session-context", () => ({
 }));
 
 vi.mock("@/lib/api/client", () => ({
-  laravelFetch: vi.fn(async () => ({
-    symbol: "BTCUSD",
-    mid: "100",
-    provider: "tradewatch",
-    is_live: true,
-    source: "rest",
-  })),
+    laravelFetch: vi.fn(async () => ({
+      symbol: "BTCUSD",
+      mid: "100",
+      price: "100",
+      provider: "coingecko",
+      is_live: true,
+      source: "rest",
+    })),
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -34,6 +35,6 @@ describe("useMarketQuote", () => {
     const { result } = renderHook(() => useMarketQuote("crypto", "BTCUSD"), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.mid).toBe("100");
-    expect(result.current.data?.provider).toBe("tradewatch");
+    expect(result.current.data?.provider).toBe("coingecko");
   });
 });
