@@ -7,11 +7,12 @@ import { LoadingState } from "@/components/system/loading-state";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { useToast } from "@/components/system/toast-context";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
-import { formatChainName, formatWalletProvider } from "@/lib/formatters";
+import { formatChainName, shortenAddress } from "@/lib/formatters";
 import {
   useAppWalletOverviewQuery,
   useCreateWflWalletMutation,
 } from "@/features/wallets/use-wallet-mutations";
+import { primaryWalletAddress } from "@/features/wallets/wallet-derive";
 import { useMarketQuote } from "@/features/market/use-market-quote";
 import { DashboardBinancePortfolioCard } from "@/components/dashboard/dashboard-binance-portfolio-card";
 import { ActivityFeedItem } from "@/components/activity/activity-feed-item";
@@ -63,8 +64,8 @@ export default function DashboardHomePage() {
 
   const data = walletOverview.data;
   const wflWallet = data?.wfl_wallet;
-  const connectedWallets = data?.connected_wallets ?? [];
   const activity = data?.recent_activity ?? [];
+  const primaryAddress = primaryWalletAddress(data);
 
   return (
     <div className="space-y-5">
@@ -82,12 +83,12 @@ export default function DashboardHomePage() {
             <p className="text-sm text-content-muted">Wallet Dashboard</p>
             <h1 className="mt-1 text-2xl font-semibold text-content-primary">Welcome back to Prosperofy</h1>
             <p className="mt-1 text-sm text-content-muted">
-              Monitor your WFL wallet, linked wallets, assets, and recent activity.
+              Monitor your WFL wallet, assets, and recent activity.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link href="/wallet" className="rounded-xl border border-surface-border px-3 py-2 text-sm text-content-primary hover:bg-surface-raised">
-              View Wallets
+              View Wallet
             </Link>
             <button
               className="rounded-xl bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
@@ -114,13 +115,11 @@ export default function DashboardHomePage() {
           <p className="mt-2 text-sm text-content-muted">
             Supported chains: {data?.supported_chains?.map((chain) => formatChainName(chain)).join(", ") ?? "Not available"}
           </p>
-        </Card>
-
-        <Card title="Linked Wallets" description="External wallets verified with a secure signature.">
-          <p className="text-3xl font-semibold text-content-primary">{connectedWallets.length}</p>
-          <p className="mt-2 text-sm text-content-muted">
-            {connectedWallets.length === 0 ? "No external wallets linked yet." : "Your wallets are ready."}
-          </p>
+          {primaryAddress ? (
+            <p className="mt-2 font-mono text-xs text-content-muted">
+              {formatChainName(primaryAddress.network)}: {shortenAddress(primaryAddress.address, 6)}
+            </p>
+          ) : null}
         </Card>
 
         <Card title="BTC snapshot" description="Live spot quote for Bitcoin.">
@@ -207,24 +206,6 @@ export default function DashboardHomePage() {
         </div>
       </div>
 
-      {connectedWallets.length > 0 ? (
-        <Card title="Wallet Connections" description="Wallets linked to your account.">
-          <div className="grid gap-2 md:grid-cols-2">
-            {connectedWallets.map((wallet) => (
-              <div key={wallet.id} className="rounded-xl border border-surface-border bg-surface-raised p-3">
-                <p className="text-sm font-semibold text-content-primary">{formatWalletProvider(wallet.provider)}</p>
-                <p className="text-xs text-content-muted">{formatChainName(wallet.chain_type)}</p>
-                <p className="mt-2 break-all text-xs font-mono text-content-primary">{wallet.address}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ) : null}
-      {connectedWallets.length === 0 ? (
-        <InlineAlert tone="info">
-          No external wallets linked yet. Connect Phantom or MetaMask from the Wallets page.
-        </InlineAlert>
-      ) : null}
       {createWflWallet.isError ? (
         <InlineAlert tone="error">{normalizeApiError(createWflWallet.error)}</InlineAlert>
       ) : null}

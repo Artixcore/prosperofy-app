@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
       { source: "/favicon.ico", destination: "/icon.svg", permanent: false },
       { source: "/billing", destination: "/settings/billing", permanent: false },
       { source: "/billing/:path*", destination: "/settings/billing/:path*", permanent: false },
+      { source: "/wallets", destination: "/wallet", permanent: false },
+      { source: "/wallets/:path*", destination: "/wallet", permanent: false },
+      { source: "/wallet/connect", destination: "/wallet", permanent: false },
     ];
   },
   async headers() {

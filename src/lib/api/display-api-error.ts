@@ -32,39 +32,6 @@ function firstFieldError(fieldErrors: FieldErrors): string | null {
   return null;
 }
 
-function walletExtensionMessage(error: unknown): string | null {
-  if (!(error instanceof Error) || !error.message) {
-    return null;
-  }
-  const m = error.message;
-  if (m === "Wallet signing was cancelled.") return m;
-  if (m.includes("Phantom not available")) {
-    return "Phantom is not installed. Please install Phantom and try again.";
-  }
-  if (m.includes("MetaMask not available")) {
-    return "MetaMask is not installed. Please install MetaMask and try again.";
-  }
-  if (m.includes("Could not read Phantom public key")) {
-    return "Could not read Phantom public key. Please try again.";
-  }
-  if (m.includes("No Ethereum account")) {
-    return "No Ethereum account available. Please unlock MetaMask and try again.";
-  }
-  if (m.includes("Unexpected signature format")) {
-    return "Unexpected signature format from wallet. Please try again.";
-  }
-  if (m.includes("Wallet service did not return")) {
-    return "Wallet connection failed. Please try again.";
-  }
-  if (m.includes("Wallet connection challenge expired")) {
-    return "Wallet connection challenge expired. Please try again.";
-  }
-  if (m.includes("Wallet account changed during connection")) {
-    return "Wallet account changed during connection. Please try again.";
-  }
-  return null;
-}
-
 function lookupMessage(code: string, fallback?: string): string {
   return ERROR_MESSAGES[code] ?? fallback ?? ERROR_MESSAGES.SERVER_ERROR ?? "We could not process your request. Please try again.";
 }
@@ -281,19 +248,6 @@ export function displayApiError(
       message: "Network connection failed. Please check your connection and try again.",
       code: "NETWORK_ERROR",
       retryable: true,
-      fieldErrors: {},
-      data: null,
-      hints: [],
-      showRefreshBalance: false,
-    };
-  }
-
-  const extension = walletExtensionMessage(error);
-  if (extension) {
-    return {
-      message: extension,
-      code: null,
-      retryable: false,
       fieldErrors: {},
       data: null,
       hints: [],

@@ -178,17 +178,6 @@ describe("normalizeApiError", () => {
     ).toContain("Too many balance refreshes");
   });
 
-  it("maps wallet signing cancelled sentinel", () => {
-    expect(normalizeApiError(new Error("Wallet signing was cancelled."))).toBe("Wallet signing was cancelled.");
-  });
-
-  it("maps missing extension errors", () => {
-    expect(normalizeApiError(new Error("MetaMask not available. Install MetaMask."))).toContain("MetaMask is not installed");
-    expect(normalizeApiError(new Error("Phantom not available. Install the Phantom extension."))).toContain(
-      "Phantom is not installed",
-    );
-  });
-
   it("maps market and service error codes", () => {
     expect(
       normalizeApiError(

@@ -5,12 +5,9 @@ import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
 import type {
-  AppWalletConnectBody,
-  ConnectedWallet,
   WalletAssetsListPayload,
   WalletAssetsRefreshPayload,
   WalletSummaryPayload,
-  WalletChallengeResponse,
   WalletOverview,
 } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/session-context";
@@ -21,83 +18,6 @@ function assertAuthenticatedToken(token: string | null): string {
     status: 401,
     code: "UNAUTHENTICATED",
     retryable: false,
-  });
-}
-
-export function useWalletsQuery() {
-  const { token, authReady, isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: ["wallets", token],
-    queryFn: () =>
-      laravelFetch<ConnectedWallet[]>(API.app.wallets.list, {
-        token,
-      }),
-    enabled: Boolean(authReady && isAuthenticated && token),
-    retry: false,
-  });
-}
-
-export function useWalletQuery(id: string | null) {
-  const { token, authReady, isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: ["wallet", id, token],
-    queryFn: () =>
-      laravelFetch<ConnectedWallet>(API.app.wallets.show(id!), {
-        token,
-      }),
-    enabled: Boolean(authReady && isAuthenticated && token && id),
-    retry: false,
-  });
-}
-
-export function useBalanceRefreshMutation(walletId: string) {
-  const { token } = useAuth();
-  return useMutation({
-    mutationFn: (body?: { network?: string; include_token_balances?: boolean }) =>
-      laravelFetch<Record<string, unknown>>(API.app.wallets.balanceRefresh(walletId), {
-        method: "POST",
-        body: body ?? {},
-        token: assertAuthenticatedToken(token),
-      }),
-  });
-}
-
-export function usePrepareTxMutation(walletId: string) {
-  const { token } = useAuth();
-  return useMutation({
-    mutationFn: (body: Record<string, unknown>) =>
-      laravelFetch<Record<string, unknown>>(API.app.wallets.txPrepare(walletId), {
-        method: "POST",
-        body,
-        token: assertAuthenticatedToken(token),
-      }),
-  });
-}
-
-export function useSimulateTxMutation(walletId: string) {
-  const { token } = useAuth();
-  return useMutation({
-    mutationFn: (body: { serialized_transaction_base64: string }) =>
-      laravelFetch<Record<string, unknown>>(API.app.wallets.txSimulate(walletId), {
-        method: "POST",
-        body,
-        token: assertAuthenticatedToken(token),
-      }),
-  });
-}
-
-export function useBroadcastTxMutation(walletId: string) {
-  const { token } = useAuth();
-  return useMutation({
-    mutationFn: (body: {
-      serialized_transaction_base64: string;
-      idempotency_key: string;
-    }) =>
-      laravelFetch<Record<string, unknown>>(API.app.wallets.txBroadcast(walletId), {
-        method: "POST",
-        body,
-        token: assertAuthenticatedToken(token),
-      }),
   });
 }
 
@@ -224,41 +144,6 @@ export function useAppWalletActivityQuery() {
   });
 }
 
-export function useAppWalletChallengeMutation() {
-  const { token } = useAuth();
-  return useMutation({
-    mutationFn: (body: {
-      provider: "phantom" | "metamask";
-      chain: "solana" | "ethereum";
-      address?: string;
-      publicKey?: string;
-    }) =>
-      laravelFetch<WalletChallengeResponse>(API.app.wallet.challenge, {
-        method: "POST",
-        body,
-        token: assertAuthenticatedToken(token),
-      }),
-  });
-}
-
-export function useAppWalletConnectMutation() {
-  const { token } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: AppWalletConnectBody) =>
-      laravelFetch<Record<string, unknown>>(API.app.wallet.connect, {
-        method: "POST",
-        body,
-        token: assertAuthenticatedToken(token),
-      }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
-      void qc.invalidateQueries({ queryKey: ["wallets"] });
-      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
-    },
-  });
-}
-
 export function useCreateWflWalletMutation() {
   const { token } = useAuth();
   const qc = useQueryClient();
@@ -272,29 +157,6 @@ export function useCreateWflWalletMutation() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
       void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
-    },
-  });
-}
-
-/**
- * Removes a connected external wallet (Phantom/MetaMask) from the user's
- * Prosperofy account. Calls Laravel `DELETE /api/app/wallet/connected/{id}`.
- * The backend route binding enforces that the wallet belongs to the
- * authenticated user, and disconnecting never touches the WFL Wallet.
- */
-export function useDisconnectConnectedWalletMutation() {
-  const { token } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string | number) =>
-      laravelFetch<Record<string, unknown>>(API.app.wallet.disconnect(String(id)), {
-        method: "DELETE",
-        token: assertAuthenticatedToken(token),
-      }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
-      void qc.invalidateQueries({ queryKey: ["wallets"] });
-      void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
     },
   });
 }

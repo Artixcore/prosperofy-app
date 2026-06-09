@@ -35,15 +35,6 @@ export function formatActivityNetwork(chain: string | null | undefined): string 
   return name;
 }
 
-export function formatWalletProvider(provider: string | null | undefined): string {
-  const normalized = (provider ?? "").toLowerCase().trim();
-  if (!normalized) return "Wallet";
-  if (normalized === "metamask") return "MetaMask";
-  if (normalized === "phantom") return "Phantom";
-  if (normalized === "wfl_internal") return "WFL Wallet";
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
-
 /**
  * "x seconds/minutes/hours ago" relative time, used for "Last synced" labels.
  * Returns "—" for null/invalid input so the UI never shows raw timestamps.

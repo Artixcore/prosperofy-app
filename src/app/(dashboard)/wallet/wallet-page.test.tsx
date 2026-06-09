@@ -7,9 +7,6 @@ import type { WalletOverview } from "@/lib/api/types";
 const overviewQuery = vi.fn();
 const assetsQuery = vi.fn();
 const transactionsQuery = vi.fn();
-const challengeMutate = vi.fn();
-const connectMutate = vi.fn();
-const disconnectMutate = vi.fn();
 const createMutate = vi.fn();
 const refreshFullMutate = vi.fn();
 const refreshFullState: { isPending: boolean; data: unknown } = {
@@ -27,12 +24,6 @@ vi.mock("next/link", () => ({
 vi.mock("@/features/wallets/use-wallet-mutations", () => ({
   useAppWalletOverviewQuery: () => overviewQuery(),
   useAppWalletAssetsQuery: () => assetsQuery(),
-  useAppWalletChallengeMutation: () => ({ mutateAsync: challengeMutate, isPending: false }),
-  useAppWalletConnectMutation: () => ({ mutateAsync: connectMutate, isPending: false }),
-  useDisconnectConnectedWalletMutation: () => ({
-    mutateAsync: disconnectMutate,
-    isPending: false,
-  }),
   useCreateWflWalletMutation: () => ({
     mutateAsync: createMutate,
     isPending: false,
@@ -86,9 +77,6 @@ beforeEach(() => {
   overviewQuery.mockReset();
   assetsQuery.mockReset();
   transactionsQuery.mockReset();
-  challengeMutate.mockReset();
-  connectMutate.mockReset();
-  disconnectMutate.mockReset();
   createMutate.mockReset();
   refreshFullMutate.mockReset();
   refreshFullState.isPending = false;
@@ -118,7 +106,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete (window as unknown as { solana?: unknown }).solana;
+  vi.clearAllMocks();
 });
 
 describe("WalletPage", () => {
@@ -204,84 +192,6 @@ describe("WalletPage", () => {
     // Both the status banner and the balance-card badge surface a "setup failed"
     // message; we only need to confirm at least one is present.
     expect(screen.getAllByText(/setup failed/i).length).toBeGreaterThan(0);
-  });
-
-  it("Phantom not connected → shows Connect Phantom button", () => {
-    setOverview(makeOverview({ connected_wallets: [] }));
-    render(<WalletPage />);
-    expect(
-      screen.getByRole("button", { name: /Connect Phantom/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Remove Phantom/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("Phantom connected → shows Remove Phantom button and not Connect", () => {
-    setOverview(
-      makeOverview({
-        connected_wallets: [
-          {
-            id: "42",
-            provider: "phantom",
-            address: "So11111111111111111111111111111111111111111",
-            chain_type: "solana",
-            network: null,
-            label: null,
-            is_primary: false,
-            last_verified_at: "2024-01-01T00:00:00Z",
-            created_at: null,
-            updated_at: null,
-          },
-        ],
-      }),
-    );
-    render(<WalletPage />);
-    expect(
-      screen.getByRole("button", { name: /Remove Phantom/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Connect Phantom/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("MetaMask not connected → shows Connect MetaMask button", () => {
-    setOverview(makeOverview({ connected_wallets: [] }));
-    render(<WalletPage />);
-    expect(
-      screen.getByRole("button", { name: /Connect MetaMask/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Remove MetaMask/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("removing a connected wallet calls the disconnect mutation through the confirm dialog", async () => {
-    disconnectMutate.mockResolvedValueOnce({});
-    setOverview(
-      makeOverview({
-        connected_wallets: [
-          {
-            id: "77",
-            provider: "phantom",
-            address: "So11111111111111111111111111111111111111111",
-            chain_type: "solana",
-            network: null,
-            label: null,
-            is_primary: false,
-            last_verified_at: null,
-            created_at: null,
-            updated_at: null,
-          },
-        ],
-      }),
-    );
-    render(<WalletPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Remove Phantom/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^Remove$/i }));
-    await waitFor(() => {
-      expect(disconnectMutate).toHaveBeenCalledWith("77");
-    });
   });
 
   it("renders ErrorState with friendly message on overview API failure", () => {

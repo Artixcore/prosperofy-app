@@ -38,7 +38,7 @@ export function WalletTransactionsChartSection() {
       ) : !chart.data?.points?.length ? (
         <p className="text-sm text-muted-foreground">No transaction activity in this period.</p>
       ) : (
-        <div className="h-56 w-full">
+        <div className="h-72 min-h-[240px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chart.data.points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/60" />

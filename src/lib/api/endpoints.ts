@@ -73,33 +73,15 @@ export const API = {
       tradeExecutions: (id: string) =>
         `/api/app/agents/${encodeURIComponent(id)}/trade-executions` as const,
     },
-    wallets: {
-      nonce: "/api/app/wallets/nonce",
-      connectPhantom: "/api/app/wallets/connect/phantom",
-      connectMetaMask: "/api/app/wallets/connect/metamask",
-      list: "/api/app/wallets",
-      show: (id: string) => `/api/app/wallets/${id}` as const,
-      balanceRefresh: (id: string) =>
-        `/api/app/wallets/${id}/balance/refresh` as const,
-      txPrepare: (id: string) =>
-        `/api/app/wallets/${id}/transactions/prepare` as const,
-      txSimulate: (id: string) =>
-        `/api/app/wallets/${id}/transactions/simulate` as const,
-      txBroadcast: (id: string) =>
-        `/api/app/wallets/${id}/transactions/broadcast` as const,
-    },
     wallet: {
       overview: "/api/app/wallet",
       summary: "/api/app/wallet/summary",
-      challenge: "/api/app/wallet/challenge",
-      connect: "/api/app/wallet/connect",
       create: "/api/app/wallet/create",
       assets: "/api/app/wallet/assets",
       assetsRefresh: "/api/app/wallet/assets/refresh",
       balanceRefresh: "/api/app/wallet/balance/refresh",
       pricesRefresh: "/api/app/wallet/prices/refresh",
       activity: "/api/app/wallet/activity",
-      disconnect: (id: string) => `/api/app/wallet/connected/${id}` as const,
       receiveAddresses: "/api/app/wallet/receive-addresses",
       sendPreview: "/api/app/wallet/send/preview",
       sendConfirm: "/api/app/wallet/send/confirm",

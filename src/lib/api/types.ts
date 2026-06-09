@@ -23,46 +23,6 @@ export type ConnectedWallet = {
   updated_at: string | null;
 };
 
-export type WalletNonceData = {
-  nonce: string;
-  message?: string;
-  signMessage?: string;
-  expiresAt?: string;
-  id?: string;
-};
-
-/** Laravel `POST /api/app/wallet/challenge` success `data` payload */
-export type WalletChallengeResponse = {
-  challenge_id: number;
-  message: string;
-  expires_at?: string;
-};
-
-export type AppWalletConnectBase = {
-  signature: string;
-  message: string;
-  challenge_id: number;
-};
-
-/** Laravel `POST /api/app/wallet/connect` body for Phantom (requires `publicKey`) */
-export type AppWalletConnectPhantomBody = AppWalletConnectBase & {
-  provider: "phantom";
-  chain: "solana";
-  publicKey: string;
-};
-
-/** Laravel `POST /api/app/wallet/connect` body for MetaMask */
-export type AppWalletConnectMetaMaskBody = AppWalletConnectBase & {
-  provider: "metamask";
-  chain: "ethereum";
-  address: string;
-};
-
-export type AppWalletConnectBody = AppWalletConnectPhantomBody | AppWalletConnectMetaMaskBody;
-
-export type PhantomConnectSignedBody = AppWalletConnectPhantomBody;
-export type MetaMaskConnectSignedBody = AppWalletConnectMetaMaskBody;
-
 /** Lifecycle of the WFL internal wallet on the user_wallets row. Backend may emit additional values, so consumers should treat the type as "string" for unknown values. */
 export type WflWalletStatus = "active" | "pending" | "failed" | (string & {});
 

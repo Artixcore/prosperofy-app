@@ -1,4 +1,4 @@
-import type { ConnectedWallet, WalletOverview } from "@/lib/api/types";
+import type { WalletOverview } from "@/lib/api/types";
 
 /**
  * Normalised view of the WFL wallet derived from the wallet overview payload.
@@ -57,38 +57,6 @@ export function wflWalletState(
 }
 
 /**
- * Returns the most-recently verified Phantom wallet for the user, or null if
- * none are connected. Multiple Phantom wallets per user collapse to the
- * latest; older addresses remain manageable on /wallet/settings.
- */
-export function phantomWallet(
-  overview: WalletOverview | null | undefined,
-): ConnectedWallet | null {
-  return mostRecentByProvider(overview, "phantom");
-}
-
-/**
- * Returns the most-recently verified MetaMask wallet for the user, or null.
- */
-export function metaMaskWallet(
-  overview: WalletOverview | null | undefined,
-): ConnectedWallet | null {
-  return mostRecentByProvider(overview, "metamask");
-}
-
-export function isPhantomConnected(
-  overview: WalletOverview | null | undefined,
-): boolean {
-  return phantomWallet(overview) !== null;
-}
-
-export function isMetaMaskConnected(
-  overview: WalletOverview | null | undefined,
-): boolean {
-  return metaMaskWallet(overview) !== null;
-}
-
-/**
  * The wallet page should surface "Activate WFL Wallet" only when there is no
  * row at all, or when the previous provisioning attempt terminally failed.
  * Pending rows should never show the repair CTA — they show a "being prepared"
@@ -124,27 +92,4 @@ export function primaryWalletAddress(
   if (addresses.ethereum) return { network: "ethereum", address: addresses.ethereum };
   if (addresses.bitcoin) return { network: "bitcoin", address: addresses.bitcoin };
   return null;
-}
-
-function mostRecentByProvider(
-  overview: WalletOverview | null | undefined,
-  provider: "phantom" | "metamask",
-): ConnectedWallet | null {
-  const list = overview?.connected_wallets ?? [];
-  const matches = list.filter(
-    (w) => (w.provider ?? "").toLowerCase() === provider,
-  );
-  if (matches.length === 0) return null;
-
-  return matches.reduce<ConnectedWallet>((best, current) => {
-    const bestAt = parseTimestamp(best.last_verified_at);
-    const currentAt = parseTimestamp(current.last_verified_at);
-    return currentAt > bestAt ? current : best;
-  }, matches[0]);
-}
-
-function parseTimestamp(value: string | null): number {
-  if (!value) return 0;
-  const n = Date.parse(value);
-  return Number.isNaN(n) ? 0 : n;
 }

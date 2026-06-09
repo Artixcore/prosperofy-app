@@ -1,15 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  isMetaMaskConnected,
-  isPhantomConnected,
-  metaMaskWallet,
-  phantomWallet,
   primaryWalletAddress,
   shouldEnableSend,
   shouldShowActivateWfl,
   wflWalletState,
 } from "./wallet-derive";
-import type { ConnectedWallet, WalletOverview } from "@/lib/api/types";
+import type { WalletOverview } from "@/lib/api/types";
 
 function makeOverview(partial: Partial<WalletOverview>): WalletOverview {
   return {
@@ -17,22 +13,6 @@ function makeOverview(partial: Partial<WalletOverview>): WalletOverview {
     connected_wallets: [],
     supported_chains: ["solana", "ethereum", "bitcoin"],
     recent_activity: [],
-    ...partial,
-  };
-}
-
-function makeConnected(partial: Partial<ConnectedWallet>): ConnectedWallet {
-  return {
-    id: "1",
-    provider: "phantom",
-    address: "So11111111111111111111111111111111111111111",
-    chain_type: "solana",
-    network: null,
-    label: null,
-    is_primary: false,
-    last_verified_at: null,
-    created_at: null,
-    updated_at: null,
     ...partial,
   };
 }
@@ -95,65 +75,6 @@ describe("wflWalletState", () => {
       ethereum: "0xeth",
       bitcoin: "bc1q",
     });
-  });
-});
-
-describe("phantomWallet / metaMaskWallet", () => {
-  it("returns null when no wallet of the given provider is connected", () => {
-    expect(phantomWallet(makeOverview({ connected_wallets: [] }))).toBeNull();
-    expect(metaMaskWallet(makeOverview({ connected_wallets: [] }))).toBeNull();
-  });
-
-  it("picks the most recently verified wallet when multiple exist", () => {
-    const older = makeConnected({
-      id: "10",
-      provider: "phantom",
-      address: "OldAddr",
-      last_verified_at: "2024-01-01T00:00:00Z",
-    });
-    const newer = makeConnected({
-      id: "11",
-      provider: "phantom",
-      address: "NewAddr",
-      last_verified_at: "2024-06-01T00:00:00Z",
-    });
-    const overview = makeOverview({ connected_wallets: [older, newer] });
-    expect(phantomWallet(overview)?.id).toBe("11");
-  });
-
-  it("treats provider names case-insensitively", () => {
-    const overview = makeOverview({
-      connected_wallets: [makeConnected({ provider: "Phantom" })],
-    });
-    expect(isPhantomConnected(overview)).toBe(true);
-  });
-});
-
-describe("isPhantomConnected / isMetaMaskConnected", () => {
-  it("isPhantomConnected reflects presence of a phantom wallet", () => {
-    expect(isPhantomConnected(makeOverview({ connected_wallets: [] }))).toBe(false);
-    expect(
-      isPhantomConnected(
-        makeOverview({ connected_wallets: [makeConnected({ provider: "phantom" })] }),
-      ),
-    ).toBe(true);
-  });
-
-  it("isMetaMaskConnected only returns true for metamask provider", () => {
-    expect(
-      isMetaMaskConnected(
-        makeOverview({ connected_wallets: [makeConnected({ provider: "phantom" })] }),
-      ),
-    ).toBe(false);
-    expect(
-      isMetaMaskConnected(
-        makeOverview({
-          connected_wallets: [
-            makeConnected({ provider: "metamask", chain_type: "evm", address: "0xabc" }),
-          ],
-        }),
-      ),
-    ).toBe(true);
   });
 });
 

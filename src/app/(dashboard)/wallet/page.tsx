@@ -7,7 +7,6 @@ import { LoadingState } from "@/components/system/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/components/system/toast-context";
 import { AssetsSection } from "@/features/wallets/components/assets-section";
-import { ConnectedWalletsSection } from "@/features/wallets/components/connected-wallets-section";
 import { RecentTransactionsSection } from "@/features/wallets/components/recent-transactions-section";
 import { WalletTransactionsChartSection } from "@/features/wallets/components/wallet-transactions-chart-section";
 import { WalletBalanceCard } from "@/features/wallets/components/wallet-balance-card";
@@ -116,7 +115,7 @@ export default function WalletPage() {
     <>
       <PageHeader
         title="Wallet"
-        description="Manage your WFL Wallet, connected wallets, assets, and transactions."
+        description="Manage your WFL Wallet, assets, and transactions."
         action={
           <button
             type="button"
@@ -146,7 +145,6 @@ export default function WalletPage() {
             assets={assets.data?.assets}
             lastSyncedAt={lastSyncedAt}
           />
-          <ConnectedWalletsSection overview={overview.data} />
           <WalletTransactionsChartSection />
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-7">
