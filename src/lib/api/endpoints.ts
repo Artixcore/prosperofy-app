@@ -138,6 +138,13 @@ export const API = {
       history: "/api/app/portfolio/history",
       snapshots: "/api/app/portfolio/snapshots",
     },
+    rewards: {
+      overview: "/api/app/rewards/overview",
+      referrals: "/api/app/rewards/referrals",
+      ledger: "/api/app/rewards/ledger",
+      monthlySummary: "/api/app/rewards/monthly-summary",
+      regenerateCode: "/api/app/rewards/referral-code/regenerate",
+    },
     billing: {
       plans: "/api/app/billing/plans",
       subscription: "/api/app/billing/subscription",

@@ -2,6 +2,7 @@ import {
   Bot,
   ChartColumn,
   CreditCard,
+  Gift,
   Home,
   PieChart,
   Settings,
@@ -19,6 +20,7 @@ export const DASHBOARD_NAV: DashboardNavItem[] = [
   { href: "/wallet", label: "Wallets", icon: CreditCard },
   { href: "/portfolio", label: "Portfolio", icon: PieChart },
   { href: "/agent", label: "AI Center", icon: Bot },
+  { href: "/rewards", label: "Rewards", icon: Gift },
   { href: "/activity", label: "Activity", icon: ChartColumn },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

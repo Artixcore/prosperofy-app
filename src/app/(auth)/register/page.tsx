@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { laravelFetch } from "@/lib/api/client";
@@ -21,18 +21,27 @@ import { InlineAlert } from "@/components/system/inline-alert";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: { device_name: "prosperofy-app" },
   });
+
+  useEffect(() => {
+    const ref = searchParams.get("ref")?.trim();
+    if (ref) {
+      setValue("referral_code", ref);
+    }
+  }, [searchParams, setValue]);
 
   async function onSubmit(data: RegisterInput) {
     setFormError(null);
@@ -105,6 +114,7 @@ export default function RegisterPage() {
           />
         </FormField>
         <input type="hidden" {...register("device_name")} />
+        <input type="hidden" {...register("referral_code")} />
         <SubmitButton pending={isSubmitting}>Create account</SubmitButton>
       </form>
       <p className="mt-6 text-center text-sm text-muted-foreground">

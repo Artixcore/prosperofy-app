@@ -13,6 +13,7 @@ export const registerSchema = z
     password: z.string().min(8, "Use at least 8 characters."),
     password_confirmation: z.string().min(1, "Confirm your password."),
     device_name: z.string().max(255).optional(),
+    referral_code: z.string().max(32).optional(),
   })
   .refine((d) => d.password === d.password_confirmation, {
     message: "Passwords do not match.",
