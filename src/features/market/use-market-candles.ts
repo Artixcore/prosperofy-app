@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { laravelFetch } from "@/lib/api/client";
-import { API } from "@/lib/api/endpoints";
+import { getMarketCandles } from "@/lib/api/market";
 import { ApiClientError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/session-context";
 import { marketQueryRetry } from "@/features/market/market-query-retry";
@@ -54,17 +53,7 @@ export function useMarketCandles(
     queryKey: ["market-candles", assetClass, symbol, resolution, fromSec, toSec, token],
     queryFn: async (): Promise<MarketCandlesPayload> => {
       const t = assertToken(token);
-      const params = new URLSearchParams({
-        asset_class: assetClass,
-        symbol,
-        resolution,
-        from: String(fromSec),
-        to: String(toSec),
-      });
-      return laravelFetch<MarketCandlesPayload>(
-        `${API.app.market.candles}?${params.toString()}`,
-        { token: t },
-      );
+      return getMarketCandles(t, symbol, resolution, fromSec, toSec, assetClass);
     },
     enabled: Boolean(
       authReady && isAuthenticated && token && enabled && symbol.length > 0,

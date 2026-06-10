@@ -3,7 +3,6 @@ import {
   ChartColumn,
   CreditCard,
   Home,
-  LineChart,
   PieChart,
   Settings,
   type LucideIcon,
@@ -17,7 +16,6 @@ export type DashboardNavItem = {
 
 export const DASHBOARD_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/market", label: "Markets", icon: LineChart },
   { href: "/wallet", label: "Wallets", icon: CreditCard },
   { href: "/portfolio", label: "Portfolio", icon: PieChart },
   { href: "/agent", label: "Agent", icon: Bot },

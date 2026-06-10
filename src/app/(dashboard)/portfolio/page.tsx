@@ -1,48 +1,82 @@
 "use client";
 
+import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
+import {
+  CRYPTO_SYMBOLS,
+  type ChartTimeframe,
+} from "@/components/market/market-chart-utils";
+import { MarketOverviewSection } from "@/components/market/market-overview-section";
+import { MarketPriceChart } from "@/components/market/market-price-chart";
 import { usePortfolioOverview } from "@/features/portfolio/use-portfolio";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 
 export default function PortfolioPage() {
   const overview = usePortfolioOverview();
-
-  if (overview.isLoading) {
-    return <LoadingState label="Loading portfolio…" />;
-  }
-
-  if (overview.isError) {
-    return (
-      <div className="space-y-4">
-        <PageHeader title="Portfolio" description="Wallet holdings and market valuation." />
-        <InlineAlert tone="error">{normalizeApiError(overview.error)}</InlineAlert>
-      </div>
-    );
-  }
+  const [chartSymbol, setChartSymbol] = useState<string>(CRYPTO_SYMBOLS[0]);
+  const [chartTimeframe, setChartTimeframe] = useState<ChartTimeframe>("1h");
 
   const data = overview.data;
   const balances = Array.isArray(data?.wallet_balances) ? data.wallet_balances : [];
-  const prices = Array.isArray(data?.market_prices) ? data.market_prices : [];
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 max-w-full space-y-6">
       <PageHeader
         title="Portfolio"
-        description="Wallet holdings valued with live Binance/CoinGecko prices via Prosperofy backend."
+        description="Wallet holdings and live crypto market data via Prosperofy backend."
       />
-      <p className="text-xs text-muted-foreground">
-        Source: {data?.source ?? "mixed"} — informational only, not financial advice.
-      </p>
-      {(data as { market_quotes_status?: string })?.market_quotes_status === "unavailable" ? (
-        <InlineAlert tone="warning">
-          Live market prices are temporarily unavailable. Holdings are shown from your last synced balance.
-        </InlineAlert>
-      ) : null}
-      <section className="rounded-xl border border-border bg-card p-4">
+
+      {overview.isLoading ? (
+        <LoadingState label="Loading portfolio…" />
+      ) : overview.isError ? (
+        <InlineAlert tone="warning">{normalizeApiError(overview.error)}</InlineAlert>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">
+            Source: {data?.source ?? "mixed"} — informational only, not financial advice.
+          </p>
+          {(data as { market_quotes_status?: string })?.market_quotes_status === "unavailable" ? (
+            <InlineAlert tone="warning">
+              Live market prices are temporarily unavailable. Holdings are shown from your last synced
+              balance.
+            </InlineAlert>
+          ) : null}
+
+          <section className="grid w-full min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="min-w-0 rounded-xl border border-border bg-card p-4">
+              <h2 className="text-sm font-semibold">Holdings count</h2>
+              <p className="mt-2 text-2xl font-semibold tabular-nums">{balances.length}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Wallet assets tracked</p>
+            </div>
+            <div className="min-w-0 rounded-xl border border-border bg-card p-4 sm:col-span-2">
+              <h2 className="text-sm font-semibold">Portfolio summary</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {balances.length === 0
+                  ? "No wallet assets yet. Create your WFL wallet to see holdings here."
+                  : `${balances.length} asset${balances.length === 1 ? "" : "s"} in your wallet.`}
+              </p>
+            </div>
+          </section>
+        </>
+      )}
+
+      <MarketOverviewSection symbols={CRYPTO_SYMBOLS} />
+
+      <MarketPriceChart
+        symbol={chartSymbol}
+        timeframe={chartTimeframe}
+        symbols={CRYPTO_SYMBOLS}
+        onSymbolChange={setChartSymbol}
+        onTimeframeChange={setChartTimeframe}
+      />
+
+      <section className="w-full min-w-0 max-w-full rounded-xl border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">Holdings</h2>
-        {balances.length === 0 ? (
+        {overview.isLoading ? (
+          <p className="mt-2 text-sm text-muted-foreground">Loading holdings…</p>
+        ) : balances.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">No wallet assets yet.</p>
         ) : (
           <ul className="mt-2 space-y-2 text-sm">
@@ -54,31 +88,6 @@ export default function PortfolioPage() {
                 </span>
               </li>
             ))}
-          </ul>
-        )}
-      </section>
-      <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Market prices</h2>
-        {prices.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">Market prices temporarily unavailable.</p>
-        ) : (
-          <ul className="mt-2 space-y-2 text-sm">
-            {prices.map((row, i) => {
-              const q = row as { symbol?: string; price?: string; last?: string; is_live?: boolean };
-              return (
-                <li key={i} className="flex justify-between gap-4">
-                  <span>{q.symbol ?? "—"}</span>
-                  <span className="tabular-nums">
-                    {q.price ?? q.last ?? "—"}{" "}
-                    {q.is_live ? (
-                      <span className="text-emerald-600 text-xs">live</span>
-                    ) : (
-                      <span className="text-amber-600 text-xs">cached</span>
-                    )}
-                  </span>
-                </li>
-              );
-            })}
           </ul>
         )}
       </section>

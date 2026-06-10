@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function MarketRedirectPage() {
+export default function MarketsRedirectPage() {
   redirect("/portfolio");
 }

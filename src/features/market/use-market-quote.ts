@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { laravelFetch } from "@/lib/api/client";
-import { API } from "@/lib/api/endpoints";
+import { getMarketQuote } from "@/lib/api/market";
 import { ApiClientError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/session-context";
 
@@ -47,14 +46,7 @@ export function useMarketQuote(assetClass: string, symbol: string) {
     queryKey: ["market-quote", assetClass, symbol, token],
     queryFn: async (): Promise<MarketQuotePayload> => {
       const t = assertToken(token);
-      const params = new URLSearchParams({
-        asset_class: assetClass,
-        symbol,
-      });
-      return laravelFetch<MarketQuotePayload>(
-        `${API.app.market.quote}?${params.toString()}`,
-        { token: t },
-      );
+      return getMarketQuote(t, symbol, assetClass);
     },
     enabled: Boolean(authReady && isAuthenticated && token),
     staleTime: 30_000,
