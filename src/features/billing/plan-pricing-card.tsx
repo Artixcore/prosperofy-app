@@ -2,6 +2,7 @@
 
 import type { BillingInterval, PlanCtaState } from "@/features/billing/billing-plan-display";
 import {
+  formatFeatureBadge,
   formatPrice,
   getPlanFeatures,
   getPlanPrice,
@@ -20,6 +21,19 @@ type PlanPricingCardProps = {
   onCheckout: (plan: SubscriptionPlanRow) => void;
 };
 
+function badgeClassName(badge: ReturnType<typeof formatFeatureBadge>): string {
+  if (badge === "Coming soon") {
+    return "bg-muted text-muted-foreground";
+  }
+  if (badge === "Where supported") {
+    return "bg-blue-500/10 text-blue-700 dark:text-blue-300";
+  }
+  if (badge === "Eligible") {
+    return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  }
+  return "bg-primary/10 text-primary";
+}
+
 export function PlanPricingCard({
   plan,
   currentSlug,
@@ -29,7 +43,7 @@ export function PlanPricingCard({
   onCheckout,
 }: PlanPricingCardProps) {
   const isCurrent = isCurrentPlan(plan, currentSlug);
-  const isRecommended = isRecommendedPlan(plan.slug);
+  const isRecommended = isRecommendedPlan(plan);
   const tagline = getPlanTagline(plan);
   const features = getPlanFeatures(plan);
   const { amount, suffix } = getPlanPrice(plan, billingInterval);
@@ -68,14 +82,24 @@ export function PlanPricingCard({
 
       {features.length > 0 ? (
         <ul className="mt-4 flex-1 space-y-2 text-sm text-muted-foreground">
-          {features.map((feature) => (
-            <li key={feature} className="flex gap-2">
-              <span aria-hidden className="shrink-0 text-primary">
-                •
-              </span>
-              <span className="min-w-0 break-words">{feature}</span>
-            </li>
-          ))}
+          {features.map((feature) => {
+            const badge = formatFeatureBadge(feature, plan.metadata);
+            return (
+              <li key={feature} className="flex gap-2">
+                <span aria-hidden className="shrink-0 text-primary">
+                  •
+                </span>
+                <span className="min-w-0 flex-1 break-words">
+                  <span>{feature}</span>
+                  <span
+                    className={`ml-2 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${badgeClassName(badge)}`}
+                  >
+                    {badge}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
 
@@ -90,7 +114,7 @@ export function PlanPricingCard({
             }
           }}
         >
-          {isBusy ? "Redirecting…" : ctaState.label}
+          {isBusy ? "Redirecting..." : ctaState.label}
         </button>
       )}
     </section>

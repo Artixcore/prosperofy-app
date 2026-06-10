@@ -28,6 +28,14 @@ vi.mock("@/features/billing/use-billing-checkout", () => ({
 import { BillingSettingsContent } from "@/features/billing/billing-settings-content";
 import { UpgradePlansContent } from "@/features/billing/upgrade-plans-content";
 
+const baseLimits = {
+  watchlists: 1,
+  tracked_assets: 5,
+  alerts: 0,
+  premium_market_data: false,
+  priority_support: false,
+};
+
 const mockPlans: SubscriptionPlanRow[] = [
   {
     id: 1,
@@ -38,15 +46,11 @@ const mockPlans: SubscriptionPlanRow[] = [
     yearly_price: 0,
     currency: "eur",
     billing_interval_support: ["monthly"],
-    features: ["Basic dashboard access"],
-    limits: {
-      watchlists: 1,
-      tracked_assets: 5,
-      alerts: 0,
-      premium_market_data: false,
-      priority_support: false,
-    },
+    features: ["Save, Invest, and Spend wallet view"],
+    limits: baseLimits,
     sort_order: 0,
+    is_current: true,
+    cta_label: "Current plan",
   },
   {
     id: 2,
@@ -57,46 +61,44 @@ const mockPlans: SubscriptionPlanRow[] = [
     yearly_price: 190,
     currency: "eur",
     billing_interval_support: ["monthly", "yearly"],
-    features: ["Everything in Free", "Basic alerts"],
-    limits: {
-      watchlists: 3,
-      tracked_assets: 25,
-      alerts: 10,
-      premium_market_data: false,
-      priority_support: false,
-    },
+    features: ["Everything in Free", "Card eligibility where supported"],
+    limits: { ...baseLimits, watchlists: 3, tracked_assets: 25, alerts: 10 },
     sort_order: 1,
+    cta_label: "Upgrade",
   },
   {
     id: 3,
-    name: "Trader",
+    name: "Growth",
     slug: "trader",
     description: null,
     monthly_price: 49,
     yearly_price: 490,
     currency: "eur",
     billing_interval_support: ["monthly", "yearly"],
-    features: ["Portfolio tools"],
+    features: ["Cashback eligibility (up to 5%, coming soon)"],
     limits: {
+      ...baseLimits,
       watchlists: 10,
       tracked_assets: 100,
       alerts: 50,
       premium_market_data: true,
-      priority_support: false,
     },
     sort_order: 2,
+    is_recommended: true,
+    cta_label: "Upgrade",
   },
   {
     id: 4,
-    name: "Pro",
+    name: "Premium",
     slug: "pro",
     description: null,
     monthly_price: 69,
     yearly_price: 690,
     currency: "eur",
     billing_interval_support: ["monthly", "yearly"],
-    features: ["Priority support"],
+    features: ["Yield pool access when available"],
     limits: {
+      ...baseLimits,
       watchlists: 25,
       tracked_assets: 500,
       alerts: 200,
@@ -104,6 +106,8 @@ const mockPlans: SubscriptionPlanRow[] = [
       priority_support: true,
     },
     sort_order: 3,
+    is_recommended: true,
+    cta_label: "Upgrade",
   },
   {
     id: 5,
@@ -114,8 +118,9 @@ const mockPlans: SubscriptionPlanRow[] = [
     yearly_price: 1290,
     currency: "eur",
     billing_interval_support: ["monthly", "yearly"],
-    features: ["Highest limits"],
+    features: ["Future credit eligibility where supported"],
     limits: {
+      ...baseLimits,
       watchlists: 100,
       tracked_assets: 2000,
       alerts: 1000,
@@ -123,6 +128,7 @@ const mockPlans: SubscriptionPlanRow[] = [
       priority_support: true,
     },
     sort_order: 4,
+    cta_label: "Upgrade",
   },
 ];
 
@@ -132,7 +138,7 @@ const mockSubscription: CurrentSubscription = {
   plan_slug: "free",
   plan_name: "Free",
   status: "active",
-  billing_interval: null,
+  billing_interval: "month",
   starts_at: null,
   renews_at: null,
   ends_at: null,
@@ -171,23 +177,26 @@ beforeEach(() => {
 });
 
 describe("BillingSettingsContent", () => {
-  it("renders current plan info without all plan cards", () => {
+  it("renders current membership without all plan cards", () => {
     render(<BillingSettingsContent />);
     expect(screen.getByRole("heading", { name: "Billing" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Current membership" })).toBeInTheDocument();
     expect(screen.getByText(/You are currently on the/i)).toBeInTheDocument();
     expect(screen.getByText("Free")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText(/Included:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Card access is subject to supported countries/i)).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Starter" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Elite" })).not.toBeInTheDocument();
   });
 
-  it("shows upgrade plan link for free users", () => {
+  it("shows upgrade membership link for free users", () => {
     render(<BillingSettingsContent />);
-    const upgradeLink = screen.getByRole("link", { name: "Upgrade plan" });
+    const upgradeLink = screen.getByRole("link", { name: "Upgrade membership" });
     expect(upgradeLink).toHaveAttribute("href", "/settings/billing/upgrade");
   });
 
-  it("shows change plan link for paid users", () => {
+  it("shows change membership link for paid users", () => {
     subscriptionQuery.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -195,16 +204,16 @@ describe("BillingSettingsContent", () => {
       data: {
         ...mockSubscription,
         plan_slug: "trader",
-        plan_name: "Trader",
+        plan_name: "Growth",
         features: mockPlans[2].features,
       },
       refetch: vi.fn(),
     });
     render(<BillingSettingsContent />);
-    expect(screen.getByRole("link", { name: "Change plan" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Change membership" })).toBeInTheDocument();
   });
 
-  it("shows subscription error with retry", () => {
+  it("shows membership error with retry", () => {
     const refetch = vi.fn();
     subscriptionQuery.mockReturnValue({
       isLoading: false,
@@ -215,7 +224,7 @@ describe("BillingSettingsContent", () => {
     });
     render(<BillingSettingsContent />);
     expect(
-      screen.getByText(/We couldn't load your subscription right now/i),
+      screen.getByText(/We couldn't load your membership right now/i),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(refetch).toHaveBeenCalled();
@@ -225,11 +234,14 @@ describe("BillingSettingsContent", () => {
 describe("UpgradePlansContent", () => {
   it("renders five plan cards", () => {
     render(<UpgradePlansContent />);
-    expect(screen.getByRole("heading", { name: "Choose your plan" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Choose your membership" })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Select the plan that fits how you save, invest, spend, and earn with WFL/i),
+    ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Free" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Starter" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Trader" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Pro" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Growth" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Premium" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Elite" })).toBeInTheDocument();
   });
 
@@ -306,7 +318,7 @@ describe("UpgradePlansContent", () => {
 
   it("shows mapped error for unavailable payment provider", async () => {
     checkoutMutate.mockRejectedValueOnce(
-      new ApiClientError("Payment provider is temporarily unavailable.", {
+      new ApiClientError("Payment provider is not configured yet.", {
         status: 503,
         code: "PAYMENT_PROVIDER_UNAVAILABLE",
         retryable: true,
@@ -318,7 +330,7 @@ describe("UpgradePlansContent", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Payment provider is temporarily unavailable/i),
+        screen.getByText(/Payment provider is not configured yet/i),
       ).toBeInTheDocument();
     });
   });

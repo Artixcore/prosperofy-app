@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
-import type { CurrentSubscription } from "@/lib/api/types";
+import type { CurrentSubscription, CurrentSubscriptionPayload } from "@/lib/api/types";
 import { ApiClientError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/session-context";
 
@@ -23,10 +23,15 @@ export function useCurrentSubscription(options?: { pollUntilActive?: boolean }) 
   const { token, authReady, isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ["current-subscription", token],
-    queryFn: () =>
-      laravelFetch<CurrentSubscription>(API.app.billing.subscription, {
-        token: assertToken(token),
-      }),
+    queryFn: async (): Promise<CurrentSubscription> => {
+      const payload = await laravelFetch<CurrentSubscriptionPayload>(
+        API.app.billing.subscription,
+        {
+          token: assertToken(token),
+        },
+      );
+      return payload.subscription;
+    },
     enabled: Boolean(authReady && isAuthenticated && token),
     refetchInterval: (query) => {
       if (!options?.pollUntilActive) {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { InlineAlert } from "@/components/system/inline-alert";
 import { LoadingState } from "@/components/system/loading-state";
 import {
+  COMPLIANCE_FOOTNOTES,
   formatBillingDate,
   formatPlanStatus,
   formatPrice,
@@ -28,7 +29,7 @@ export function BillingSettingsContent() {
   const plans = useSubscriptionPlans();
 
   if (subscription.isLoading) {
-    return <LoadingState label="Loading your subscription…" />;
+    return <LoadingState label="Loading membership details..." />;
   }
 
   if (subscription.isError) {
@@ -37,11 +38,11 @@ export function BillingSettingsContent() {
         <div>
           <h2 className="text-base font-semibold text-foreground">Billing</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your current plan, payments, and subscription.
+            Manage your current membership, payments, and subscription.
           </p>
         </div>
         <InlineAlert tone="error">
-          We couldn&apos;t load your subscription right now.
+          We couldn&apos;t load your membership right now.
         </InlineAlert>
         <button
           type="button"
@@ -76,12 +77,12 @@ export function BillingSettingsContent() {
       <div>
         <h2 className="text-base font-semibold text-foreground">Billing</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage your current plan, payments, and subscription.
+          Manage your current membership, payments, and subscription.
         </p>
       </div>
 
       <section className="min-w-0 max-w-full break-words rounded-xl border border-border bg-card p-5 leading-relaxed">
-        <h3 className="text-sm font-medium text-muted-foreground">Current plan</h3>
+        <h3 className="text-sm font-medium text-muted-foreground">Current membership</h3>
         <p className="mt-2 text-base text-foreground">
           You are currently on the <span className="font-semibold">{planName}</span> plan.
         </p>
@@ -128,7 +129,7 @@ export function BillingSettingsContent() {
 
         {features.length > 0 ? (
           <div className="mt-5">
-            <p className="text-sm font-medium text-foreground">Your plan includes:</p>
+            <p className="text-sm font-medium text-foreground">Included:</p>
             <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
               {features.map((feature) => (
                 <li key={feature} className="flex gap-2">
@@ -141,6 +142,13 @@ export function BillingSettingsContent() {
             </ul>
           </div>
         ) : null}
+
+        <div className="mt-5 space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+          <p>{COMPLIANCE_FOOTNOTES.card}</p>
+          <p>{COMPLIANCE_FOOTNOTES.cashback}</p>
+          <p>{COMPLIANCE_FOOTNOTES.yield}</p>
+          <p>{COMPLIANCE_FOOTNOTES.credit}</p>
+        </div>
 
         <div className="mt-6">
           <Link

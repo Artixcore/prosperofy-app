@@ -589,7 +589,30 @@ export type AgentTradeExecutionRecord = {
   created_at?: string;
 };
 
-export type SubscriptionPlanLimits = {
+export type PlanMetadata = {
+  wallets?: string[];
+  card_access?: string;
+  cashback?: string;
+  ai_access?: string;
+  yield_pools?: string;
+  referral_rewards?: string;
+  future_credit?: string;
+  support?: string;
+};
+
+export type WflPlanLimits = {
+  watchlists?: number;
+  tracked_assets?: number;
+  alerts?: number;
+  premium_market_data?: boolean;
+  priority_support?: boolean;
+  wallets?: string[];
+  wallet_activity_monthly?: number;
+  ai_actions_monthly?: number;
+  referral_reward_rate?: string;
+};
+
+export type SubscriptionPlanLimits = WflPlanLimits & {
   watchlists: number;
   tracked_assets: number;
   alerts: number;
@@ -611,6 +634,12 @@ export type SubscriptionPlanRow = {
   sort_order: number;
   price_minor?: number;
   billing_interval?: string;
+  price_amount?: string;
+  price_currency?: string;
+  metadata?: PlanMetadata;
+  is_current?: boolean;
+  is_recommended?: boolean;
+  cta_label?: string;
 };
 
 export type SubscriptionPlansPayload = {
@@ -623,12 +652,34 @@ export type CurrentSubscription = {
   plan_slug: string;
   plan_name: string;
   status: string;
+  price_amount?: string;
+  price_currency?: string;
   billing_interval: string | null;
   starts_at: string | null;
   renews_at: string | null;
   ends_at: string | null;
   limits: SubscriptionPlanLimits;
   features: string[];
+  metadata?: PlanMetadata;
+};
+
+export type CurrentSubscriptionPayload = {
+  subscription: CurrentSubscription;
+};
+
+export type BillingPaymentRow = {
+  id: number;
+  subscription_plan_id: number | null;
+  plan_slug: string | null;
+  amount: string;
+  currency: string;
+  status: string;
+  checkout_url: string | null;
+  created_at: string | null;
+};
+
+export type BillingPaymentsPayload = {
+  payments: BillingPaymentRow[];
 };
 
 export type BillingCheckoutBody = {

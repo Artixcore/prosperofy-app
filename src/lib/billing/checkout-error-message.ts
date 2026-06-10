@@ -4,11 +4,12 @@ const CHECKOUT_ERROR_MESSAGE =
   "We couldn't start checkout right now. Please try again.";
 
 const CHECKOUT_ERROR_BY_CODE: Record<string, string> = {
-  PAYMENT_PROVIDER_UNAVAILABLE: "Payment provider is temporarily unavailable.",
-  PAYMENT_PROVIDER_NOT_CONFIGURED: "Billing is not configured yet.",
+  PAYMENT_PROVIDER_UNAVAILABLE: "Payment provider is not configured yet.",
+  PAYMENT_PROVIDER_NOT_CONFIGURED: "Payment provider is not configured yet.",
   PAYMENT_CREATE_FAILED: "We couldn't start checkout right now. Please try again.",
   BILLING_PLAN_NOT_FOUND: "This plan could not be found.",
   BILLING_CHECKOUT_FAILED: "We couldn't start checkout right now. Please try again.",
+  BILLING_ALREADY_ON_PLAN: "You are already on this membership plan.",
   UNAUTHENTICATED: "Please sign in again.",
 };
 

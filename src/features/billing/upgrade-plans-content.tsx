@@ -36,7 +36,7 @@ export function UpgradePlansContent() {
   const [redirectError, setRedirectError] = useState<string | null>(null);
 
   if (plans.isLoading || subscription.isLoading) {
-    return <LoadingState label="Loading plans…" />;
+    return <LoadingState label="Loading membership details..." />;
   }
 
   if (plans.isError) {
@@ -118,9 +118,9 @@ export function UpgradePlansContent() {
         </Link>
 
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Choose your plan</h1>
+          <h1 className="text-xl font-semibold text-foreground">Choose your membership</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Upgrade when you are ready. You can start with Free and move up anytime.
+            Select the plan that fits how you save, invest, spend, and earn with WFL.
           </p>
         </div>
 

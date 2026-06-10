@@ -136,6 +136,7 @@ export const API = {
       subscription: "/api/app/billing/subscription",
       checkout: "/api/app/billing/checkout",
       cancel: "/api/app/billing/cancel",
+      payments: "/api/app/billing/payments",
       paymentStatus: (id: string | number) =>
         `/api/app/billing/payments/${encodeURIComponent(String(id))}/status` as const,
     },
