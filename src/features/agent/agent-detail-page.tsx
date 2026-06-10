@@ -83,9 +83,14 @@ export default function AgentDetailPage() {
         title={a.name}
         description={a.primary_job}
         action={
-          <Link href="/agent" className="text-sm text-primary underline">
-            Back to agents
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href={`/agent/${agentId}/edit`} className="text-sm text-primary underline">
+              Edit agent
+            </Link>
+            <Link href="/agent" className="text-sm text-primary underline">
+              Back to agents
+            </Link>
+          </div>
         }
       />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,17 @@ import { InlineAlert } from "@/components/system/inline-alert";
 import { useExchangeConnectionsQuery } from "@/features/exchanges/use-exchange-connections";
 import { useAgentCapabilitiesQuery } from "@/features/agent/use-agents";
 import { AGENT_DISCLAIMER } from "@/lib/config/agent-features";
+import {
+  agentTypeAllowsExecutable,
+  buildAgentBody,
+  filterBinanceConnections,
+  formatExchangeOptionLabel,
+  getExecutableDisabledReason,
+  isExecutableReadyConnection,
+  mapUserAgentToFormValues,
+  type AgentFormValues,
+} from "@/features/agent/components/agent-form-helpers";
+import type { UserAgentRecord } from "@/lib/api/types";
 
 const schema = z
   .object({
@@ -48,7 +59,7 @@ const schema = z
       if (!data.max_trade_size || Number(data.max_trade_size) <= 0) {
         ctx.addIssue({
           code: "custom",
-          message: "Max trade size is required when executable trading is enabled.",
+          message: "Max trade size is required when executable trade preparation is enabled.",
           path: ["max_trade_size"],
         });
       }
@@ -76,47 +87,105 @@ const schema = z
     }
   });
 
-export type CreateAgentFormValues = z.infer<typeof schema>;
+export type CreateAgentFormValues = AgentFormValues;
+
+const defaultFormValues: AgentFormValues = {
+  name: "",
+  primary_job: "Market research",
+  description_prompt: "",
+  agent_type: "research_only",
+  can_suggest_trades: false,
+  can_prepare_executable_trades: false,
+  symbols: "BTCUSDT, ETHUSDT",
+  timeframe: "1h",
+  risk_profile: "balanced",
+  max_trade_size: "",
+  exchange_connection_id: "",
+};
 
 type Props = {
+  mode?: "create" | "edit";
+  initialAgent?: UserAgentRecord;
   onSubmit: (values: CreateAgentFormValues) => Promise<void>;
   pending?: boolean;
   error?: string | null;
+  submitLabel?: string;
 };
 
-export function CreateAgentForm({ onSubmit, pending, error }: Props) {
+export function CreateAgentForm({
+  mode = "create",
+  initialAgent,
+  onSubmit,
+  pending,
+  error,
+  submitLabel,
+}: Props) {
   const connections = useExchangeConnectionsQuery();
   const capabilities = useAgentCapabilitiesQuery();
 
   const form = useForm<CreateAgentFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      primary_job: "Market research",
-      description_prompt: "",
-      agent_type: "research_only",
-      can_suggest_trades: false,
-      can_prepare_executable_trades: false,
-      symbols: "BTCUSDT, ETHUSDT",
-      timeframe: "1h",
-      risk_profile: "balanced",
-      max_trade_size: "",
-      exchange_connection_id: "",
-    },
+    defaultValues:
+      mode === "edit" && initialAgent
+        ? mapUserAgentToFormValues(initialAgent)
+        : defaultFormValues,
   });
 
   const watchExecutable = form.watch("can_prepare_executable_trades");
   const watchSuggest = form.watch("can_suggest_trades");
+  const watchAgentType = form.watch("agent_type");
+  const watchExchangeId = form.watch("exchange_connection_id") ?? "";
 
   const binanceConnections = useMemo(() => {
     const items = connections.data?.connections ?? connections.data?.exchanges ?? [];
-    return items.filter(
-      (c) => c.exchange === "binance" && c.is_valid && !c.can_withdraw,
-    );
+    return filterBinanceConnections(items);
   }, [connections.data]);
 
+  const selectedExchange = binanceConnections.find((c) => String(c.id) === watchExchangeId);
+
+  const hasValidSelectedExchange = isExecutableReadyConnection(selectedExchange, watchExchangeId);
+
+  const platformAllowsPrep =
+    capabilities.data?.executable_trade_preparation_enabled === true;
+
   const canEnableExecutable =
-    capabilities.data?.has_trading_binance_connection ?? false;
+    watchSuggest &&
+    agentTypeAllowsExecutable(watchAgentType) &&
+    hasValidSelectedExchange &&
+    platformAllowsPrep &&
+    !capabilities.isLoading;
+
+  const disabledReason = getExecutableDisabledReason({
+    capabilities: capabilities.data,
+    capabilitiesLoading: capabilities.isLoading,
+    canSuggestTrades: watchSuggest,
+    agentType: watchAgentType,
+    exchangeConnectionId: watchExchangeId,
+    binanceConnections,
+    selectedExchange,
+  });
+
+  useEffect(() => {
+    if (!watchSuggest && watchExecutable) {
+      form.setValue("can_prepare_executable_trades", false);
+    }
+  }, [watchSuggest, watchExecutable, form]);
+
+  useEffect(() => {
+    if (!agentTypeAllowsExecutable(watchAgentType) && watchExecutable) {
+      form.setValue("can_prepare_executable_trades", false);
+    }
+  }, [watchAgentType, watchExecutable, form]);
+
+  useEffect(() => {
+    if (!hasValidSelectedExchange && watchExecutable) {
+      form.setValue("can_prepare_executable_trades", false);
+    }
+  }, [hasValidSelectedExchange, watchExecutable, form]);
+
+  const showExchangeConnectLink =
+    disabledReason ===
+    "Connect a valid exchange in Settings before enabling executable trade preparation.";
 
   return (
     <form
@@ -183,29 +252,39 @@ export function CreateAgentForm({ onSubmit, pending, error }: Props) {
         Can suggest trades?
       </label>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          disabled={!canEnableExecutable}
-          {...form.register("can_prepare_executable_trades")}
-        />
-        Can prepare executable trades?
-      </label>
+      <div className="space-y-1">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            disabled={!canEnableExecutable}
+            {...form.register("can_prepare_executable_trades")}
+          />
+          Can prepare executable trade drafts?
+        </label>
+        <p className="text-xs text-muted-foreground">
+          This lets the agent prepare an order draft for your review. It will not place trades
+          automatically.
+        </p>
+      </div>
 
-      {!canEnableExecutable && (watchExecutable || watchSuggest) ? (
+      {disabledReason && !canEnableExecutable ? (
         <InlineAlert tone="warning">
-          Connect Binance in{" "}
-          <Link href="/settings/exchange-connections" className="underline">
-            Settings → Exchange Connections
-          </Link>{" "}
-          first (valid connection, trading enabled, withdrawals disabled).
+          {disabledReason}{" "}
+          {showExchangeConnectLink ? (
+            <>
+              <Link href="/settings/exchange-connections" className="underline">
+                Go to Exchange Connections
+              </Link>
+              .
+            </>
+          ) : null}
         </InlineAlert>
       ) : null}
 
       {watchExecutable ? (
         <InlineAlert tone="warning">
-          This agent can prepare executable Binance trades for your review. It cannot execute
-          without your final confirmation. Trading involves risk and you can lose money.
+          Prepared trades still require your final confirmation before anything is sent to an
+          exchange. Trading involves risk and you can lose money.
         </InlineAlert>
       ) : null}
 
@@ -218,10 +297,19 @@ export function CreateAgentForm({ onSubmit, pending, error }: Props) {
           <option value="">None</option>
           {binanceConnections.map((c) => (
             <option key={c.id} value={String(c.id)}>
-              {c.label ?? `Binance #${c.id}`}
+              {formatExchangeOptionLabel(c)}
             </option>
           ))}
         </select>
+        {binanceConnections.length === 0 ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Connect a valid exchange in{" "}
+            <Link href="/settings/exchange-connections" className="underline">
+              Settings
+            </Link>{" "}
+            before enabling executable trade preparation.
+          </p>
+        ) : null}
       </FormField>
 
       <FormField id="symbols" label="Symbols / Watchlist">
@@ -295,11 +383,26 @@ export function CreateAgentForm({ onSubmit, pending, error }: Props) {
         <fieldset className="space-y-2 rounded-md border border-amber-500/40 p-3">
           <legend className="px-1 text-sm font-medium">Safety confirmations</legend>
           {[
-            ["safety_trading_risk", "I understand trading can lose money."],
-            ["safety_not_guaranteed", "I understand agent suggestions are not guaranteed."],
-            ["safety_must_confirm", "I understand I must review and confirm every trade."],
-            ["safety_withdrawal_disabled", "I confirm withdrawal permission is disabled on my Binance API key."],
-            ["safety_not_advice", "I understand Prosperofy is not financial advice."],
+            [
+              "safety_not_guaranteed",
+              "I understand this agent can only prepare trade drafts, not guarantee profit.",
+            ],
+            [
+              "safety_trading_risk",
+              "I understand trading involves risk and I can lose money.",
+            ],
+            [
+              "safety_must_confirm",
+              "I understand every real trade still requires my final confirmation.",
+            ],
+            [
+              "safety_withdrawal_disabled",
+              "I confirm withdrawal permission should remain disabled on my exchange API key.",
+            ],
+            [
+              "safety_not_advice",
+              "I understand Prosperofy is not financial advice.",
+            ],
           ].map(([key, label]) => (
             <label key={key} className="flex items-start gap-2 text-sm">
               <input type="checkbox" {...form.register(key as keyof CreateAgentFormValues)} />
@@ -309,49 +412,15 @@ export function CreateAgentForm({ onSubmit, pending, error }: Props) {
         </fieldset>
       ) : null}
 
-      <SubmitButton pending={pending}>Save Agent</SubmitButton>
+      <SubmitButton pending={pending}>{submitLabel ?? "Save Agent"}</SubmitButton>
     </form>
   );
 }
 
 export function buildAgentCreateBody(values: CreateAgentFormValues) {
-  const symbols = (values.symbols ?? "")
-    .split(/[,\s]+/)
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean)
-    .slice(0, 20);
+  return buildAgentBody(values);
+}
 
-  const strategy_preferences: string[] = [];
-  if (values.strategy_trend_following) strategy_preferences.push("trend_following");
-  if (values.strategy_momentum) strategy_preferences.push("momentum");
-  if (values.strategy_mean_reversion) strategy_preferences.push("mean_reversion");
-  if (values.strategy_breakout) strategy_preferences.push("breakout");
-  if (values.strategy_risk_first) strategy_preferences.push("risk_first");
-  if (values.strategy_portfolio_rebalance) strategy_preferences.push("portfolio_rebalance");
-
-  return {
-    name: values.name,
-    primary_job: values.primary_job,
-    description_prompt: values.description_prompt,
-    agent_type: values.agent_type,
-    can_suggest_trades: values.can_suggest_trades,
-    can_prepare_executable_trades: values.can_prepare_executable_trades,
-    symbols,
-    timeframe: values.timeframe,
-    risk_profile: values.risk_profile,
-    max_trade_size: values.max_trade_size ? Number(values.max_trade_size) : undefined,
-    exchange_connection_id: values.exchange_connection_id
-      ? Number(values.exchange_connection_id)
-      : undefined,
-    strategy_preferences,
-    safety_confirmations: values.can_prepare_executable_trades
-      ? {
-          understand_trading_risk: Boolean(values.safety_trading_risk),
-          understand_suggestions_not_guaranteed: Boolean(values.safety_not_guaranteed),
-          understand_must_confirm_trades: Boolean(values.safety_must_confirm),
-          confirm_withdrawal_disabled: Boolean(values.safety_withdrawal_disabled),
-          understand_not_financial_advice: Boolean(values.safety_not_advice),
-        }
-      : undefined,
-  };
+export function buildAgentUpdateBody(values: CreateAgentFormValues) {
+  return buildAgentBody(values);
 }

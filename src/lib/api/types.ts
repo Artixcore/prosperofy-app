@@ -410,7 +410,11 @@ export type StrategyPatchBody = {
 export type AgentCapabilities = {
   agents_enabled: boolean;
   trade_suggestions_enabled: boolean;
+  executable_trade_preparation_enabled: boolean;
   trade_execution_enabled: boolean;
+  binance_trading_enabled: boolean;
+  requires_exchange_connection: boolean;
+  requires_risk_confirmation: boolean;
   has_valid_binance_connection: boolean;
   has_trading_binance_connection: boolean;
   disclaimer: string;
@@ -433,6 +437,7 @@ export type UserAgentRecord = {
   max_daily_trades?: number;
   status: string;
   exchange_connection_id?: number | null;
+  safety_confirmations?: Record<string, boolean> | null;
   last_run_at?: string | null;
   total_analyses?: number;
   total_trade_suggestions?: number;
