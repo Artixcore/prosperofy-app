@@ -6,9 +6,15 @@ import { usePathname } from "next/navigation";
 const AGENT_TABS = [
   {
     href: "/agent",
+    label: "AI Center",
+    match: (path: string) => path === "/agent",
+  },
+  {
+    href: "/agent/my-agents",
     label: "My Agents",
     match: (path: string) =>
-      path === "/agent" || (path.startsWith("/agent/") && !path.startsWith("/agent/create")),
+      path === "/agent/my-agents" ||
+      (path.startsWith("/agent/") && !path.startsWith("/agent/create") && path !== "/agent"),
   },
   {
     href: "/agent/create",
@@ -27,7 +33,7 @@ export function AgentSubNav() {
 
   return (
     <nav
-      aria-label="Agent sections"
+      aria-label="AI Center sections"
       className="mb-6 flex gap-1 overflow-x-auto border-b border-surface-border pb-px"
     >
       {AGENT_TABS.map((tab) => {

@@ -18,7 +18,7 @@ export const DASHBOARD_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/wallet", label: "Wallets", icon: CreditCard },
   { href: "/portfolio", label: "Portfolio", icon: PieChart },
-  { href: "/agent", label: "Agent", icon: Bot },
+  { href: "/agent", label: "AI Center", icon: Bot },
   { href: "/activity", label: "Activity", icon: ChartColumn },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

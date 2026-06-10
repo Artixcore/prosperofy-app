@@ -1,3 +1,3 @@
 "use client";
 
-export { default } from "@/features/agent/agent-page";
+export { default } from "@/features/ai/ai-action-center-page";

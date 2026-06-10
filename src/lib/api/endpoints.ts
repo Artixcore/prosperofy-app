@@ -73,6 +73,13 @@ export const API = {
       tradeExecutions: (id: string) =>
         `/api/app/agents/${encodeURIComponent(id)}/trade-executions` as const,
     },
+    ai: {
+      createAction: "/api/app/ai/actions",
+      recommendations: "/api/app/ai/recommendations",
+      save: (id: string) => `/api/app/ai/recommendations/${encodeURIComponent(id)}/save` as const,
+      dismiss: (id: string) =>
+        `/api/app/ai/recommendations/${encodeURIComponent(id)}/dismiss` as const,
+    },
     wallet: {
       controlCenter: "/api/app/wallet/control-center",
       overview: "/api/app/wallet",

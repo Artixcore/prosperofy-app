@@ -703,3 +703,62 @@ export type BillingCheckoutResponse = {
 };
 
 export type PaymentStatusResponse = BillingCheckoutResponse;
+
+export type AiActionType =
+  | "analyze_save_wallet"
+  | "suggest_yield_option"
+  | "explain_save_risks"
+  | "analyze_portfolio"
+  | "suggest_allocation"
+  | "suggest_rebalance"
+  | "analyze_spending"
+  | "suggest_budget"
+  | "prepare_card_topup_idea"
+  | "scan_risk"
+  | "explain_exposure"
+  | "suggest_safer_move"
+  | "analyze_rewards"
+  | "suggest_rewards_next_step"
+  | "view_membership_benefits";
+
+export type AiRecommendedAction = {
+  label: string;
+  action: "view_details" | "save" | "dismiss";
+};
+
+export type AiRecommendationRecord = {
+  id: string;
+  type: AiActionType;
+  title: string;
+  summary: string;
+  details?: string | null;
+  status: "draft" | "ready" | "saved" | "dismissed" | "expired";
+  risk_level: "low" | "medium" | "high" | string;
+  confidence_score?: number | null;
+  source_module?: string;
+  recommended_actions: AiRecommendedAction[];
+  disclaimer: string;
+  created_at?: string;
+};
+
+export type CreateAiActionBody = {
+  action_type: AiActionType;
+  context?: {
+    wallet_type?: "save" | "invest" | "spend";
+    [key: string]: unknown;
+  };
+};
+
+export type CreateAiActionResponse = {
+  recommendation: AiRecommendationRecord;
+};
+
+export type AiRecommendationsListResponse = {
+  items: AiRecommendationRecord[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+};
