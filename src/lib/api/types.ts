@@ -481,6 +481,20 @@ export type AgentMarketAnalysisRecord = {
   created_at?: string;
 };
 
+export type CreateTradeSuggestionBody = {
+  symbol: string;
+  side?: "buy" | "sell" | "long" | "short" | "auto";
+  timeframe?: string;
+  risk_profile?: "conservative" | "balanced" | "aggressive";
+  trade_type: "spot";
+  notes?: string;
+  accepted_risk_disclaimer: true;
+};
+
+export type CreateTradeSuggestionResponse = {
+  suggestion: AgentTradeSuggestionRecord;
+};
+
 export type AgentTradeSuggestionRecord = {
   id: string;
   symbol: string;

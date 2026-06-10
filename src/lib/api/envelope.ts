@@ -84,7 +84,14 @@ export function parseEnvelope<T>(json: unknown, httpStatus: number, context: Env
 
   const code = body.error?.code ?? (httpStatus === 403 ? "FORBIDDEN" : "API_ERROR");
   const retryable = Boolean(body.error?.retryable ?? httpStatus >= 500);
-  const fieldErrors = body.errors ?? {};
+  const detailsFromError =
+    body.error?.details &&
+    typeof body.error.details === "object" &&
+    !Array.isArray(body.error.details)
+      ? (body.error.details as FieldErrors)
+      : {};
+  const fieldErrors =
+    body.errors && Object.keys(body.errors).length > 0 ? body.errors : detailsFromError;
   const message = asMessage(
     body.message,
     fallbackMessageForStatus(httpStatus),

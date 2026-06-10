@@ -5,6 +5,7 @@ export type NewsPanelKind = "crypto" | "market";
 
 export type ApiErrorContext =
   | "default"
+  | "agent"
   | "wallet-send"
   | "wallet-send-confirm"
   | "wallet-refresh"
@@ -61,9 +62,22 @@ function resolveApiClientError(
         ? "Please check your details and try again."
         : context === "settings"
           ? "Please check your settings and try again."
-          : "Validation failed.";
+          : context === "agent"
+            ? "Please complete the required trade suggestion fields."
+            : "Validation failed.";
+
+    let message = fieldFirst ?? lookupMessage(code, validationDefault);
+    if (context === "agent") {
+      const base = "Please complete the required trade suggestion fields.";
+      if (fieldFirst && process.env.NODE_ENV === "development") {
+        message = `${base} ${fieldFirst}`;
+      } else {
+        message = base;
+      }
+    }
+
     return {
-      message: fieldFirst ?? lookupMessage(code, validationDefault),
+      message,
       code,
       retryable: error.retryable,
       fieldErrors: error.fieldErrors,
@@ -71,6 +85,53 @@ function resolveApiClientError(
       hints: [],
       showRefreshBalance: false,
     };
+  }
+
+  if (context === "agent") {
+    if (code === "AGENT_SYMBOL_REQUIRED") {
+      return {
+        message: lookupMessage(code, "Choose a symbol before creating a trade suggestion."),
+        code,
+        retryable: false,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (code === "AGENT_TRADE_SUGGESTIONS_DISABLED") {
+      return {
+        message: lookupMessage(code, "Trade suggestions are not enabled for this agent."),
+        code,
+        retryable: false,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (error.status === 404 || code === "AGENT_NOT_FOUND" || code === "MODEL_NOT_FOUND") {
+      return {
+        message: lookupMessage("HTTP_NOT_FOUND", "Agent not found."),
+        code,
+        retryable: false,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
+    if (error.status >= 500 || code === "SERVER_ERROR" || code === "AGENT_TRADE_SUGGESTION_FAILED") {
+      return {
+        message: "We couldn't create a trade suggestion right now. Please try again.",
+        code,
+        retryable: error.retryable,
+        fieldErrors: error.fieldErrors,
+        data,
+        hints: [],
+        showRefreshBalance: false,
+      };
+    }
   }
 
   if (context === "auth-form" && error.status === 401) {

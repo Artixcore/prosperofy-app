@@ -79,7 +79,12 @@ export const ERROR_MESSAGES: Record<string, string> = {
   "PAYMENT_IPN_INVALID": "Invalid payment notification.",
   "PAYMENT_IPN_SIGNATURE_INVALID": "Payment notification signature is invalid.",
   "PAYMENT_ALREADY_PROCESSED": "This payment has already been processed.",
-  "NOT_FOUND": "The requested item could not be found."
+  "NOT_FOUND": "The requested item could not be found.",
+  "AGENT_SYMBOL_REQUIRED": "Choose a symbol before creating a trade suggestion.",
+  "AGENT_TRADE_SUGGESTIONS_DISABLED": "Trade suggestions are not enabled for this agent.",
+  "AGENT_TRADE_SUGGESTION_FAILED": "We couldn't create a trade suggestion right now. Please try again.",
+  "AGENT_RUN_FAILED": "We couldn't create a trade suggestion right now. Please try again.",
+  "AGENT_NOT_FOUND": "Agent not found."
 } as const;
 
 export const ERROR_DATA_KEYS: Partial<Record<string, readonly string[]>> = {

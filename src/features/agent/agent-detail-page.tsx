@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { LoadingState } from "@/components/system/loading-state";
 import { ErrorState } from "@/components/system/error-state";
 import { useToast } from "@/components/system/toast-context";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
 import { AGENT_DISCLAIMER } from "@/lib/config/agent-features";
+import { buildTradeSuggestionBody } from "@/features/agent/build-trade-suggestion-body";
 import { TradeSuggestionCard } from "@/features/agent/components/trade-suggestion-card";
+import { TradeSuggestionRiskModal } from "@/features/agent/components/trade-suggestion-risk-modal";
 import {
   useAgentAnalysesQuery,
   useAgentCapabilitiesQuery,
@@ -39,6 +42,7 @@ export default function AgentDetailPage() {
   const saveMut = useSaveSuggestionMutation(agentId);
   const cancelMut = useCancelSuggestionMutation(agentId);
   const executeMut = useExecuteSuggestionMutation(agentId);
+  const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
 
   if (agent.isPending) return <LoadingState label="Loading agent…" />;
   if (agent.isError || !agent.data) {
@@ -53,6 +57,25 @@ export default function AgentDetailPage() {
 
   const a = agent.data;
   const latestAnalysis = analyses.data?.items?.[0];
+  const suggestionBody = buildTradeSuggestionBody(a);
+
+  async function handleCreateSuggestion() {
+    if (!suggestionBody) {
+      pushToast({
+        tone: "error",
+        title: "Choose a symbol before creating a trade suggestion.",
+      });
+      return;
+    }
+
+    try {
+      await createSuggestionMut.mutateAsync(suggestionBody);
+      setSuggestionModalOpen(false);
+      pushToast({ tone: "success", title: "Trade suggestion generated" });
+    } catch (e) {
+      pushToast({ tone: "error", title: normalizeApiError(e, "agent") });
+    }
+  }
 
   return (
     <>
@@ -108,18 +131,20 @@ export default function AgentDetailPage() {
           {a.can_suggest_trades ? (
             <button
               type="button"
-              disabled={createSuggestionMut.isPending}
-              onClick={async () => {
-                try {
-                  await createSuggestionMut.mutateAsync(undefined);
-                  pushToast({ tone: "success", title: "Trade suggestion generated" });
-                } catch (e) {
-                  pushToast({ tone: "error", title: normalizeApiError(e) });
+              disabled={createSuggestionMut.isPending || !suggestionBody}
+              onClick={() => {
+                if (!suggestionBody) {
+                  pushToast({
+                    tone: "error",
+                    title: "Choose a symbol before creating a trade suggestion.",
+                  });
+                  return;
                 }
+                setSuggestionModalOpen(true);
               }}
-              className="rounded-md border border-border px-3 py-1.5 text-sm"
+              className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50"
             >
-              Generate trade suggestion
+              {createSuggestionMut.isPending ? "Generating…" : "Generate trade suggestion"}
             </button>
           ) : null}
         </div>
@@ -216,6 +241,14 @@ export default function AgentDetailPage() {
           ) : null}
         </ul>
       </section>
+
+      <TradeSuggestionRiskModal
+        open={suggestionModalOpen}
+        symbol={suggestionBody?.symbol ?? ""}
+        pending={createSuggestionMut.isPending}
+        onClose={() => !createSuggestionMut.isPending && setSuggestionModalOpen(false)}
+        onConfirm={() => void handleCreateSuggestion()}
+      />
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Research history</h2>

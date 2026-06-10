@@ -11,6 +11,8 @@ import type {
   AgentTradeExecutionRecord,
   AgentTradeSuggestionRecord,
   AppListResponse,
+  CreateTradeSuggestionBody,
+  CreateTradeSuggestionResponse,
   UserAgentCreateBody,
   UserAgentRecord,
 } from "@/lib/api/types";
@@ -249,14 +251,24 @@ export function useExecuteSuggestionMutation(agentId: string) {
   });
 }
 
+function compactTradeSuggestionBody(body: CreateTradeSuggestionBody): CreateTradeSuggestionBody {
+  const compact: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (value !== undefined) {
+      compact[key] = value;
+    }
+  }
+  return compact as CreateTradeSuggestionBody;
+}
+
 export function useCreateSuggestionMutation(agentId: string) {
   const { token } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (symbol?: string) =>
-      laravelFetch<AgentTradeSuggestionRecord>(API.app.agents.tradeSuggestions(agentId), {
+    mutationFn: (body: CreateTradeSuggestionBody) =>
+      laravelFetch<CreateTradeSuggestionResponse>(API.app.agents.tradeSuggestions(agentId), {
         method: "POST",
-        body: symbol ? { symbol } : {},
+        body: compactTradeSuggestionBody(body),
         token,
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["agent-suggestions", agentId] }),
