@@ -116,6 +116,62 @@ export type WalletAssetsRefreshPayload = WalletAssetsListPayload & {
   from_cache?: boolean;
 };
 
+export type SubWalletType = "save" | "invest" | "spend";
+
+export type SubWalletAction = {
+  key: string;
+  label: string;
+  enabled: boolean;
+  reason?: string;
+};
+
+export type SubWalletCard = {
+  type: SubWalletType;
+  name: string;
+  description: string;
+  balance: string;
+  currency: string;
+  status: string;
+  features: string[];
+  actions: SubWalletAction[];
+};
+
+export type MasterWalletSummary = {
+  id: string | null;
+  label: string;
+  address: string | null;
+  network: string;
+  status: "active" | "pending" | "failed" | "not_created" | (string & {});
+  total_balance: string;
+  currency: string;
+  last_synced_at: string | null;
+};
+
+export type WalletControlCenterActivityItem = {
+  id: number;
+  action: string;
+  chain: string | null;
+  created_at: string | null;
+};
+
+export type WalletControlCenterPayload = {
+  master_wallet: MasterWalletSummary;
+  sub_wallets: SubWalletCard[];
+  recent_activity: WalletControlCenterActivityItem[];
+};
+
+export type WalletBalanceRefreshPayload = {
+  wallet: {
+    id: number;
+    address: string;
+    network: string;
+    asset: string;
+    balance_lamports: string;
+    balance_sol: string;
+    last_balance_synced_at: string | null;
+  };
+};
+
 export type WalletSummaryPayload = {
   total_usd: string;
   currency: string;

@@ -7,6 +7,14 @@ describe("activity-labels", () => {
     expect(resolveActivityDisplay({ action: "wallet.assets.refresh" }).title).toBe(
       "Wallet balance refreshed",
     );
+    expect(ACTIVITY_LABELS["wallet.subwallet.created"].title).toBe("Sub-wallet created");
+    expect(ACTIVITY_LABELS["wallet.save.deposit"].title).toBe("Funds added to Save Wallet");
+    expect(ACTIVITY_LABELS["wallet.invest.allocation_suggested"].title).toBe(
+      "Investment idea created",
+    );
+    expect(ACTIVITY_LABELS["wallet.spend.card_topup_requested"].title).toBe(
+      "Card top-up requested",
+    );
   });
 
   it("humanizes unknown event keys", () => {

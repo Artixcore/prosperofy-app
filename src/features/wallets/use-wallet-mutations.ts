@@ -4,9 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import { ApiClientError } from "@/lib/api/errors";
+import { getWalletControlCenter, refreshWalletBalances } from "@/lib/api/wallet";
 import type {
   WalletAssetsListPayload,
   WalletAssetsRefreshPayload,
+  WalletBalanceRefreshPayload,
   WalletSummaryPayload,
   WalletOverview,
 } from "@/lib/api/types";
@@ -53,10 +55,34 @@ export function useAppWalletAssetsQuery() {
 
 export function invalidateWalletQueries(qc: ReturnType<typeof useQueryClient>): void {
   void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+  void qc.invalidateQueries({ queryKey: ["wallet-control-center"] });
   void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
   void qc.invalidateQueries({ queryKey: ["app-wallet-summary"] });
   void qc.invalidateQueries({ queryKey: ["wallet-transactions"] });
   void qc.invalidateQueries({ queryKey: ["app-dashboard"] });
+}
+
+export function useWalletControlCenterQuery() {
+  const { token, authReady, isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["wallet-control-center", token],
+    queryFn: () => getWalletControlCenter(assertAuthenticatedToken(token)),
+    enabled: Boolean(authReady && isAuthenticated && token),
+    retry: false,
+  });
+}
+
+export function useRefreshWalletBalancesMutation() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (options?: { force?: boolean }): Promise<WalletBalanceRefreshPayload> =>
+      refreshWalletBalances(assertAuthenticatedToken(token), options),
+    retry: false,
+    onSuccess: () => {
+      invalidateWalletQueries(qc);
+    },
+  });
 }
 
 export type WalletTransactionsSyncPayload = {
@@ -156,6 +182,7 @@ export function useCreateWflWalletMutation() {
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["app-wallet-overview"] });
+      void qc.invalidateQueries({ queryKey: ["wallet-control-center"] });
       void qc.invalidateQueries({ queryKey: ["app-wallet-assets"] });
     },
   });

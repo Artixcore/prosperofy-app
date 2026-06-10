@@ -1,165 +1,115 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { ErrorState } from "@/components/system/error-state";
 import { LoadingState } from "@/components/system/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/components/system/toast-context";
-import { AssetsSection } from "@/features/wallets/components/assets-section";
-import { RecentTransactionsSection } from "@/features/wallets/components/recent-transactions-section";
-import { WalletTransactionsChartSection } from "@/features/wallets/components/wallet-transactions-chart-section";
-import { WalletBalanceCard } from "@/features/wallets/components/wallet-balance-card";
+import { MasterWalletSummaryCard } from "@/features/wallets/components/master-wallet-summary-card";
+import { SubWalletCard } from "@/features/wallets/components/sub-wallet-card";
+import { SubWalletDetailPanel } from "@/features/wallets/components/sub-wallet-detail-panel";
+import { WalletControlCenterActivity } from "@/features/wallets/components/wallet-control-center-activity";
 import { WflWalletStatusBanner } from "@/features/wallets/components/wfl-wallet-status-banner";
 import {
-  useAppWalletAssetsQuery,
   useAppWalletOverviewQuery,
-  useWalletFullRefreshMutation,
+  useRefreshWalletBalancesMutation,
+  useWalletControlCenterQuery,
 } from "@/features/wallets/use-wallet-mutations";
-import { useWalletTransactionsQuery } from "@/features/wallets/use-wallet-send";
-import { wflWalletState } from "@/features/wallets/wallet-derive";
+import { handleSubWalletAction } from "@/features/wallets/wallet-action-handler";
 import { normalizeApiError } from "@/lib/api/normalize-api-error";
+import type { SubWalletType } from "@/lib/api/types";
 
 export default function WalletPage() {
-  const overview = useAppWalletOverviewQuery();
-  const assets = useAppWalletAssetsQuery();
-  const refreshMu = useWalletFullRefreshMutation();
-  const txs = useWalletTransactionsQuery({ per_page: 5 });
+  const router = useRouter();
   const { pushToast } = useToast();
-  const autoSyncedRef = useRef(false);
+  const controlCenter = useWalletControlCenterQuery();
+  const overview = useAppWalletOverviewQuery();
+  const refreshBalances = useRefreshWalletBalancesMutation();
+  const [selectedType, setSelectedType] = useState<SubWalletType>("save");
 
-  const walletState = wflWalletState(overview.data);
-  const refreshing =
-    refreshMu.isPending || overview.isFetching || assets.isFetching || txs.isFetching;
+  const refreshing = refreshBalances.isPending || controlCenter.isFetching;
 
-  const hasPendingTx = (txs.data?.transactions ?? []).some((tx) =>
-    ["pending", "broadcasted", "previewed"].includes(tx.status),
-  );
+  const selectedWallet = useMemo(() => {
+    const wallets = controlCenter.data?.sub_wallets ?? [];
+    return wallets.find((wallet) => wallet.type === selectedType) ?? wallets[0] ?? null;
+  }, [controlCenter.data?.sub_wallets, selectedType]);
 
-  const lastSyncedAt =
-    refreshMu.data?.assets.last_synced_at ??
-    assets.data?.last_synced_at ??
-    overview.data?.last_synced_at ??
-    null;
-
-  const runFullRefresh = async (options?: { silent?: boolean }) => {
-    try {
-      const result = await refreshMu.mutateAsync();
-      const { sync, assets: assetsResult } = result;
-
-      if (!options?.silent) {
-        if (sync.not_implemented) {
-          pushToast({
-            tone: "info",
-            title: "Deposit sync unavailable",
-            description:
-              "Incoming receive history is not enabled on this deployment yet.",
-          });
-        } else if (sync.balance_refresh_error) {
-          pushToast({
-            tone: "warning",
-            title: "Transactions synced",
-            description:
-              sync.balance_refresh_error.message ||
-              "Balance could not be refreshed. Please try again.",
-          });
-        } else {
-          pushToast({
-            tone: assetsResult.from_cache ? "info" : "success",
-            title: assetsResult.from_cache ? "Already up to date" : "Wallet refreshed",
-            description: assetsResult.from_cache
-              ? "Your wallet was synced very recently."
-              : `Synced ${sync.synced_count} transaction(s) and loaded the latest on-chain balance.`,
-          });
-        }
-      }
-
-      return result;
-    } catch (error) {
-      if (!options?.silent) {
-        pushToast({
-          tone: "error",
-          title: "Could not refresh wallet",
-          description:
-            normalizeApiError(error, "wallet-refresh") ||
-            "Wallet refresh failed. Please try again shortly.",
-        });
-      }
-    }
+  const handleAction = (actionKey: string) => {
+    const wallet = controlCenter.data?.sub_wallets.find((item) =>
+      item.actions.some((action) => action.key === actionKey),
+    );
+    const action = wallet?.actions.find((item) => item.key === actionKey);
+    if (!action) return;
+    handleSubWalletAction(action, router, pushToast);
   };
 
-  useEffect(() => {
-    if (autoSyncedRef.current) return;
-    if (walletState.status !== "active") return;
-    if (overview.isPending) return;
-
-    autoSyncedRef.current = true;
-    void runFullRefresh({ silent: true }).catch(() => {
-      // Errors are surfaced on manual refresh; mount sync is best-effort.
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync once when wallet is active
-  }, [walletState.status, overview.isPending]);
-
-  useEffect(() => {
-    if (!hasPendingTx) return;
-
-    const intervalId = window.setInterval(() => {
-      void runFullRefresh({ silent: true }).catch(() => undefined);
-    }, 10_000);
-
-    return () => window.clearInterval(intervalId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- poll while pending txs exist
-  }, [hasPendingTx]);
+  const runRefresh = async () => {
+    try {
+      await refreshBalances.mutateAsync({ force: true });
+      pushToast({
+        tone: "success",
+        title: "Balances updated.",
+      });
+    } catch (error) {
+      pushToast({
+        tone: "error",
+        title: "We couldn't refresh balances right now.",
+        description:
+          normalizeApiError(error, "wallet-refresh") ||
+          "Please try again in a moment.",
+      });
+    }
+  };
 
   return (
     <>
       <PageHeader
-        title="Wallet"
-        description="Manage your WFL Wallet, assets, and transactions."
+        title="Wallet Control Center"
+        description="Manage your Save, Invest, and Spend wallets from one place."
         action={
           <button
             type="button"
-            onClick={() => void runFullRefresh()}
+            onClick={() => void runRefresh()}
             disabled={refreshing}
             className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-content-primary shadow-sm hover:bg-muted disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} aria-hidden />
-            {refreshing ? "Refreshing…" : "Refresh"}
+            {refreshing ? "Refreshing…" : "Refresh balances"}
           </button>
         }
       />
 
-      {overview.isPending && !overview.data ? (
-        <LoadingState label="Loading wallet…" />
-      ) : overview.isError ? (
+      {controlCenter.isPending && !controlCenter.data ? (
+        <LoadingState label="Loading your wallet control center..." />
+      ) : controlCenter.isError ? (
         <ErrorState
-          error={overview.error}
-          title="Wallet data could not be loaded"
-          onRetry={() => void overview.refetch()}
+          error={controlCenter.error}
+          title="We couldn't load your wallet details right now."
+          onRetry={() => void controlCenter.refetch()}
         />
-      ) : (
-        <div className="space-y-6">
+      ) : controlCenter.data ? (
+        <div className="w-full min-w-0 max-w-full space-y-6">
           <WflWalletStatusBanner overview={overview.data} />
-          <WalletBalanceCard
-            overview={overview.data}
-            assets={assets.data?.assets}
-            lastSyncedAt={lastSyncedAt}
-          />
-          <WalletTransactionsChartSection />
-          <div className="grid gap-6 lg:grid-cols-12">
-            <div className="lg:col-span-7">
-              <AssetsSection
-                assets={assets.data?.assets}
-                isLoading={assets.isPending}
-                lastSyncedAt={lastSyncedAt}
+          <MasterWalletSummaryCard master={controlCenter.data.master_wallet} />
+
+          <div className="grid w-full min-w-0 max-w-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {controlCenter.data.sub_wallets.map((wallet) => (
+              <SubWalletCard
+                key={wallet.type}
+                wallet={wallet}
+                selected={selectedType === wallet.type}
+                onSelect={() => setSelectedType(wallet.type)}
+                onAction={handleAction}
               />
-            </div>
-            <div className="lg:col-span-5">
-              <RecentTransactionsSection />
-            </div>
+            ))}
           </div>
+
+          <SubWalletDetailPanel wallet={selectedWallet} onAction={handleAction} />
+          <WalletControlCenterActivity items={controlCenter.data.recent_activity} />
         </div>
-      )}
+      ) : null}
     </>
   );
 }

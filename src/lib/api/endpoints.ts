@@ -74,6 +74,7 @@ export const API = {
         `/api/app/agents/${encodeURIComponent(id)}/trade-executions` as const,
     },
     wallet: {
+      controlCenter: "/api/app/wallet/control-center",
       overview: "/api/app/wallet",
       summary: "/api/app/wallet/summary",
       create: "/api/app/wallet/create",

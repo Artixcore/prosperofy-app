@@ -20,6 +20,31 @@ export const ACTIVITY_LABELS: Record<string, ActivityLabelEntry> = {
     description: "Your wallet assets were updated.",
     icon: "wallet",
   },
+  "wallet.balance.refresh": {
+    title: "Wallet balance refreshed",
+    description: "Your wallet balance was updated.",
+    icon: "wallet",
+  },
+  "wallet.subwallet.created": {
+    title: "Sub-wallet created",
+    description: "Your Save, Invest, and Spend wallets are ready.",
+    icon: "wallet",
+  },
+  "wallet.save.deposit": {
+    title: "Funds added to Save Wallet",
+    description: "Your Save Wallet balance was updated.",
+    icon: "wallet",
+  },
+  "wallet.invest.allocation_suggested": {
+    title: "Investment idea created",
+    description: "A new allocation idea is available to review.",
+    icon: "bot",
+  },
+  "wallet.spend.card_topup_requested": {
+    title: "Card top-up requested",
+    description: "Your card top-up request was recorded.",
+    icon: "credit-card",
+  },
   "wallet.transaction.sent": {
     title: "Transaction sent",
     description: "A wallet transaction was submitted.",
