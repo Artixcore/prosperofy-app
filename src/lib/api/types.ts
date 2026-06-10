@@ -160,6 +160,120 @@ export type WalletControlCenterPayload = {
   recent_activity: WalletControlCenterActivityItem[];
 };
 
+export type YieldPoolRiskLevel = "low" | "medium" | "high" | "extreme" | (string & {});
+
+export type YieldPoolStatus = "active" | "paused" | "disabled" | (string & {});
+
+export type YieldPoolDisabledReason =
+  | "Membership upgrade required"
+  | "Yield provider not enabled"
+  | "Save Wallet not ready"
+  | "Pool paused"
+  | "Insufficient balance"
+  | (string & {});
+
+export type YieldPool = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  asset_symbol: string;
+  network: string;
+  status: YieldPoolStatus;
+  risk_level: YieldPoolRiskLevel;
+  apy_min: string | null;
+  apy_max: string | null;
+  apy_display: string | null;
+  lockup_days: number | null;
+  auto_compound_supported: boolean;
+  provider: string;
+  allocate_enabled: boolean;
+  disabled_reason: YieldPoolDisabledReason | null;
+};
+
+export type YieldOverview = {
+  enabled: boolean;
+  provider_enabled: boolean;
+  save_wallet: {
+    balance: string;
+    currency: string;
+    status: string;
+  };
+  summary: {
+    total_allocated: string;
+    confirmed_earnings: string;
+    estimated_earnings: string;
+    currency: string;
+  };
+  membership: {
+    required: boolean;
+    eligible: boolean;
+    plan_name: string;
+  };
+  risk_notice: string;
+};
+
+export type YieldAllocationStatus =
+  | "draft"
+  | "pending_confirmation"
+  | "submitted"
+  | "active"
+  | "paused"
+  | "withdrawing"
+  | "withdrawn"
+  | "failed"
+  | "cancelled"
+  | (string & {});
+
+export type YieldAllocation = {
+  id: string;
+  pool_id: string;
+  pool_name?: string | null;
+  amount: string;
+  currency: string;
+  status: YieldAllocationStatus;
+  auto_compound_enabled: boolean;
+  risk_acknowledged_at: string | null;
+  provider_reference: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type YieldEarningStatus = "estimated" | "confirmed" | "paid" | "reversed" | (string & {});
+
+export type YieldEarning = {
+  id: string;
+  yield_allocation_id: string;
+  pool_name?: string | null;
+  amount: string;
+  currency: string;
+  source: string;
+  status: YieldEarningStatus;
+  earned_at: string | null;
+  created_at: string | null;
+};
+
+export type YieldPoolsListPayload = {
+  items: YieldPool[];
+};
+
+export type YieldAllocationsListPayload = {
+  items: YieldAllocation[];
+};
+
+export type YieldEarningsListPayload = {
+  items: YieldEarning[];
+};
+
+export type CreateYieldAllocationBody = {
+  pool_id: string;
+  amount: string;
+  currency: string;
+  auto_compound_enabled: boolean;
+  risk_acknowledged: boolean;
+  idempotency_key?: string;
+};
+
 export type WalletBalanceRefreshPayload = {
   wallet: {
     id: number;

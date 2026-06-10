@@ -1,5 +1,6 @@
 "use client";
 
+import { YieldPoolsSection } from "@/features/yield/components/yield-pools-section";
 import type { SubWalletCard as SubWalletCardType } from "@/lib/api/types";
 
 type Props = {
@@ -28,6 +29,12 @@ export function SubWalletDetailPanel({ wallet, onAction }: Props) {
           ))}
         </ul>
       </div>
+
+      {wallet.type === "save" ? (
+        <div className="mt-8">
+          <YieldPoolsSection />
+        </div>
+      ) : null}
 
       <div className="mt-6">
         <h3 className="text-xs font-medium uppercase tracking-wide text-content-muted">

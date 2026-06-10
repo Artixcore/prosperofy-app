@@ -39,6 +39,46 @@ vi.mock("@/components/system/toast-context", () => ({
   useToast: () => ({ pushToast }),
 }));
 
+vi.mock("@/features/yield/use-yield", () => ({
+  useYieldOverviewQuery: () => ({
+    isPending: false,
+    isError: false,
+    data: {
+      enabled: true,
+      provider_enabled: false,
+      save_wallet: { balance: "0.00", currency: "WFL", status: "ready" },
+      summary: {
+        total_allocated: "0.00",
+        confirmed_earnings: "0.00",
+        estimated_earnings: "0.00",
+        currency: "WFL",
+      },
+      membership: { required: true, eligible: true, plan_name: "Premium" },
+      risk_notice: "Yield pools involve smart contract, liquidity, and market risk.",
+    },
+    refetch: vi.fn(),
+  }),
+  useYieldPoolsQuery: () => ({
+    isPending: false,
+    isError: false,
+    data: { items: [] },
+  }),
+  useYieldAllocationsQuery: () => ({
+    isPending: false,
+    isError: false,
+    data: { items: [] },
+  }),
+  useYieldEarningsQuery: () => ({
+    isPending: false,
+    isError: false,
+    data: { items: [] },
+  }),
+  useCreateYieldAllocationMutation: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}));
+
 import WalletPage from "./page";
 
 function makeControlCenter(
@@ -63,10 +103,15 @@ function makeControlCenter(
         balance: "0.00",
         currency: "WFL",
         status: "ready",
-        features: ["Cashback destination", "Yield pools coming soon", "Long-term savings"],
+        features: ["Cashback destination", "Yield pools", "Long-term savings"],
         actions: [
           { key: "add_funds", label: "Add funds", enabled: true },
-          { key: "explore_yield", label: "Explore yield pools", enabled: false, reason: "Coming soon" },
+          {
+            key: "explore_yield",
+            label: "Explore yield pools",
+            enabled: true,
+            reason: "Yield provider not enabled",
+          },
         ],
       },
       {
@@ -207,17 +252,21 @@ describe("WalletPage control center", () => {
     expect(screen.queryByText("wallet.assets.refresh")).not.toBeInTheDocument();
   });
 
-  it("shows coming-soon toast for disabled actions without navigating", () => {
+  it("shows yield pools section on save wallet and scrolls on explore action", () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
     render(<WalletPage />);
+    expect(screen.getByRole("heading", { name: "Yield Pools" })).toBeInTheDocument();
+
     const yieldButtons = screen.getAllByRole("button", { name: /Explore yield pools/i });
     fireEvent.click(yieldButtons[0]!);
 
-    expect(pushToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tone: "info",
-        title: "This feature is coming soon.",
-      }),
-    );
+    expect(scrollIntoView).toHaveBeenCalled();
+    expect(pushToast).not.toHaveBeenCalled();
     expect(routerPush).not.toHaveBeenCalled();
   });
 

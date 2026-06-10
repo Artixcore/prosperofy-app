@@ -15,6 +15,8 @@ describe("activity-labels", () => {
     expect(ACTIVITY_LABELS["wallet.spend.card_topup_requested"].title).toBe(
       "Card top-up requested",
     );
+    expect(ACTIVITY_LABELS["yield.allocation.created"].title).toBe("Yield allocation created");
+    expect(ACTIVITY_LABELS["yield.earnings.confirmed"].title).toBe("Yield earnings confirmed");
   });
 
   it("humanizes unknown event keys", () => {

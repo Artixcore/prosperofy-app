@@ -30,6 +30,11 @@ export function handleSubWalletAction(
     case "top_up_card":
       router.push("/card");
       return;
+    case "explore_yield":
+      if (typeof document !== "undefined") {
+        document.getElementById("yield-pools")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      return;
     default:
       showComingSoonToast(pushToast, action.reason);
   }

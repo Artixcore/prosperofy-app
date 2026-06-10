@@ -35,6 +35,26 @@ export const ACTIVITY_LABELS: Record<string, ActivityLabelEntry> = {
     description: "Your Save Wallet balance was updated.",
     icon: "wallet",
   },
+  "yield.allocation.created": {
+    title: "Yield allocation created",
+    description: "Your yield allocation request was recorded.",
+    icon: "wallet",
+  },
+  "yield.allocation.active": {
+    title: "Yield allocation active",
+    description: "Your yield allocation is now active.",
+    icon: "wallet",
+  },
+  "yield.earnings.confirmed": {
+    title: "Yield earnings confirmed",
+    description: "Yield earnings were confirmed for your allocation.",
+    icon: "wallet",
+  },
+  "yield.allocation.withdrawn": {
+    title: "Yield allocation withdrawn",
+    description: "Your yield allocation was withdrawn or cancelled.",
+    icon: "wallet",
+  },
   "wallet.invest.allocation_suggested": {
     title: "Investment idea created",
     description: "A new allocation idea is available to review.",

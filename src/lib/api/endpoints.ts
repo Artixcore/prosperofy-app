@@ -145,6 +145,18 @@ export const API = {
       monthlySummary: "/api/app/rewards/monthly-summary",
       regenerateCode: "/api/app/rewards/referral-code/regenerate",
     },
+    yield: {
+      overview: "/api/app/yield/overview",
+      pools: "/api/app/yield/pools",
+      pool: (id: string) => `/api/app/yield/pools/${encodeURIComponent(id)}` as const,
+      allocations: "/api/app/yield/allocations",
+      allocation: (id: string) => `/api/app/yield/allocations/${encodeURIComponent(id)}` as const,
+      cancelAllocation: (id: string) =>
+        `/api/app/yield/allocations/${encodeURIComponent(id)}/cancel` as const,
+      toggleAutoCompound: (id: string) =>
+        `/api/app/yield/allocations/${encodeURIComponent(id)}/toggle-auto-compound` as const,
+      earnings: "/api/app/yield/earnings",
+    },
     card: {
       overview: "/api/app/card/overview",
       orders: "/api/app/card/orders",
