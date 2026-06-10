@@ -5,7 +5,6 @@ import { laravelFetch } from "@/lib/api/client";
 import { API } from "@/lib/api/endpoints";
 import type {
   BinanceValidationPreview,
-  ExchangeConnectionMode,
   ExchangeConnectionSummary,
   ExchangeConnectionsListData,
   ExchangePortfolioResponse,
@@ -17,10 +16,12 @@ export type BinanceConnectionBody = {
   label?: string | null;
   api_key: string;
   api_secret: string;
-  mode: ExchangeConnectionMode;
-  accepted_terms: boolean;
-  trading_risk_ack?: boolean;
-} & IdentityFactors;
+};
+
+export type BinanceStoreConnectionData = {
+  connection: ExchangeConnectionSummary;
+  warning?: string | null;
+};
 
 export function useExchangeConnectionsQuery() {
   const { token, authReady, isAuthenticated } = useAuth();
@@ -35,7 +36,7 @@ export function useExchangeConnectionsQuery() {
 export function useValidateBinanceConnectionMutation() {
   const { token } = useAuth();
   return useMutation({
-    mutationFn: (body: Omit<BinanceConnectionBody, keyof IdentityFactors | "trading_risk_ack">) =>
+    mutationFn: (body: BinanceConnectionBody) =>
       laravelFetch<BinanceValidationPreview>(API.app.settingsBinanceValidate, {
         method: "POST",
         body,
@@ -49,7 +50,7 @@ export function useStoreBinanceConnectionMutation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: BinanceConnectionBody) =>
-      laravelFetch<{ connection: ExchangeConnectionSummary }>(API.app.settingsBinanceStore, {
+      laravelFetch<BinanceStoreConnectionData>(API.app.settingsBinanceStore, {
         method: "POST",
         body,
         token,

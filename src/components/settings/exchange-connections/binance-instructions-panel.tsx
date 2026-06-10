@@ -31,9 +31,9 @@ export function BinanceInstructionsPanel() {
         <li>You can revoke the API key anytime from Binance API Management.</li>
       </ol>
       <InlineAlert tone="info">
-        For portfolio-only mode, use Reading permission only. For trading mode, enable Spot trading
-        only when you understand the risk. Withdrawal permission is unsupported and unsafe —
-        Prosperofy will reject keys with withdrawal access.
+        Use Reading permission for portfolio view. Enable Spot trading only if you plan to use
+        Prosperofy trading later. We strongly recommend keeping withdrawal permission disabled for
+        safety.
       </InlineAlert>
       <div className="mt-3">
         <InlineAlert tone="warning">
