@@ -145,6 +145,15 @@ export const API = {
       monthlySummary: "/api/app/rewards/monthly-summary",
       regenerateCode: "/api/app/rewards/referral-code/regenerate",
     },
+    card: {
+      overview: "/api/app/card/overview",
+      orders: "/api/app/card/orders",
+      currentOrder: "/api/app/card/orders/current",
+      order: (id: string) => `/api/app/card/orders/${encodeURIComponent(id)}` as const,
+      refreshOrder: (id: string) =>
+        `/api/app/card/orders/${encodeURIComponent(id)}/refresh-status` as const,
+      activity: "/api/app/card/activity",
+    },
     billing: {
       plans: "/api/app/billing/plans",
       subscription: "/api/app/billing/subscription",

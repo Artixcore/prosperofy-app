@@ -3,6 +3,7 @@ import {
   ChartColumn,
   CreditCard,
   Gift,
+  WalletCards,
   Home,
   PieChart,
   Settings,
@@ -18,6 +19,7 @@ export type DashboardNavItem = {
 export const DASHBOARD_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/wallet", label: "Wallets", icon: CreditCard },
+  { href: "/card", label: "Prosperity Card", icon: WalletCards },
   { href: "/portfolio", label: "Portfolio", icon: PieChart },
   { href: "/agent", label: "AI Center", icon: Bot },
   { href: "/rewards", label: "Rewards", icon: Gift },
@@ -37,6 +39,9 @@ export function isDashboardNavActive(pathname: string, href: string): boolean {
   }
   if (href === "/wallet") {
     return pathname === "/wallet" || pathname.startsWith("/wallet/") || pathname === "/wallets" || pathname.startsWith("/wallets/");
+  }
+  if (href === "/card") {
+    return pathname === "/card" || pathname.startsWith("/card/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

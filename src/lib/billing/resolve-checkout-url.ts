@@ -1,8 +1,6 @@
-import type { BillingCheckoutResponse } from "@/lib/api/types";
-
-/** Extracts a checkout redirect URL from Laravel billing checkout response data. */
-export function resolveCheckoutUrl(data: BillingCheckoutResponse): string | null {
-  const record = data as BillingCheckoutResponse & Record<string, unknown>;
+/** Extracts a checkout redirect URL from Laravel payment checkout response data. */
+export function resolveCheckoutUrl(data: Record<string, unknown>): string | null {
+  const record = data;
   const url =
     record.payment_url ??
     record.invoice_url ??

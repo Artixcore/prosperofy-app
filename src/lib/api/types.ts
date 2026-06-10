@@ -704,6 +704,91 @@ export type BillingCheckoutResponse = {
 
 export type PaymentStatusResponse = BillingCheckoutResponse;
 
+export type ProsperityCardStatus =
+  | "not_requested"
+  | "checkout_pending"
+  | "payment_pending"
+  | "paid_pending_activation"
+  | "activation_processing"
+  | "active"
+  | "failed"
+  | "cancelled";
+
+export type CardOrderStatus =
+  | "draft"
+  | "checkout_created"
+  | "payment_pending"
+  | "paid"
+  | "activation_processing"
+  | "active"
+  | "failed"
+  | "cancelled";
+
+export type ProsperityCardSummary = {
+  id?: string;
+  status: ProsperityCardStatus;
+  card_type: string;
+  fee_amount: string;
+  fee_currency: string;
+  cashback_rate: string;
+  cashback_destination: string;
+  spend_wallet_required: boolean;
+  activated_at?: string | null;
+};
+
+export type CardOrderPaymentSummary = {
+  id: number;
+  status: string;
+};
+
+export type CardOrderSummary = {
+  id: string;
+  order_number: string;
+  status: CardOrderStatus;
+  fee_amount: string;
+  fee_currency: string;
+  pay_currency?: string | null;
+  provider?: string;
+  checkout_url?: string | null;
+  payment?: CardOrderPaymentSummary | null;
+  created_at?: string | null;
+};
+
+export type CardOverviewPayload = {
+  enabled: boolean;
+  card: ProsperityCardSummary;
+  current_order: CardOrderSummary | null;
+  spend_wallet: {
+    balance: string;
+    currency: string;
+    status: string;
+  };
+  membership: {
+    required: boolean;
+    eligible: boolean;
+    plan_name: string;
+  };
+};
+
+export type CardCheckoutBody = {
+  pay_currency?: string;
+};
+
+export type CardCheckoutResponse = {
+  order: {
+    id: string;
+    order_number: string;
+    status: CardOrderStatus;
+    fee_amount: string;
+    fee_currency: string;
+    provider: string;
+  };
+  payment: CardOrderPaymentSummary | null;
+  checkout_url: string | null;
+  payment_url?: string | null;
+  invoice_url?: string | null;
+};
+
 export type AiActionType =
   | "analyze_save_wallet"
   | "suggest_yield_option"

@@ -93,9 +93,8 @@ function makeControlCenter(
         actions: [
           {
             key: "top_up_card",
-            label: "Top up card",
-            enabled: false,
-            reason: "Card integration coming soon",
+            label: "Prosperity Card",
+            enabled: true,
           },
           { key: "view_spending", label: "View spending", enabled: true },
         ],
@@ -236,6 +235,10 @@ describe("WalletPage control center", () => {
     const spendingButtons = screen.getAllByRole("button", { name: /View spending/i });
     fireEvent.click(spendingButtons[0]!);
     expect(routerPush).toHaveBeenCalledWith("/wallet/transactions");
+
+    const cardButtons = screen.getAllByRole("button", { name: /Prosperity Card/i });
+    fireEvent.click(cardButtons[0]!);
+    expect(routerPush).toHaveBeenCalledWith("/card");
   });
 
   it("renders error state when control center fails to load", () => {

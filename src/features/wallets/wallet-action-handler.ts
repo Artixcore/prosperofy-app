@@ -27,6 +27,9 @@ export function handleSubWalletAction(
     case "view_spending":
       router.push("/wallet/transactions");
       return;
+    case "top_up_card":
+      router.push("/card");
+      return;
     default:
       showComingSoonToast(pushToast, action.reason);
   }
