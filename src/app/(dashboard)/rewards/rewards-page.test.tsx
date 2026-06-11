@@ -18,6 +18,18 @@ vi.mock("@/features/rewards/use-rewards", () => ({
   useRewardsMonthlySummary: () => monthlyQuery(),
 }));
 
+vi.mock("@/features/rewards/use-payout-profile", () => ({
+  usePayoutProfile: () => ({
+    isPending: false,
+    data: { has_profile: false, payout_currency: "usdttrc20", network: "trc20" },
+  }),
+  useSavePayoutProfile: () => ({ mutate: vi.fn(), isPending: false, isError: false, isSuccess: false }),
+  usePayoutHistory: () => ({
+    isPending: false,
+    data: { items: [], pagination: { current_page: 1, per_page: 10, total: 0, last_page: 1 } },
+  }),
+}));
+
 import RewardsPage from "./page";
 
 const mockOverview: RewardsOverview = {
@@ -108,5 +120,13 @@ describe("RewardsPage", () => {
 
     expect(screen.queryByText(/user_id/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/subscription_id/i)).not.toBeInTheDocument();
+  });
+
+  it("renders payout profile form", () => {
+    setupQueries();
+    render(<RewardsPage />);
+
+    expect(screen.getByRole("heading", { name: "Crypto payout profile" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save wallet" })).toBeInTheDocument();
   });
 });

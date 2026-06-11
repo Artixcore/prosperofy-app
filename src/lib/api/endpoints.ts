@@ -144,6 +144,8 @@ export const API = {
       ledger: "/api/app/rewards/ledger",
       monthlySummary: "/api/app/rewards/monthly-summary",
       regenerateCode: "/api/app/rewards/referral-code/regenerate",
+      payoutProfile: "/api/app/rewards/payout-profile",
+      payoutHistory: "/api/app/rewards/payout-history",
     },
     yield: {
       overview: "/api/app/yield/overview",

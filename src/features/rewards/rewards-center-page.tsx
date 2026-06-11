@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/page-header";
 import { MonthlyRewardsSection } from "@/components/rewards/monthly-rewards-section";
 import { ReferralLinkCard } from "@/components/rewards/referral-link-card";
 import { ReferredMembersTable } from "@/components/rewards/referred-members-table";
+import { PayoutHistoryTable } from "@/components/rewards/payout-history-table";
+import { PayoutProfileForm } from "@/components/rewards/payout-profile-form";
 import { RewardLedgerTable } from "@/components/rewards/reward-ledger-table";
 import { RewardsSummaryCards } from "@/components/rewards/rewards-summary-cards";
 import { ErrorState } from "@/components/system/error-state";
@@ -89,6 +91,10 @@ export function RewardsCenterPage() {
             <ReferredMembersTable members={referralMembers} />
           </>
         )}
+
+        <PayoutProfileForm />
+
+        <PayoutHistoryTable />
 
         <RewardLedgerTable
           items={ledgerItems.length > 0 ? ledgerItems : data.recent_rewards}
