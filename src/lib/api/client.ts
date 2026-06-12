@@ -40,8 +40,28 @@ export type LaravelFetchOptions = {
   /** Mirrors JSON idempotency_key for wallet send confirm (crypto transfers). */
   idempotencyKey?: string;
   expectNoContent?: boolean;
+  /** Do not auto-refresh CSRF and replay on 419 (auth forms). */
+  skipCsrfRetry?: boolean;
   _csrfRetried?: boolean;
 };
+
+const AUTH_CSRF_EXEMPT_PATHS = new Set([
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/v1/auth/login",
+  "/api/v1/auth/register",
+]);
+
+function normalizeApiPath(path: string): string {
+  const withLeadingSlash = path.startsWith("/") ? path : `/${path}`;
+  const withoutQuery = withLeadingSlash.split("?")[0] ?? withLeadingSlash;
+  return withoutQuery.replace(/\/+$/, "") || "/";
+}
+
+function shouldSkipCsrfRetry(path: string, skipCsrfRetry?: boolean): boolean {
+  if (skipCsrfRetry) return true;
+  return AUTH_CSRF_EXEMPT_PATHS.has(normalizeApiPath(path));
+}
 
 function randomId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -146,6 +166,7 @@ export async function laravelFetch<T>(
     timeoutMs,
     idempotencyKey,
     expectNoContent = false,
+    skipCsrfRetry = false,
     _csrfRetried = false,
   } = options;
   const url = `${getBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
@@ -240,7 +261,11 @@ export async function laravelFetch<T>(
   }
 
   if (res.status === 419) {
-    if (isMutatingMethod(method) && !_csrfRetried) {
+    if (
+      isMutatingMethod(method) &&
+      !_csrfRetried &&
+      !shouldSkipCsrfRetry(path, skipCsrfRetry)
+    ) {
       try {
         await refreshCsrfCookie(signal);
       } catch {

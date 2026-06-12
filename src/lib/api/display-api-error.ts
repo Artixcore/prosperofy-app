@@ -146,6 +146,21 @@ function resolveApiClientError(
     };
   }
 
+  if (
+    context === "auth-form" &&
+    (error.status === 419 || code === "HTTP_SESSION_EXPIRED")
+  ) {
+    return {
+      message: "Your login session could not be started. Please refresh and try again.",
+      code,
+      retryable: false,
+      fieldErrors: error.fieldErrors,
+      data,
+      hints: [],
+      showRefreshBalance: false,
+    };
+  }
+
   if (error.status === 0 && error.code === "NETWORK_ERROR") {
     const networkMessage =
       context === "wallet-send"

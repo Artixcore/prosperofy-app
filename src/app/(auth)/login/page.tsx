@@ -41,12 +41,10 @@ function LoginForm() {
   async function onSubmit(data: LoginInput) {
     setFormError(null);
     try {
-      await laravelFetch<Record<string, never>>(API.auth.csrfCookie, {
-        expectNoContent: true,
-      });
       const payload = await laravelFetch<AuthSuccessPayload>(API.auth.login, {
         method: "POST",
         body: data,
+        skipCsrfRetry: true,
       });
       login(payload);
       router.replace(next);
